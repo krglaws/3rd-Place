@@ -4,11 +4,15 @@
 
 struct options
 {
-  int port;
-  int client;
+  unsigned short server_port;
+  unsigned long server_ip;
+  int max_clients;
+  int max_queue;
 };
 
-struct options* valid_args(int argc, char** argv);
+void get_options(const int argc, const char** argv, struct options* opts);
+
+void start_server(const struct options* opts);
 
 #endif
 
