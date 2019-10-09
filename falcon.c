@@ -9,6 +9,28 @@
 
 #include "falcon.h"
 
+#define CHILD_STACK_SIZE (1024 * 1024)
+#define BUFFER_SIZE (1024)
+
+
+struct thread
+{
+  pid_t pid;
+  char* stack_bot;
+  char* stack_top;
+  int dead;
+  struct thread* next;
+};
+
+
+struct thread_queue
+{
+  int num_threads;
+  struct thread* head;
+};
+
+struct thread_queue tq = { 0, NULL };
+
 
 int main(const int argc, const char** argv)
 {
@@ -20,6 +42,22 @@ int main(const int argc, const char** argv)
   start_server(&opts);
 
   return 0;
+}
+
+
+void manage_threads()
+{
+  // continuously check thread queue for closed connections
+  while (1)
+  {
+    struct thread* h = tq->head;
+    while (h != NULL)
+    {
+      if (h->dead) cleanup(h->pid);
+      h = h->next;
+    }
+    sleep(10);
+  }
 }
 
 
@@ -103,8 +141,9 @@ void start_server(const struct options* opts)
   int server_fd, client_fd, bytes_read;
   struct sockaddr_in server_addr, client_addr;
   int addr_len = sizeof(struct sockaddr_in);
-  char* greeting = "Hello there!";
+  char* greeting = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 13\n\nSup Mauricio!";
   char in_buffer[1000] = {0};
+  pid_t thread_manager_pid = 0;
 
   memset(&server_addr, 0, addr_len);
   memset(&client_addr, 0, addr_len);
@@ -131,31 +170,74 @@ void start_server(const struct options* opts)
     exit(-1);
   }
 
+  printf("Listening on port %d...\n", ntohs(opts->server_port));
   while (1)
   {
-    printf("Awaiting connections...\n");
     if ((client_fd = accept(server_fd, (struct sockaddr*) &client_addr, &addr_len)) < 0)
-    {
       perror("Failed to accept incoming connection");
+    else if (new_connection(client_fd, (struct sockaddr*) &client_addr) == -1)
       exit(-1);
-    }
-
-    if ((bytes_read = recv(client_fd, in_buffer, sizeof(in_buffer), 0)) <= 0)
-    {
-      perror("Connection lost");
-      exit(-1);
-    }
-    printf("Message from client on socket %d:\n%s\n%d bytes read\n", client_fd, in_buffer, bytes_read);
-    
-    if (send(client_fd, greeting, strlen(greeting), 0) < 0)
-    {
-      perror("Failed to send message");
-      exit(-1);
-    }
-    printf("Response sent to client.\n");
-
-    close(client_fd);
   }
+
+  return 0;
 }
+
+
+int new_connection(int fd, struct sockaddr* address)
+{
+  struct thread* t = calloc(1, sizeof(struct thread));
+  t->stack_bot = malloc(CHILD_STACK_SIZE);
+  t->stack_top = stack + CHILD_STACK_SIZE;
+
+  /* add to queue prior to starting to
+   * ensure thread can only die after it
+   * is on the queue
+   */
+  add_to_queue(t);
+
+  if ((t->pid = clone(&serve_connection, stack_top, )) == -1)
+  {
+    perror("Failed to create new thread");
+    remove_from_queue(t->pid);
+  }
+  
+  return t->pid;
+}
+
+
+int serve_connection(int fd, struct sockaddr* address, struct thread* t)
+{
+  int err = 0;
+  int in_bytes = 0;
+  char in_buffer[BUFFER_SIZE] = {0};
+
+  while(1)
+  {
+    if ((in_bytes = recv(fd, in_buffer, BUFFER_SIZE, 0)) < 0)
+      break;
+
+    if (in_bytes > 0)
+    {
+      err = evaluate(fd, address, in_bytes, in_buffer);
+      memset(in_buffer, 0, BUFFER_SIZE);
+    }
+  }
+
+  close(client_fd);
+
+  char ip_str[16] = {0};
+  
+  if (inet_ntop(address->sa_family, &address->sin_addr, ip_str, 16) == NULL)
+  {
+    perror("inet_ntop");
+    printf("Connection closed\n");
+  }
+  else printf("Connection with %s closed.\n", );
+
+  free(address);
+  t->dead = 1;
+  return err;
+}
+
 
 
