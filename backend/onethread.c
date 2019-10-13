@@ -20,8 +20,10 @@
 #define HTTP_PUT     	(2)
 #define HTTP_DELETE  	(3)
 #define HTTP_EMPTY 	(4)
-#define HTTP_UNKOWN	(5)
+#define HTTP_UNKNOWN	(5)
 
+
+void evaluate_request(int, char*, int);
 
 int main()
 {
@@ -86,18 +88,11 @@ int main()
 		}
 
 		if (in_bytes > 0)
-		{		
+		{
 			printf("Message from %s:\n\n%s\n", ip_str, in_buffer);
 		}
-		
-		printf("Sending response to %s... ", ip_str);
-		char response[] = "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length:12\n\nHello there!";
-		if ((out_bytes = send(client_sock, response, sizeof(response), 0)) == -1)
-		{
-			perror("Failed to send response");
-			exit(EXIT_FAILURE);
-		}
-		printf("%d bytes sent.\n", out_bytes);
+
+		evaluate_request(client_sock, in_buffer, in_bytes);
 
 		// cleanup
 		close(client_sock);
@@ -123,11 +118,11 @@ int check_req_type(char* buffer, int bufflen)
 
 	/* Update */
 	if (strcmp(type_str, "PUT") == 0) return HTTP_PUT;
-	
+
 	/* Delete */
 	if (strcmp(type_str, "DELETE") == 0) return HTTP_DELETE;
 
-	return HTTP_UNKOWN;
+	return HTTP_UNKNOWN;
 }
 
 
@@ -135,11 +130,31 @@ void handle_post(int client_sock, char* buffer, int bufflen)
 {
 	char path_str[100] = {0};
 	
-	sscanf(buffer, "%s", "%s", NULL, path_str); 
+	sscanf(buffer, "%s %s", NULL, path_str); 
 
 	printf("POST to %s\n", path_str);
 
-	send(client_sock, NULL, 0, 0);
+	char resp[] = "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length:0\n\n";
+
+	int out_bytes = send(client_sock, resp, sizeof(resp), 0);
+
+	if (out_bytes == -1) perror("Failed to send POST response");
+	else printf("Sent %d bytes\n", out_bytes);
+}
+
+
+int get(char* uri, int len)
+{
+	int filelen = 0;
+
+
+	FILE* file = fopen(uri, "r");
+
+	if (file == NULL)
+	{
+		perror("Failed to open path");
+	}
+
 }
 
 
@@ -147,20 +162,33 @@ void handle_get(int client_sock, char* buffer, int bufflen)
 {
 	char path_str[100] = {0};
 	
-	sscanf(buffer, "%s", "%s", NULL, path_str); 
+	sscanf(buffer, "%s %s", NULL, path_str); 
 
 	printf("GET %s\n", path_str);
 	
-	send(client_sock, NULL, 0, 0);
+	char resp[] = "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length:4\n\nYOLO";
+
+	int out_bytes = send(client_sock, resp, sizeof(resp), 0);
+
+	if (out_bytes == -1) perror("Failed to send GET response");
+	else printf("Sent %d bytes\n", out_bytes);
 }
 
 
 void handle_put(int client_sock, char* buffer, int bufflen)
-{	char path_str[100] = {0};
+{
+	char path_str[100] = {0};
 	
-	sscanf(buffer, "%s", "%s", NULL, path_str); 
+	sscanf(buffer, "%s %s", NULL, path_str); 
 
-	printf("PUT to %s\n", path_str);	send(client_sock, NULL, 0, 0);
+	printf("PUT to %s\n", path_str);
+
+	char resp[] = "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length:0\n\n";
+
+	int out_bytes = send(client_sock, resp, sizeof(resp), 0);
+
+	if (out_bytes == -1) perror("Failed to send PUT response");
+	else printf("Sent %d bytes\n", out_bytes);
 }
 
 
@@ -168,11 +196,16 @@ void handle_delete(int client_sock, char* buffer, int bufflen)
 {	
 	char path_str[100] = {0};
 	
-	sscanf(buffer, "%s", "%s", NULL, path_str); 
+	sscanf(buffer, "%s %s", NULL, path_str); 
 
 	printf("DELETE %s\n", path_str);
 	
-	send(client_sock, NULL, 0, 0);
+	char resp[] = "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length:0\n\n";
+
+	int out_bytes = send(client_sock, resp, sizeof(resp), 0);
+
+	if (out_bytes == -1) perror("Failed to send DELETE response");
+	else printf("Sent %d bytes\n", out_bytes);
 }
 
 
@@ -189,18 +222,23 @@ void evaluate_request(int client_sock, char* buffer, int bufflen)
 		case HTTP_POST:
 			handle_post(client_sock, buffer, bufflen);
 			break;
+
 		case HTTP_GET:
 			handle_get(client_sock, buffer, bufflen);
 			break;
+
 		case HTTP_PUT:
 			handle_put(client_sock, buffer, bufflen);
 			break;
+
 		case HTTP_DELETE:
 			handle_delete(client_sock, buffer, bufflen);
 			break;
+
 		case HTTP_EMPTY:
 			printf("Empty request, do nothing.\n");
 			break;
+
 		case HTTP_UNKNOWN:
 			out_bytes = send(client_sock, resp_501, sizeof(resp_501), 0);
 			printf("501: unkown request. Sent %d bytes.\n", out_bytes);
