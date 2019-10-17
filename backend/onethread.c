@@ -11,7 +11,7 @@
 /* Server settings */
 #define LISTENQUEUE 	(10)
 #define BUFFERSIZE 	(1024)
-#define SERVERADDR 	(0x00000000)
+#define SERVERADDR 	(0xAA0c2393)
 #define SERVERPORT 	(80)
 
 /* Request types */
@@ -143,35 +143,67 @@ void handle_post(int client_sock, char* buffer, int bufflen)
 }
 
 
-int get(char* uri, int len)
+void get_uri(char* uri, char* response)
 {
+	FILE* file;
 	int filelen = 0;
+	
+	char err[512] = {0};
+	char* not_found = "HTTP/1.1 404 NOT FOUND\nContent-Type:text/html\nContent-Length:0\n\n";
+	char* was_found = "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length:%d\n\n%s";
 
-
-	FILE* file = fopen(uri, "r");
-
+	if (strcmp("./", uri) == 0)
+		file = fopen("./index.html", "r");
+	else file = fopen(uri, "r");
+	
 	if (file == NULL)
 	{
-		perror("Failed to open path");
+		sprintf(err, "Failed to open file '%s' in get_uri()", uri);
+		perror(err);
+		sprintf(response, "%s", not_found);
+		return;
 	}
 
+	fseek(file, 0, SEEK_END);
+	filelen = ftell(file);
+	rewind(file);
+
+	printf("file size = %d bytes\n", filelen);
+
+	char contents[filelen+1];
+	memset(contents, 0, filelen);
+
+	for (int i = 0; i < filelen; i++)
+		contents[i] = fgetc(file);
+
+	sprintf(response, was_found, filelen, contents);
+}
+
+
+void parse_uri(char* uri_buffer, char* req_buffer)
+{
+	uri_buffer[0] = '.';
+	uri_buffer++;
+
+	char temp[10];
+
+	sscanf(req_buffer, "%s %s", temp, uri_buffer);
 }
 
 
 void handle_get(int client_sock, char* buffer, int bufflen)
 {
+	int out_bytes = 0;
 	char path_str[100] = {0};
-	
-	sscanf(buffer, "%s %s", NULL, path_str); 
+	char response[1024] = {0};
 
-	printf("GET %s\n", path_str);
-	
-	char resp[] = "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length:4\n\nYOLO";
+	parse_uri(path_str, buffer);
+	get_uri(path_str, response);
 
-	int out_bytes = send(client_sock, resp, sizeof(resp), 0);
-
-	if (out_bytes == -1) perror("Failed to send GET response");
-	else printf("Sent %d bytes\n", out_bytes);
+	if ((out_bytes = send(client_sock, response, strlen(response), 0)) == 0)
+		perror("Failed to send GET response");
+	else 
+		printf("Sent %d bytes\n", out_bytes);
 }
 
 
