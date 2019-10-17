@@ -55,6 +55,7 @@ char* insert_html(char* contents, char* replace, char* with)
 	size_t bytes;
 	char* result_end = result;
 	char* contents_end = contents;
+	int num_swaps = 0;
 
 	for (int i = 0; i < (num_pairs * 2); i+=2)
 	{
@@ -70,22 +71,27 @@ char* insert_html(char* contents, char* replace, char* with)
 		{
 			memcpy(result_end, with, strlen(with));
 			result_end += strlen(with);
+			num_swaps++;
 		}
 		else 
 		{
-
 			memcpy(result_end, contents_end, (close - open) + 1);
 			result_end += (close - open) + 1;
-		}	
+		}
 		contents_end = &(contents[close+1]);
 		last_close = close + 1;
 	}
 
 	memcpy(result_end, contents_end, strlen(contents_end));
+	int actual_size = (num_swaps * strlen(with)) + (strlen(contents) - (num_swaps * strlen(replace)));
+	char* final = calloc(1, actual_size);
+	memcpy(final, result, actual_size);
 
-	return result;
+	free(result);
+	free(contents);
+
+	return final;
 }
-
 
 
 char* load_html(char* fname)
@@ -115,8 +121,8 @@ char* load_html(char* fname)
 
 int main()
 {
-	char* file = load_html("./test.html");
-	printf("File contents:\n%s\n", file);
-	printf(insert_html(file, "{TEST}", "<p> sup! <p>"));
+	char* html = insert_html(load_html("./test.html"), "{TEAST}", "BITCH");
+	printf("%s\n", html);
+	free(html);
 }
 

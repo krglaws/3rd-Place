@@ -1,0 +1,38 @@
+
+<div id="user_cont">
+	
+	<h3> u/{UNAME} </h3>
+
+	<button class="subButton" onclick="alert('Subbed to user {UNAME}')"> Subscribe </button>
+	
+	<button class="tablink" onclick="openPage('overview', this, 'red')"> Overview </button>
+	<button class="tablink" onclick="openPage('posts', this, 'green')"> Posts </button>
+	<button class="tablink" onclick="openPage('comments', this, 'blue')"> Comments </button>
+	<button class="tablink" onclick="openPage('wall', this, 'grey')"> Wall </button>
+
+	<div id="overview" class="tabcontent">
+		<ul>
+			{OVERVIEW}
+		</ul>
+	</div>
+
+	<div id="posts" class="tabcontent">
+		<ul>
+			{POSTS}
+		</ul>
+	</div>
+
+	<div id="comments" class="tabcontent">
+		<ul>
+			{COMMENTS}
+		</ul>
+	</div>
+
+	<div id="wall" class="tabcontent">
+		<ul>
+			{WALL}
+		</ul>
+	</div>
+
+</div>
+
