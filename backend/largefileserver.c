@@ -8,7 +8,6 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-
 #define BUFFERLEN 1024
 #define MAXBUFFERMUL 10
 
@@ -23,10 +22,13 @@ struct options
 
 static void get_options(const int argc, const char** argv, struct options* opts);
 
-static void start_server(const struct options* opts);
+static void serve(const struct options* opts);
 
-char* receive_message(int, struct sockaddr_in*);
+char* receive_request(int client_fd, struct sockaddr_in* client_addr);
 
+char* process_request(char* request, int client_fd, struct sockaddr_in* client_addr);
+
+char* send_request(char* request, int client_fd, struct sockaddr_in* client_addr);
 
 
 int main(const int argc, const char** argv)
@@ -36,7 +38,7 @@ int main(const int argc, const char** argv)
 
   get_options(argc, argv, &opts);
 
-  start_server(&opts);
+  serve(&opts);
 
   return 0;
 }
@@ -117,7 +119,7 @@ static void get_options(const int argc, const char** argv, struct options* opts)
 }// end valid_args
 
 
-static void start_server(const struct options* opts)
+static void serve(const struct options* opts)
 {
   int server_fd, client_fd, in_bytes, out_bytes;
   struct sockaddr_in server_addr, client_addr;
@@ -165,10 +167,10 @@ static void start_server(const struct options* opts)
     }
     printf("Connected to %s.\n", ip_str);
 
-    char* message = receive_message(client_fd, &client_addr);
-    printf("Message from client %s:\n%s\n", ip_str, message);
-    process_request(client_fd, &client_addr, message);
-    free(message);
+    send_response( process_request( receive_request(
+      client_fd, &client_addr),
+        client_fd, &client_addr)
+          client_fd, &client_addr);
 
     close(client_fd);
     memset(&client_addr, 0, sizeof(client_addr));
@@ -178,7 +180,7 @@ static void start_server(const struct options* opts)
 }
 
 
-char* receive_message(int client_fd, struct sockaddr_in* client_addr)
+char* receive_request(int client_fd, struct sockaddr_in* client_addr)
 {
   char* message_buffer = calloc(1, BUFFERLEN);
   char* curr_buff_ptr = message_buffer;
@@ -189,13 +191,13 @@ char* receive_message(int client_fd, struct sockaddr_in* client_addr)
   {
     if (multiplier >= MAXBUFFERMUL)
     {
-      fprintf(stderr, "Request exceeds %d byte limit\n", MAXBUFFERMUL * BUFFERLEN);
+      fprintf(stderr, "receive_request(): Request exceeds %d byte limit\n", MAXBUFFERMUL * BUFFERLEN);
       free(message_buffer);
       return NULL;
     }
     if ((bytes = recv(client_fd, curr_buff_ptr, BUFFERLEN - 1, 0)) == -1)
     {
-      perror("receive_message(): error while reading message from client");
+      perror("receive_request(): error while reading message from client");
       exit(EXIT_FAILURE);
     }
     if (bytes == 0 || bytes < BUFFERLEN - 1) break;
@@ -209,8 +211,43 @@ char* receive_message(int client_fd, struct sockaddr_in* client_addr)
 }
 
 
-void process_request(char* request, int client_fd, struct sockaddr_in* client_addr)
+char* process_request(char* request, int client_fd, struct sockaddr_in* client_addr)
 {
+  if (strncmp("PUT", request, 3) == 0)
+    return http_put(request);
+
+  else if (strncmp("GET", request, 3) == 0 ||
+           strcmp("HEAD", request, 4) == 0)
+    return http_get(request);
+
+  else if (strncmp("POST", request, 4) == 0)
+    return http_post(request);
+
+  else if (strncmp("DELETE", request, 6) == 0)
+    return http_delete(request);
   
+  fprintf(stderr, "process_request(): 400 Bad Request\n");
+
+  char* bad_request = "HTTP/1.1 400 Bad Request\nConnection: close\nContent-Length: 0\n\n";
+  char* response = malloc(sizeof(bad_request));
+  memcpy(response, bad_request, sizeof(bad_request));
+
+  return response;    
+}
+
+
+void send_response(char* response, int client_fd, struct sockaddr_in* client_addr)
+{
+  int total = 0, bytes = 0, msg_len = strlen(response);
+
+  while (total < msg_len)
+  {
+    if ((bytes = send(client_fd, response, msg_len, 0)) == -1)
+    {
+      perror("send_response(): error while sending response to client");
+      exit(EXIT_FAILURE);
+    }
+    total += bytes;
+  }
 }
 
