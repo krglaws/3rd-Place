@@ -8,35 +8,19 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-#define BUFFERLEN 1024
-#define MAXBUFFERMUL 10
-
-struct options
-{
-  uint16_t server_port;
-  uint32_t server_ip;
-  int max_clients;
-  int max_queue;
-};
+#include "include/http_post.h"
+#include "include/http_get.h"
+#include "include/http_put.h"
+#include "include/http_delete.h"
+#include "include/server.h"
 
 
-static void get_options(const int argc, const char** argv, struct options* opts);
-
-static void serve(const struct options* opts);
-
-char* receive_request(int client_fd, struct sockaddr_in* client_addr);
-
-char* process_request(char* request, int client_fd, struct sockaddr_in* client_addr);
-
-char* send_request(char* request, int client_fd, struct sockaddr_in* client_addr);
-
-
-int main(const int argc, const char** argv)
+int main(int argc, char** argv)
 {
   struct options opts;
   memset(&opts, 0, sizeof(opts));
 
-  get_options(argc, argv, &opts);
+  get_options(argc, (const char**) argv, &opts);
 
   serve(&opts);
 
@@ -167,10 +151,9 @@ static void serve(const struct options* opts)
     }
     printf("Connected to %s.\n", ip_str);
 
-    send_response( process_request( receive_request(
-      client_fd, &client_addr),
-        client_fd, &client_addr)
-          client_fd, &client_addr);
+    send_response(
+      process_request(
+        receive_request(client_fd)), client_fd);
 
     close(client_fd);
     memset(&client_addr, 0, sizeof(client_addr));
@@ -180,7 +163,7 @@ static void serve(const struct options* opts)
 }
 
 
-char* receive_request(int client_fd, struct sockaddr_in* client_addr)
+static char* receive_request(int client_fd)
 {
   char* message_buffer = calloc(1, BUFFERLEN);
   char* curr_buff_ptr = message_buffer;
@@ -211,13 +194,14 @@ char* receive_request(int client_fd, struct sockaddr_in* client_addr)
 }
 
 
-char* process_request(char* request, int client_fd, struct sockaddr_in* client_addr)
+static char* process_request(char* request)
 {
+  printf("\n%s\n", request);
   if (strncmp("PUT", request, 3) == 0)
     return http_put(request);
 
   else if (strncmp("GET", request, 3) == 0 ||
-           strcmp("HEAD", request, 4) == 0)
+           strncmp("HEAD", request, 4) == 0)
     return http_get(request);
 
   else if (strncmp("POST", request, 4) == 0)
@@ -228,7 +212,7 @@ char* process_request(char* request, int client_fd, struct sockaddr_in* client_a
   
   fprintf(stderr, "process_request(): 400 Bad Request\n");
 
-  char* bad_request = "HTTP/1.1 400 Bad Request\nConnection: close\nContent-Length: 0\n\n";
+  char bad_request[] = "HTTP/1.1 400 Bad Request\nConnection: close\nContent-Length: 0\n\n";
   char* response = malloc(sizeof(bad_request));
   memcpy(response, bad_request, sizeof(bad_request));
 
@@ -236,13 +220,13 @@ char* process_request(char* request, int client_fd, struct sockaddr_in* client_a
 }
 
 
-void send_response(char* response, int client_fd, struct sockaddr_in* client_addr)
+static void send_response(char* response, int client_fd)
 {
   int total = 0, bytes = 0, msg_len = strlen(response);
 
   while (total < msg_len)
   {
-    if ((bytes = send(client_fd, response, msg_len, 0)) == -1)
+    if ((bytes = send(client_fd, response+total, msg_len-total, 0)) == -1)
     {
       perror("send_response(): error while sending response to client");
       exit(EXIT_FAILURE);
