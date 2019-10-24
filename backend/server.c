@@ -8,10 +8,13 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
+#include "include/conn_mgr.h"
+
 #include "include/http_post.h"
 #include "include/http_get.h"
 #include "include/http_put.h"
 #include "include/http_delete.h"
+
 #include "include/server.h"
 
 
@@ -105,10 +108,11 @@ static void get_options(const int argc, const char** argv, struct options* opts)
 
 static void serve(const struct options* opts)
 {
-  int server_fd, client_fd, in_bytes, out_bytes;
+  int server_fd, client_fd, active_fd, max_fd; 
   struct sockaddr_in server_addr, client_addr;
   int addr_len = sizeof(struct sockaddr_in);
-  char in_buffer[1024] = {0}, ip_str[20] = {0};
+  char ip_str[20] = {0};
+  fd_set readfds;
 
   memset(&server_addr, 0, addr_len);
   memset(&client_addr, 0, addr_len);
@@ -119,56 +123,89 @@ static void serve(const struct options* opts)
 
   if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
   {
-    perror("start_server(): Failed to create socket");
+    perror("serve(): Failed to create socket");
     exit(EXIT_FAILURE);
   }
 
   if (bind(server_fd, (struct sockaddr*) &server_addr, addr_len) < 0)
   {
-    perror("start_server(): Failed to bind socket to address");
+    perror("serve(): Failed to bind socket to address");
     exit(EXIT_FAILURE);
   }
 
   if (listen(server_fd, opts->max_clients) < 0)
   {
-    perror("start_server(): Failed to designate server socket");
+    perror("serve(): Failed to designate server socket");
     exit(EXIT_FAILURE);
   }
+
+  add_connection(server_fd);
 
   printf("Listening on port %d...\n", ntohs(opts->server_port));
   while (1)
   {
-    if ((client_fd = accept(server_fd, (struct sockaddr*) &client_addr, &addr_len)) < 0)
+    
+    max_fd = initialize_fdset(&readfds);
+
+    if (select(max_fd+1, &readfds, NULL, NULL, NULL) <= 0)
     {
-      perror("start_server(): Failed to await connections");
+      perror("server(): failed to wait for socket activity");
       exit(EXIT_FAILURE);
+    }
+
+    if ((active_fd = get_active_fd(&readfds)) == -1)
+    {
+      fprintf(stderr, "serve(): no active fds\n");
+      exit(EXIT_FAILURE); 
+    }
+
+    if (active_fd == server_fd)
+    {
+      if ((client_fd = accept(server_fd, (struct sockaddr*) &client_addr, &addr_len)) < 0)
+      {
+        perror("serve(): Failed to await connections");
+        exit(EXIT_FAILURE);
+      }
+      if (inet_ntop(client_addr.sin_family, &(client_addr.sin_addr), ip_str, sizeof(ip_str)) == NULL)
+      {
+        perror("serve(): Failed to read client address");
+        exit(EXIT_FAILURE);
+      }
+      printf("Connected to %s.\n", ip_str);
+      add_connection(client_fd);
+      active_fd = client_fd;
     }
     
-    if (inet_ntop(client_addr.sin_family, &(client_addr.sin_addr), ip_str, sizeof(ip_str)) == NULL)
+    else
     {
-      perror("start_server(): Failed to read client address");
-      exit(EXIT_FAILURE);
+      if (getpeername(active_fd, &client_addr, &addr_len) == -1)
+      {
+        perror("serve(): getpeername() failed");
+	exit(EXIT_FAILURE);
+      }
+      if (inet_ntop(client_addr.sin_family, &(client_addr.sin_addr), ip_str, sizeof(ip_str)) == NULL)
+      {
+        perror("serve(): Failed to read client address");
+        exit(EXIT_FAILURE);
+      }
     }
-    printf("Connected to %s.\n", ip_str);
 
     send_response(
       process_request(
-        receive_request(client_fd)), client_fd);
+        receive_request(active_fd, ip_str)), active_fd);
 
-    close(client_fd);
     memset(&client_addr, 0, sizeof(client_addr));
     memset(ip_str, 0, sizeof(ip_str));
-    memset(in_buffer, 0, sizeof(in_buffer));
   }
 }
 
 
-static char* receive_request(int client_fd)
+static char* receive_request(int client_fd, char* ip)
 {
   char* message_buffer = calloc(1, BUFFERLEN);
   char* curr_buff_ptr = message_buffer;
   int multiplier = 1;
-  int bytes = 0, cont_bytes = 0;
+  int total_bytes = 0, bytes = 0, cont_bytes = 0;
   
   while (multiplier++ < MAXBUFFERMUL+1)
   {
@@ -183,11 +220,21 @@ static char* receive_request(int client_fd)
       perror("receive_request(): error while reading message from client");
       exit(EXIT_FAILURE);
     }
+    total_bytes += bytes;
     if (bytes == 0 || bytes < BUFFERLEN - 1) break;
     
     message_buffer = realloc(message_buffer, BUFFERLEN * multiplier);
     curr_buff_ptr = message_buffer + strlen(message_buffer);
     memset(curr_buff_ptr, 0, BUFFERLEN);
+  }
+
+  if (total_bytes == 0)
+  {
+    remove_connection(client_fd);
+    close(client_fd);
+    free(message_buffer);
+    printf("Connection to %s closed\n", ip);
+    return NULL;
   }
 
   return message_buffer;
@@ -196,6 +243,8 @@ static char* receive_request(int client_fd)
 
 static char* process_request(char* request)
 {
+  if (request == NULL) return NULL;
+
   printf("\n%s\n", request);
   if (strncmp("PUT", request, 3) == 0)
     return http_put(request);
@@ -222,6 +271,8 @@ static char* process_request(char* request)
 
 static void send_response(char* response, int client_fd)
 {
+  if (response == NULL) return;
+
   int total = 0, bytes = 0, msg_len = strlen(response);
 
   while (total < msg_len)

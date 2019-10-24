@@ -27,7 +27,7 @@ static void serve(const struct options* opts);
 
 /* Allocates a buffer of limited size on the heap and returns it to
    the serve() function for precessing. */
-static char* receive_request(int client_fd);
+static char* receive_request(int client_fd, char* ip);
 
 
 /* Determines the request method being used, passes it to one 
