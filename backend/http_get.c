@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "include/http_methods.h"
+#include "include/http_get.h"
 
 
 char* http_get(char* request)
