@@ -1,79 +1,52 @@
-
+#include <stdio.h>
 #include <stdlib.h>
+#include <kylestructs/datacont.h>
+#include <kylestructs/listnode.h>
 
 #include "include/conn_mgr.h"
 
 
-static struct connection_list cl = { 0, NULL };
+static listnode* conns = NULL;
+static int num_conns = 0;
 
 
 void add_connection(int fd)
 {
-  struct connection* con = cl.head;
-  struct connection* new_con = calloc(1, sizeof(struct connection));
+  if (conns == NULL)
+    conns = listnode_new(datacont_new(&fd, INT, 1));
 
-  new_con->fd = fd;
+  else listnode_add(conns, datacont_new(&fd, INT, 1));
 
-  if (cl.head == NULL) 
-  {
-    cl.head = new_con;
-    cl.count++;
-    return; 
-  }
-  
-  while (con->next) con = con->next;
-  con->next = new_con;
-  cl.count++;
+  num_conns++;
 }
 
 
 void remove_connection(int fd)
 {
-  struct connection* con = cl.head;
-  struct connection* temp;
+  datacont* dc = datacont_new(&fd, INT, 1);
 
-  if (cl.head->fd == fd)
-  {
-    cl.head = cl.head->next;
-    free(con);
-    cl.count--;
-    return;
-  }
+  listnode_remove(conns, dc);
 
-  while (con->next)
-  {
-    if (con->next->fd == fd)
-    {
-      temp = con->next;
-      con->next = temp->next;
-      free(temp);
-      cl.count--;
-      return;
-    }
-    con = con->next;
-  }
+  datacont_delete(dc);
+
+  if (--num_conns == 0)
+    conns = NULL;
 }
 
 
-int get_nth_fd(int n)
-{
-  if (n < 0) return 0;
-  struct connection* con = cl.head;
-  while (n-- > 0 && con) con = con->next;
-  return con->fd;
-}
-
-
-/* returns highest fd value */
 int initialize_fdset(fd_set* fds)
 {
-  int max = 0, fd;
+  int max = 0;
+  datacont* dc;
+
   FD_ZERO(fds);
-  for (int i = 0; i < cl.count; i++)
+
+  for (int i = 0; i < num_conns; i++)
   {
-    fd = get_nth_fd(i);
-    FD_SET(fd, fds);
-    if (max < fd) max = fd;
+    dc = listnode_get_nth(conns, i);
+    FD_SET(dc->i, fds);
+    if (max < dc->i) max = dc->i;
+    datacont_delete(dc);
   }
   return max; 
 }
@@ -81,12 +54,17 @@ int initialize_fdset(fd_set* fds)
 
 int get_active_fd(fd_set* fds)
 {
-  int curr_fd;
-  for (int i = 0; i < cl.count; i++)
+  datacont* dc;
+  for (int i = 0; i < num_conns; i++)
   {
-    curr_fd = get_nth_fd(i);
-    if (FD_ISSET(curr_fd, fds))
-      return curr_fd;
+    dc = listnode_get_nth(conns, i);
+    if (FD_ISSET(dc->i, fds))
+    {
+      int fd = dc->i;
+      datacont_delete(dc);
+      return fd;
+    }
+    datacont_delete(dc);
   }
   return -1;
 }
