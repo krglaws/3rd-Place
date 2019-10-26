@@ -2,8 +2,59 @@
 #ifndef _SERVER_H_
 #define _SERVER_H_
 
+
+/* server settings */
+
 #define BUFFERLEN 1024
+
 #define MAXBUFFERMUL 10
+
+#define MAXURILEN 256
+
+
+/* successful statuses */
+
+#define STAT200 "200 OK\n\n"
+
+
+/* client errors */
+
+#define STAT404 "404 Not Found\n\n"
+
+#define STAT413 "413 Payload Too Large\n\n"
+
+
+/* server errors */
+
+#define STAT500 "500 Internal Server Error\n\n"
+
+#define STAT501 "501 Not Implemented\n\n"
+
+#define STAT505 "505 HTTP Version Not Supported\n\n"
+ 
+
+/* struct containing stripped down request info */
+
+struct request
+{
+  int method;
+  char* uri;
+  char* content;
+};
+
+
+/* struct containing response info */
+
+struct response
+{
+  char* status;
+  char* content_type;
+  size_t content_length;
+  char* content;
+}
+
+
+/* commandline options container */
 
 struct options
 {
