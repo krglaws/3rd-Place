@@ -9,12 +9,10 @@
 #include <unistd.h>
 
 #include "include/conn_mgr.h"
-
 #include "include/http_post.h"
 #include "include/http_get.h"
 #include "include/http_put.h"
 #include "include/http_delete.h"
-
 #include "include/server.h"
 
 
@@ -103,7 +101,7 @@ static void get_options(const int argc, const char** argv, struct options* opts)
   if (opts->server_port == 0) opts->server_port = htons(80);
   if (opts->max_clients == 0) opts->max_clients = 10;
   // default ip is already set to 0.0.0.0
-}// end valid_args
+}// end get_options
 
 
 static void serve(const struct options* opts)
