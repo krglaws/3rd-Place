@@ -9,7 +9,7 @@
 
 char* http_get(char* request)
 {
-  char* uri, content, resp, err;
+  char* uri, *content, *resp, *err;
   int resplen = 0;
   FILE* file;
 
@@ -33,7 +33,7 @@ char* http_get(char* request)
 
   /* ship it! */
   char* ok = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 2\n\nYO";
-  char* resp = calloc(1, strlen(ok));
+  resp = calloc(1, strlen(ok));
   memcpy(resp, ok, strlen(ok));
   return resp;
 }
@@ -41,7 +41,7 @@ char* http_get(char* request)
 
 char* parse_uri(char* request)
 {
-  char* uri, getloc;
+  char* uri, *getloc;
  
   uri = calloc(1, MAXURILEN);
   uri[0] = '.';
@@ -59,20 +59,22 @@ char* load_file(char* uri)
   char* content;
   FILE* fd;
 
-  if ((file = fopen(uri, "r")) == NULL)
+  if ((fd = fopen(uri, "r")) == NULL)
   {
     perror("http_get(): failed to open file");
     return NULL;
   }
 
   fseek(fd, 0, SEEK_END);
-  filelen = ftell(file);
+  filelen = ftell(fd);
   rewind(fd);
 
   content = calloc(1, filelen);
   for (int i = 0; i < filelen; i++)
     content[i] = fgetc(fd);
-  
+ 
+  fclose(fd);
+ 
   return content;
 }
 

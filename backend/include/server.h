@@ -2,6 +2,8 @@
 #ifndef _SERVER_H_
 #define _SERVER_H_
 
+#include <inttypes.h>
+
 
 /* server settings */
 
@@ -51,7 +53,7 @@ struct response
   char* content_type;
   size_t content_length;
   char* content;
-}
+};
 
 
 /* commandline options container */

@@ -121,7 +121,7 @@ char* load_html(char* fname)
 
 int main()
 {
-	char* html = insert_html(load_html("./test.html"), "{TEAST}", "BITCH");
+	char* html = insert_html(load_html("./test.html"), "{TEAST}", "WORKING");
 	printf("%s\n", html);
 	free(html);
 }
