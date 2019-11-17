@@ -21,6 +21,8 @@
 
 /* client errors */
 
+#define STAT400 "400 Bad Request\n\n"
+
 #define STAT404 "404 Not Found\n\n"
 
 #define STAT413 "413 Payload Too Large\n\n"
@@ -78,19 +80,19 @@ static void get_options(const int argc, const char** argv, struct options* opts)
 static void serve(const struct options* opts);
 
 
-/* Allocates a buffer of limited size on the heap and returns it to
-   the serve() function for precessing. */
+/* Allocates a buffer of up to (MAXBUFFERMUL * BUFFERLEN) bytes
+   on the heap and returns it to the serve() function for precessing. */
 static char* receive_request(int client_fd, char* ip);
 
 
-/* Determines the request method being used, passes it to one 
-   of the corresponding http_* functions, and finally returns the
-   resulting response back to serve(). */
-static char* process_request(char* request);
+/* Parses the request string into a 'request' struct, passes it to 
+   the corresponding HTTP method handler, and returns a 'response' 
+   struct. */
+static struct response* process_request(char* req);
 
 
 /* Sends the response to the client in chunks. */
-static void send_response(char* request, int client_fd);
+static void send_response(struct response*, int client_fd);
 
 
 #endif
