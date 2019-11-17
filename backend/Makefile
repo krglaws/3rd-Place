@@ -16,6 +16,6 @@ all: $(DEPS)
 
 
 clean:
-	if [ -f "falcon.out" ]; rm falcon.out; fi;
+	if [ -f "falcon.out" ]; then rm falcon.out; fi;
 
 
