@@ -239,9 +239,13 @@ static char* receive_request(int client_fd, char* ip)
 }
 
 
-static char* process_request(char* request)
+static char* process_request(char* req_str)
 {
   if (request == NULL) return NULL;
+
+  struct request* req = calloc(1, sizeof(struct request));
+  
+  req->m = get_request_method(req_str);
 
   printf("\n%s\n", request);
   if (strncmp("PUT", request, 3) == 0)

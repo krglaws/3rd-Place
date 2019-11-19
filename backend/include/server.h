@@ -37,11 +37,23 @@
 #define STAT505 "505 HTTP Version Not Supported\n\n"
  
 
+/* request methods */
+enum request_method rm
+{
+  GET,
+  HEAD,
+  PUT,
+  POST,
+  DELETE,
+  BAD
+};
+
+
 /* struct containing stripped down request info */
 
 struct request
 {
-  int method;
+  enum request_method rm;
   char* uri;
   char* content;
 };
