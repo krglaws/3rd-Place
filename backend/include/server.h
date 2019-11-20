@@ -53,8 +53,8 @@ enum request_method rm
 
 struct request
 {
-  enum request_method rm;
-  char* uri;
+  enum request_method method;
+  list* header;
   char* content;
 };
 
@@ -63,9 +63,7 @@ struct request
 
 struct response
 {
-  char* status;
-  char* content_type;
-  size_t content_length;
+  list* header;
   char* content;
 };
 

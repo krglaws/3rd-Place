@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <kylestructs.h>
 
 #include "include/conn_mgr.h"
 #include "include/http_post.h"
@@ -239,35 +240,52 @@ static char* receive_request(int client_fd, char* ip)
 }
 
 
-static char* process_request(char* req_str)
+static struct response* process_request(char* req_str)
 {
   if (request == NULL) return NULL;
 
   struct request* req = calloc(1, sizeof(struct request));
-  
-  req->m = get_request_method(req_str);
+
+  req->method = get_request_method(req_str);
+  req->uri = get_request_uri(req_str);
+  req->content = get_request_content(req_str);
+
+  free(req_str);
 
   printf("\n%s\n", request);
-  if (strncmp("PUT", request, 3) == 0)
-    return http_put(request);
 
-  else if (strncmp("GET", request, 3) == 0 ||
-           strncmp("HEAD", request, 4) == 0)
-    return http_get(request);
+  if (req->method == GET || req->method == HEAD)
+    return http_get(req);
 
-  else if (strncmp("POST", request, 4) == 0)
-    return http_post(request);
+  if (req->method == PUT)
+    return http_put(req);
 
-  else if (strncmp("DELETE", request, 6) == 0)
-    return http_delete(request);
-  
+  if (req->method == POST)
+    return http_post(req);
+
+  if (req->method == DELETE)
+    return http_delete(req);
+
+  free(req->method);
+  free(req->uri);
+  free(req->content);
+  free(req);
+
   fprintf(stderr, "process_request(): 400 Bad Request\n");
 
-  char bad_request[] = "HTTP/1.1 400 Bad Request\nConnection: close\nContent-Length: 0\n\n";
-  char* response = malloc(sizeof(bad_request));
-  memcpy(response, bad_request, sizeof(bad_request));
+  /* Set up bad request response */
+  char* h1 = "HTTP/1.1 400 Bad Request\n";
+  char* h2 = "Connection: close\n";
+  char* h3 = "Content-Length: 0\n";
 
-  return response;    
+  struct response* resp = calloc(1, sizeof(struct response));
+  resp->header = list_new();
+  
+  list_add(resp->header, datacont_new(h1, CHARP, strlen(h1)+1));
+  list_add(resp->header, datacont_new(h2, CHARP, strlen(h2)+1));
+  list_add(resp->header, datacont_new(h3, CHARP, strlen(h3)+1));
+
+  return resp;
 }
 
 
