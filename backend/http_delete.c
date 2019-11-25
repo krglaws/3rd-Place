@@ -1,9 +1,12 @@
 
 #include <stdlib.h>
+#include <kylestructs.h>
 
+#include "include/common.h"
 #include "include/http_delete.h"
 
-char* http_delete(char* message)
+
+struct response* http_delete(struct request* req)
 {
   return NULL;
 }

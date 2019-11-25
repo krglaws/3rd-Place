@@ -1,9 +1,12 @@
 
 #include <stdlib.h>
+#include <kylestructs.h>
 
+#include "include/common.h"
 #include "include/http_put.h"
 
-char* http_put(char* request)
+
+struct response* http_put(struct request* req)
 {
   return NULL;
 }

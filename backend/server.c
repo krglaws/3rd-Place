@@ -7,8 +7,10 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <inttypes.h>
 #include <kylestructs.h>
 
+#include "include/common.h"
 #include "include/conn_mgr.h"
 #include "include/http_post.h"
 #include "include/http_get.h"
@@ -240,34 +242,71 @@ static char* receive_request(int client_fd, char* ip)
 }
 
 
-static struct response* process_request(char* req_str)
+enum request_method get_request_method(char* req_str)
 {
-  if (request == NULL) return NULL;
+  if (req_str == NULL) return BAD_REQ;
+ 
+  if (strstr(req_str, "GET")) return GET_REQ;
 
-  struct request* req = calloc(1, sizeof(struct request));
+  if (strstr(req_str, "HEAD")) return HEAD;
 
+  if (strstr(req_str, "PUT")) return PUT_REQ;
+
+  if (strstr(req_str, "POST")) return POST_REQ;
+
+  if (strstr(req_str, "DELETE")) return DELETE_REQ;
+
+  return BAD_REQ;
+}
+
+
+list* get_request_header(char* req_str) 
+{
+  if (req_str == NULL) return NULL;	
+
+  unsigned int headlen = (unsigned int) req_str - strstr(req_str, "\n\n");
+
+  if (headlen == ((unsigned int) req_str))
+    return NULL;
+
+  int nl = 0;
+  for (int i = 0; i < headlen && nl < 2; i++)
+  {
+    if (req_str 
+} 
+
+
+char* get_request_content(char* req_str) 
+{
+  return NULL;
+}
+
+
+static struct response* process_request(char* req_str) 
+{ 
+  if (req_str == NULL) return NULL; 
+ 
+  printf("\n%s\n", req_str); 
+
+  struct request* req = calloc(1, sizeof(struct request)); 
   req->method = get_request_method(req_str);
-  req->uri = get_request_uri(req_str);
+  req->header = get_request_header(req_str);
   req->content = get_request_content(req_str);
-
-  free(req_str);
-
-  printf("\n%s\n", request);
-
-  if (req->method == GET || req->method == HEAD)
+  free(req_str); 
+ 
+  if (req->method == GET_REQ || req->method == HEAD_REQ)
     return http_get(req);
 
-  if (req->method == PUT)
+  if (req->method == PUT_REQ)
     return http_put(req);
 
-  if (req->method == POST)
+  if (req->method == POST_REQ)
     return http_post(req);
 
-  if (req->method == DELETE)
+  if (req->method == DELETE_REQ)
     return http_delete(req);
 
-  free(req->method);
-  free(req->uri);
+  list_delete(req->header);
   free(req->content);
   free(req);
 
@@ -289,20 +328,44 @@ static struct response* process_request(char* req_str)
 }
 
 
-static void send_response(char* response, int client_fd)
+void send_str(int fd, char* str)
 {
-  if (response == NULL) return;
+  if (str == NULL) return;
 
-  int total = 0, bytes = 0, msg_len = strlen(response);
+  int total = 0, bytes = 0;
+  int msg_len = strlen(str);
 
   while (total < msg_len)
   {
-    if ((bytes = send(client_fd, response+total, msg_len-total, 0)) == -1)
+    if ((bytes = send(fd, str + total, msg_len - total, 0)) == -1)
     {
-      perror("send_response(): error while sending response to client");
+      perror("send_str(): error while sending response to client");
       exit(EXIT_FAILURE);
     }
-    total += bytes;
+    total += bytes; 
   }
+}
+
+
+static void send_response(struct response* resp, int client_fd)
+{
+  if (resp == NULL) return;
+
+  int total, bytes, msg_len;
+  int head_lines = list_length(resp->header);
+  
+  for (int i = 0; i < head_lines; i++)
+  {
+    datacont* line = list_get(resp->header, i);
+    send_str(client_fd, line->cp);
+    datacont_delete(line); 
+  }
+
+  send_str(client_fd, "\n");
+  send_str(client_fd, resp->content);
+
+  list_delete(resp->header);
+  free(resp->content);
+  free(resp);
 }
 

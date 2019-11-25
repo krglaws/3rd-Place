@@ -2,39 +2,35 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <kylestructs.h>
 
-#include "include/server.h"
+#include "include/common.h"
 #include "include/http_get.h"
 
 
-char* http_get(char* request)
+struct response* http_get(struct request* req_str)
 {
-  char* uri, *content, *resp, *err;
-  int resplen = 0;
-  FILE* file;
-
-  resp = calloc(1, BUFFERLEN);
-
   /* what are we getting? */
-  uri = parse_uri(request);
 
   /* do we have it? */
-  if ((content = load_file(uri)) == NULL)
-  {
-    free(uri);
-    memcpy(resp, STAT404, sizeof(STAT404));
-    return resp;
-  }
-
+ 
   /* what type of file is it? */
-  
 
   /* how big is it? */
 
   /* ship it! */
-  char* ok = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 2\n\nYO";
-  resp = calloc(1, strlen(ok));
-  memcpy(resp, ok, strlen(ok));
+
+  free(req_str);
+  
+  struct response* resp = calloc(1, sizeof(struct response));
+  resp->header = list_new();
+  list_add(resp->header, datacont_new("HTTP/1.1 200 OK\n", CHARP, 17));
+  list_add(resp->header, datacont_new("Content-Type: text/html\n", CHARP, 24));
+  list_add(resp->header, datacont_new("Content-Length: 2\n", CHARP, 18));
+
+  resp->content = malloc(3 * sizeof(char));
+  memcpy(resp->content, "OK", 3);
+
   return resp;
 }
 
@@ -53,13 +49,13 @@ char* parse_uri(char* request)
 }
 
 
-char* load_file(char* uri)
+char* load_file(char* path)
 {
   int filelen;
   char* content;
   FILE* fd;
 
-  if ((fd = fopen(uri, "r")) == NULL)
+  if ((fd = fopen(path, "r")) == NULL)
   {
     perror("http_get(): failed to open file");
     return NULL;

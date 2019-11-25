@@ -2,13 +2,13 @@
 #ifndef _HTTP_GET_H_
 #define _HTTP_GET_H_
 
-char* http_get(char* request);
+struct response* http_get(struct request* req);
 
-char* http_head(char* request);
+struct response* http_head(struct request* req);
 
-char* parse_uri(char* request);
+char* parse_uri(char* uri_line);
 
-char* load_file(char* uri);
+char* load_file(char* path);
 
 #endif
 
