@@ -21,12 +21,16 @@ struct response* http_get(struct request* req_str)
   /* ship it! */
 
   free(req_str);
-  
+ 
+  char* h1 = "HTTP/1.1 200 OK\n";
+  char* h2 = "Content-Type: text/html\n";
+  char* h3 = "Content-Length: 2\n";
+
   struct response* resp = calloc(1, sizeof(struct response));
   resp->header = list_new();
-  list_add(resp->header, datacont_new("HTTP/1.1 200 OK\n", CHARP, 17));
-  list_add(resp->header, datacont_new("Content-Type: text/html\n", CHARP, 24));
-  list_add(resp->header, datacont_new("Content-Length: 2\n", CHARP, 18));
+  list_add(resp->header, datacont_new(h1, CHARP, strlen(h1)+1));
+  list_add(resp->header, datacont_new(h2, CHARP, strlen(h2)+1));
+  list_add(resp->header, datacont_new(h3, CHARP, strlen(h2)+1));
 
   resp->content = malloc(3 * sizeof(char));
   memcpy(resp->content, "OK", 3);

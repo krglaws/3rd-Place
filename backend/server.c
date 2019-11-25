@@ -245,16 +245,23 @@ static char* receive_request(int client_fd, char* ip)
 enum request_method get_request_method(char* req_str)
 {
   if (req_str == NULL) return BAD_REQ;
- 
-  if (strstr(req_str, "GET")) return GET_REQ;
 
-  if (strstr(req_str, "HEAD")) return HEAD;
+  char* endofline = strstr(req_str, "\n");
 
-  if (strstr(req_str, "PUT")) return PUT_REQ;
+  char* getloc = strstr(req_str, "GET");
+  if (getloc && getloc < endofline) return GET_REQ;
 
-  if (strstr(req_str, "POST")) return POST_REQ;
+  char* headloc = strstr(req_str, "HEAD");
+  if (headloc && headloc < endofline) return HEAD_REQ;
 
-  if (strstr(req_str, "DELETE")) return DELETE_REQ;
+  char* putloc = strstr(req_str, "PUT");
+  if (putloc && putloc < endofline) return PUT_REQ;
+
+  char* postloc = strstr(req_str, "POST");
+  if (postloc && postloc < endofline) return POST_REQ;
+
+  char* delloc = strstr(req_str, "DELETE");
+  if (delloc && delloc < endofline) return DELETE_REQ;
 
   return BAD_REQ;
 }
@@ -262,23 +269,45 @@ enum request_method get_request_method(char* req_str)
 
 list* get_request_header(char* req_str) 
 {
-  if (req_str == NULL) return NULL;	
+  if (req_str == NULL) return NULL;
 
-  unsigned int headlen = (unsigned int) req_str - strstr(req_str, "\n\n");
+  list* header = list_new();
+  char *prev = req_str, *next;
+  unsigned long int len;
 
-  if (headlen == ((unsigned int) req_str))
-    return NULL;
-
-  int nl = 0;
-  for (int i = 0; i < headlen && nl < 2; i++)
+  while (1)
   {
-    if (req_str 
+    next = strstr(prev, "\n");
+    len = (unsigned long int) next - (unsigned long int) prev;
+    if (next == NULL || len <= 1) break;
+
+    char line[len+1];
+    line[len] = '\0';
+    memcpy(line, prev, len);
+    list_add(header, datacont_new(line, CHARP, len+1));
+
+    prev = next + 1; 
+  }
+  return header;
 } 
 
 
 char* get_request_content(char* req_str) 
 {
-  return NULL;
+  if (req_str == NULL) return NULL;
+  
+  int len;
+  char *content;
+  char *contstart = strstr(req_str, "\n\n");
+
+  if (contstart == NULL) return NULL;
+
+  contstart += 2; // skip over "\n\n"
+  len = strlen(contstart);
+  content = calloc(len+1, sizeof(char));
+  memcpy(content, contstart, len);
+
+  return content;
 }
 
 
@@ -331,7 +360,7 @@ static struct response* process_request(char* req_str)
 void send_str(int fd, char* str)
 {
   if (str == NULL) return;
-
+  printf("%s", str);
   int total = 0, bytes = 0;
   int msg_len = strlen(str);
 
@@ -349,11 +378,16 @@ void send_str(int fd, char* str)
 
 static void send_response(struct response* resp, int client_fd)
 {
-  if (resp == NULL) return;
+  if (resp == NULL)
+  {
+    fprintf(stderr, "send_response(): empty response\n");
+    return;
+  }
 
   int total, bytes, msg_len;
   int head_lines = list_length(resp->header);
   
+  printf("Sending response:\n"); 
   for (int i = 0; i < head_lines; i++)
   {
     datacont* line = list_get(resp->header, i);
