@@ -38,11 +38,11 @@
 
 /* content types */
 
-#define TEXTHTML "Content-Type: text/html"
+#define TEXTHTML "Content-Type: text/html\n"
 
-#define TEXTCSS "Content-Type: text/css"
+#define TEXTCSS "Content-Type: text/css\n"
 
-#define APPJS "Content-Type: application/javascript"
+#define APPJS "Content-Type: application/javascript\n"
 
 
 /* request methods */

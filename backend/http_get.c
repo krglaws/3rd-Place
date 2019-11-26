@@ -73,7 +73,7 @@ struct response* send_404()
   struct response* resp = calloc(1, sizeof(struct response));
   resp->header = list_new();
   list_add(resp->header, datacont_new(STAT404, CHARP, strlen(STAT404)+1));
-//  list_add(resp->header, datacont_new("Connection: close\n", CHARP, strlen("Connection: close\n")+1));
+  list_add(resp->header, datacont_new("Connection: close\n", CHARP, strlen("Connection: close\n")+1));
   list_add(resp->header, datacont_new("Content-Length: 0\n", CHARP, strlen("Content-Length: 0\n")+1));
   return resp;
 }
@@ -87,9 +87,9 @@ char* parse_uri(char* request)
   uri[0] = '.';
 
   getloc = strstr(request, "GET");
-  sscanf(uri+1, "%*s %s", getloc);
+  sscanf(getloc+4, "%s", uri+1);
 
-  return uri;  
+  return uri;
 }
 
 
