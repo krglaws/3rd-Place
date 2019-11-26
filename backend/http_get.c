@@ -12,7 +12,8 @@ struct response* http_get(struct request* req)
 {
   if (req == NULL) return NULL;
 
-  char *uri, *conttype, *content;
+  char *uri, *conttype;
+  datacont* content;
   int contlen;
 
   /* what are we getting? */
@@ -26,6 +27,8 @@ struct response* http_get(struct request* req)
     conttype = TEXTCSS;
   else if (strstr(uri, ".js"))
     conttype = APPJS;
+  else if (strstr(uri, ".ico"))
+    conttype = IMGICO;
   else
   {
     free(uri);
@@ -45,12 +48,10 @@ struct response* http_get(struct request* req)
     return send_404();
   }
   free(uri);
-  /* how big is it? */
-  contlen = strlen(content); 
   
   /* ship it! */
   list_delete(req->header);
-  if (req->content) free(req->content);
+  datacont_delete(req->content); 
   free(req);
   
   struct response* resp = calloc(1, sizeof(struct response));
@@ -59,7 +60,7 @@ struct response* http_get(struct request* req)
   list_add(resp->header, datacont_new(conttype, CHARP, strlen(conttype)+1));
  
   char contline[80];
-  sprintf(contline, "Content-Length: %d\n", contlen);
+  sprintf(contline, "Content-Length: %d\n", content->size);
   list_add(resp->header, datacont_new(contline, CHARP, strlen(contline)+1));
 
   resp->content = content; 
@@ -89,14 +90,16 @@ char* parse_uri(char* request)
   getloc = strstr(request, "GET");
   sscanf(getloc+4, "%s", uri+1);
 
+  if (strcmp(uri, "./") == 0)
+    memcpy(uri, "./index.html", strlen("./index.html")+1);
+
   return uri;
 }
 
 
-char* load_file(char* path)
+datacont* load_file(char* path)
 {
   int filelen;
-  char* content;
   FILE* fd;
 
   if ((fd = fopen(path, "r")) == NULL)
@@ -109,12 +112,13 @@ char* load_file(char* path)
   filelen = ftell(fd);
   rewind(fd);
 
-  content = calloc(1, filelen);
+  char content[filelen];
+
   for (int i = 0; i < filelen; i++)
     content[i] = fgetc(fd);
  
   fclose(fd);
- 
-  return content;
+
+  return datacont_new(content, CHARP, filelen);
 }
 

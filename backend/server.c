@@ -201,7 +201,7 @@ static void serve(const struct options* opts)
 }
 
 
-static char* receive_request(int client_fd, char* ip)
+static datacont* receive_request(int client_fd, char* ip)
 {
   char* message_buffer = calloc(1, BUFFERLEN);
   char* curr_buff_ptr = message_buffer;
@@ -238,7 +238,10 @@ static char* receive_request(int client_fd, char* ip)
     return NULL;
   }
 
-  return message_buffer;
+  datacont* req_str = datacont_new(message_buffer, CHARP, total_bytes);
+  free(message_buffer);
+
+  return req_str;
 }
 
 
@@ -292,7 +295,7 @@ list* get_request_header(char* req_str)
 } 
 
 
-char* get_request_content(char* req_str) 
+datacont* get_request_content(datacont* req_str) 
 {
   if (req_str == NULL) return NULL;
   
@@ -311,11 +314,11 @@ char* get_request_content(char* req_str)
 }
 
 
-static struct response* process_request(char* req_str) 
+static struct response* process_request(datacont* req_str) 
 { 
   if (req_str == NULL) return NULL; 
  
-  printf("\n%s\n", req_str); 
+  printf("\n%s\n", req_str->cp); 
 
   struct request* req = calloc(1, sizeof(struct request)); 
   req->method = get_request_method(req_str);
@@ -336,7 +339,7 @@ static struct response* process_request(char* req_str)
     return http_delete(req);
 
   list_delete(req->header);
-  free(req->content);
+  datacont_delet(req->content);
   free(req);
 
   fprintf(stderr, "process_request(): 400 Bad Request\n");
@@ -357,16 +360,14 @@ static struct response* process_request(char* req_str)
 }
 
 
-void send_str(int fd, char* str)
+void send_str(int fd, datacont* message)
 {
   if (str == NULL) return;
-  printf("%s", str);
   int total = 0, bytes = 0;
-  int msg_len = strlen(str);
 
-  while (total < msg_len)
+  while (total < message->size)
   {
-    if ((bytes = send(fd, str + total, msg_len - total, 0)) == -1)
+    if ((bytes = send(fd, message->cp + total, msg_len - total, 0)) == -1)
     {
       perror("send_str(): error while sending response to client");
       exit(EXIT_FAILURE);
@@ -379,27 +380,26 @@ void send_str(int fd, char* str)
 static void send_response(struct response* resp, int client_fd)
 {
   if (resp == NULL)
-  {
-    fprintf(stderr, "send_response(): empty response\n");
     return;
-  }
 
   int total, bytes, msg_len;
   int head_lines = list_length(resp->header);
   
-  printf("Sending response:\n"); 
+  printf("Sending response:\n\n"); 
   for (int i = 0; i < head_lines; i++)
   {
     datacont* line = list_get(resp->header, i);
-    send_str(client_fd, line->cp);
+    printf("%s", line->cp);
+    send_str(client_fd, line->cp, line->size);
     datacont_delete(line); 
   }
+  printf("\n");
 
   send_str(client_fd, "\n");
-  send_str(client_fd, resp->content);
+  send_str(client_fd, resp->content->cp, resp->content->size);
 
   list_delete(resp->header);
-  free(resp->content);
+  datacont_delete(resp->content);
   free(resp);
 }
 

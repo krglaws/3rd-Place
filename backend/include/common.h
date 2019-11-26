@@ -44,6 +44,8 @@
 
 #define APPJS "Content-Type: application/javascript\n"
 
+#define IMGICO "Content-Type: image/x-icon\n"
+
 
 /* request methods */
 enum request_method
@@ -62,7 +64,7 @@ struct request
 {
   enum request_method method;
   list* header;
-  char* content;
+  datacont* content;
 };
 
 
@@ -70,7 +72,7 @@ struct request
 struct response
 {
   list* header;
-  char* content;
+  datacont* content;
 };
 
 

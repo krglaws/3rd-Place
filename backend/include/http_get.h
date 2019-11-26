@@ -10,7 +10,7 @@ struct response* send_404();
 
 char* parse_uri(char* uri_line);
 
-char* load_file(char* path);
+datacont* load_file(char* path);
 
 #endif
 
