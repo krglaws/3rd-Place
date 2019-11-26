@@ -8,33 +8,73 @@
 #include "include/http_get.h"
 
 
-struct response* http_get(struct request* req_str)
+struct response* http_get(struct request* req)
 {
+  if (req == NULL) return NULL;
+
+  char *uri, *conttype, *content;
+  int contlen;
+
   /* what are we getting? */
+  datacont* line1 = list_get(req->header, 0);
+  uri = parse_uri(line1->cp);
+  datacont_delete(line1);
+
+  if (strstr(uri, ".html"))
+    conttype = TEXTHTML;
+  else if (strstr(uri, ".css"))
+    conttype = TEXTCSS;
+  else if (strstr(uri, ".js"))
+    conttype = APPJS;
+  else
+  {
+    free(uri);
+    list_delete(req->header);
+    if (req->content) free(req->content);
+    free(req);
+    return send_404();
+  }
 
   /* do we have it? */
- 
-  /* what type of file is it? */
-
+  if ((content = load_file(uri)) == NULL)
+  {
+    free(uri);
+    list_delete(req->header);
+    if (req->content) free(req->content);
+    free(req);
+    return send_404();
+  }
+  free(uri);
   /* how big is it? */
-
+  contlen = strlen(content); 
+  
   /* ship it! */
-
-  free(req_str);
- 
-  char* h1 = "HTTP/1.1 200 OK\n";
-  char* h2 = "Content-Type: text/html\n";
-  char* h3 = "Content-Length: 2\n";
-
+  list_delete(req->header);
+  if (req->content) free(req->content);
+  free(req);
+  
   struct response* resp = calloc(1, sizeof(struct response));
   resp->header = list_new();
-  list_add(resp->header, datacont_new(h1, CHARP, strlen(h1)+1));
-  list_add(resp->header, datacont_new(h2, CHARP, strlen(h2)+1));
-  list_add(resp->header, datacont_new(h3, CHARP, strlen(h2)+1));
+  list_add(resp->header, datacont_new(STAT200, CHARP, strlen(STAT200)+1));
+  list_add(resp->header, datacont_new(conttype, CHARP, strlen(conttype)+1));
+ 
+  char contline[80];
+  sprintf(contline, "Content-Length: %d\n", contlen);
+  list_add(resp->header, datacont_new(contline, CHARP, strlen(contline)+1));
 
-  resp->content = malloc(3 * sizeof(char));
-  memcpy(resp->content, "OK", 3);
+  resp->content = content; 
 
+  return resp;
+}
+
+
+struct response* send_404()
+{
+  struct response* resp = calloc(1, sizeof(struct response));
+  resp->header = list_new();
+  list_add(resp->header, datacont_new(STAT404, CHARP, strlen(STAT404)+1));
+//  list_add(resp->header, datacont_new("Connection: close\n", CHARP, strlen("Connection: close\n")+1));
+  list_add(resp->header, datacont_new("Content-Length: 0\n", CHARP, strlen("Content-Length: 0\n")+1));
   return resp;
 }
 

@@ -6,31 +6,44 @@
 
 /* server settings */
 
+#define HTTPVERSION "HTTP/1.1"
+
 #define MAXURILEN 256
 
 
 /* successful statuses */
 
-#define STAT200 "200 OK\n\n"
+#define STAT200 (HTTPVERSION " 200 OK\n")
 
 
 /* client errors */
 
-#define STAT400 "400 Bad Request\n\n"
+#define STAT400 (HTTPVERSION " 400 Bad Request\n")
 
-#define STAT404 "404 Not Found\n\n"
+#define STAT404 (HTTPVERSION " 404 Not Found\n")
 
-#define STAT413 "413 Payload Too Large\n\n"
+#define STAT413 (HTTPVERSION " 413 Payload Too Large\n")
+
+#define STAT414 (HTTPVERSION " 414 URI Too Long\n")
 
 
 /* server errors */
 
-#define STAT500 "500 Internal Server Error\n\n"
+#define STAT500 (HTTPVERSION " 500 Internal Server Error\n")
 
-#define STAT501 "501 Not Implemented\n\n"
+#define STAT501 (HTTPVERSION " 501 Not Implemented\n")
 
-#define STAT505 "505 HTTP Version Not Supported\n\n"
- 
+#define STAT505 (HTTPVERSION " 505 HTTP Version Not Supported\n")
+
+
+/* content types */
+
+#define TEXTHTML "Content-Type: text/html"
+
+#define TEXTCSS "Content-Type: text/css"
+
+#define APPJS "Content-Type: application/javascript"
+
 
 /* request methods */
 enum request_method
