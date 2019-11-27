@@ -394,7 +394,8 @@ static void send_response(struct response* resp, int client_fd)
   printf("\n");
   
   send_msg(client_fd, "\n", 1);
-  send_msg(client_fd, resp->content->cp, resp->content->size);
+  if (resp->content)
+    send_msg(client_fd, resp->content->cp, resp->content->size);
 
   list_delete(resp->header);
   datacont_delete(resp->content);

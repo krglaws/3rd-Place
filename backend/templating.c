@@ -4,6 +4,8 @@
 #include <string.h>
 #include <stdbool.h>
 
+#include "include/templating.h"
+
 
 int check_braces(char* content)
 {
@@ -118,11 +120,4 @@ char* load_html(char* fname)
 	return contents;
 }
 
-
-int main()
-{
-	char* html = insert_html(load_html("./test.html"), "{TEAST}", "WORKING");
-	printf("%s\n", html);
-	free(html);
-}
 
