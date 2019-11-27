@@ -60,7 +60,7 @@ struct response* http_get(struct request* req)
   list_add(resp->header, datacont_new(conttype, CHARP, strlen(conttype)+1));
  
   char contline[80];
-  sprintf(contline, "Content-Length: %d\n", content->size);
+  sprintf(contline, "Content-Length: %ld\n", content->size);
   list_add(resp->header, datacont_new(contline, CHARP, strlen(contline)+1));
 
   resp->content = content; 

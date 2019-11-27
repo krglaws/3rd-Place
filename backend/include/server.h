@@ -34,17 +34,17 @@ static void serve(const struct options* opts);
 
 /* Allocates a buffer of up to (MAXBUFFERMUL * BUFFERLEN) bytes
    on the heap and returns it to the serve() function for precessing. */
-static char* receive_request(int client_fd, char* ip);
+static datacont* receive_request(int client_fd, char* ip);
 
 
 /* Parses the request string into a 'request' struct, passes it to 
    the corresponding HTTP method handler, and returns a 'response' 
    struct. */
-static struct response* process_request(char* req);
+static struct response* process_request(datacont* req_str);
 
 
 /* Sends the response to the client in chunks. */
-static void send_response(struct response*, int client_fd);
+static void send_response(struct response* resp, const int client_fd);
 
 
 #endif

@@ -301,16 +301,14 @@ datacont* get_request_content(datacont* req_str)
   
   int len;
   char *content;
-  char *contstart = strstr(req_str, "\n\n");
+  char *contstart = strstr(req_str->cp, "\r\n\r\n");
 
   if (contstart == NULL) return NULL;
 
-  contstart += 2; // skip over "\n\n"
-  len = strlen(contstart);
-  content = calloc(len+1, sizeof(char));
-  memcpy(content, contstart, len);
+  contstart += 4; // skip over "\r\n\r\n"
+  len = req_str->size - (contstart - req_str->cp);
 
-  return content;
+  return datacont_new(contstart, CHARP, len);
 }
 
 
@@ -321,8 +319,8 @@ static struct response* process_request(datacont* req_str)
   printf("\n%s\n", req_str->cp); 
 
   struct request* req = calloc(1, sizeof(struct request)); 
-  req->method = get_request_method(req_str);
-  req->header = get_request_header(req_str);
+  req->method = get_request_method(req_str->cp);
+  req->header = get_request_header(req_str->cp);
   req->content = get_request_content(req_str);
   free(req_str); 
  
@@ -339,7 +337,7 @@ static struct response* process_request(datacont* req_str)
     return http_delete(req);
 
   list_delete(req->header);
-  datacont_delet(req->content);
+  datacont_delete(req->content);
   free(req);
 
   fprintf(stderr, "process_request(): 400 Bad Request\n");
@@ -360,16 +358,16 @@ static struct response* process_request(datacont* req_str)
 }
 
 
-void send_str(int fd, datacont* message)
+void send_msg(int fd, char* buffer, int msg_len)
 {
-  if (str == NULL) return;
+  if (buffer == NULL) return;
   int total = 0, bytes = 0;
 
-  while (total < message->size)
+  while (total < msg_len)
   {
-    if ((bytes = send(fd, message->cp + total, msg_len - total, 0)) == -1)
+    if ((bytes = send(fd, buffer + total, msg_len - total, 0)) == -1)
     {
-      perror("send_str(): error while sending response to client");
+      perror("send_msg(): error while sending response to client");
       exit(EXIT_FAILURE);
     }
     total += bytes; 
@@ -390,13 +388,13 @@ static void send_response(struct response* resp, int client_fd)
   {
     datacont* line = list_get(resp->header, i);
     printf("%s", line->cp);
-    send_str(client_fd, line->cp, line->size);
+    send_msg(client_fd, line->cp, line->size-1);
     datacont_delete(line); 
   }
   printf("\n");
-
-  send_str(client_fd, "\n");
-  send_str(client_fd, resp->content->cp, resp->content->size);
+  
+  send_msg(client_fd, "\n", 1);
+  send_msg(client_fd, resp->content->cp, resp->content->size);
 
   list_delete(resp->header);
   datacont_delete(resp->content);
