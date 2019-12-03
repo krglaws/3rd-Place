@@ -1,6 +1,50 @@
-h1 {
-	color:blue;
+
+html, body {
+	height: 100%;
+	font-family: helvetica;
 }
-body {
-	background-color:red;
+
+#topview {
+	border-style: solid;
+	padding-left: 2%;
+	padding-right: 2%;
+	padding-top: 2%;
+	padding-bottom: 2%;
+
+	height: 10%;
+
+	display: table;
 }
+
+#topcont {
+	padding-left: 2%;
+	padding-right: 2%;
+	padding-top: 2%;
+	padding-bottom: 1%;
+
+	height: 10%;
+}
+
+.column {
+	display: table-cell;
+}
+
+#mainview {
+	border-style: solid;
+	padding-left: 2%;
+	padding-right: 2%;
+	padding-top: 2%;
+	padding-bottom: 2%;
+
+	height: 90%;
+}
+
+#maincont {
+	padding-left: 2%;
+	padding-right: 2%;
+	padding-top: 1%;
+	padding-bottom: 2%;
+
+	height: 90%;
+}
+
