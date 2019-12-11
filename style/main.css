@@ -6,45 +6,18 @@ html, body {
 
 #topview {
 	border-style: solid;
-	padding-left: 2%;
-	padding-right: 2%;
-	padding-top: 2%;
-	padding-bottom: 2%;
-
-	height: 10%;
-
-	display: table;
-}
-
-#topcont {
-	padding-left: 2%;
-	padding-right: 2%;
-	padding-top: 2%;
-	padding-bottom: 1%;
-
-	height: 10%;
+	padding: 2% 5% 2% 5%;
+	margin: 2% 8% 1% 8%;
 }
 
 .column {
 	display: table-cell;
+	width: 35%;
 }
 
 #mainview {
 	border-style: solid;
-	padding-left: 2%;
-	padding-right: 2%;
-	padding-top: 2%;
-	padding-bottom: 2%;
-
-	height: 90%;
-}
-
-#maincont {
-	padding-left: 2%;
-	padding-right: 2%;
-	padding-top: 1%;
-	padding-bottom: 2%;
-
-	height: 90%;
+	padding: 2%;
+	margin: 1% 8% 2% 8%;
 }
 
