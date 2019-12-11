@@ -19,7 +19,6 @@ struct response* http_get(struct request* req)
   /* what are we getting? */
   datacont* line1 = list_get(req->header, 0);
   uri = parse_uri(line1->cp);
-  datacont_delete(line1);
 
   if (strstr(uri, ".html"))
     conttype = TEXTHTML;
@@ -48,22 +47,22 @@ struct response* http_get(struct request* req)
     return send_404();
   }
   free(uri);
-  
+
   /* ship it! */
   list_delete(req->header);
   datacont_delete(req->content); 
   free(req);
-  
+
   struct response* resp = calloc(1, sizeof(struct response));
   resp->header = list_new();
-  list_add(resp->header, datacont_new(STAT200, CHARP, strlen(STAT200)+1));
-  list_add(resp->header, datacont_new(conttype, CHARP, strlen(conttype)+1));
+  list_add(resp->header, datacont_new(STAT200, CHARP, strlen(STAT200)));
+  list_add(resp->header, datacont_new(conttype, CHARP, strlen(conttype)));
  
   char contline[80];
-  sprintf(contline, "Content-Length: %ld\n", content->size);
-  list_add(resp->header, datacont_new(contline, CHARP, strlen(contline)+1));
+  int len = sprintf(contline, "Content-Length: %ld\n", content->size);
+  list_add(resp->header, datacont_new(contline, CHARP, len));
 
-  resp->content = content; 
+  resp->content = content;
 
   return resp;
 }
@@ -73,9 +72,9 @@ struct response* send_404()
 {
   struct response* resp = calloc(1, sizeof(struct response));
   resp->header = list_new();
-  list_add(resp->header, datacont_new(STAT404, CHARP, strlen(STAT404)+1));
-  list_add(resp->header, datacont_new("Connection: close\n", CHARP, strlen("Connection: close\n")+1));
-  list_add(resp->header, datacont_new("Content-Length: 0\n", CHARP, strlen("Content-Length: 0\n")+1));
+  list_add(resp->header, datacont_new(STAT404, CHARP, strlen(STAT404)));
+  list_add(resp->header, datacont_new("Connection: close\n", CHARP, strlen("Connection: close\n")));
+  list_add(resp->header, datacont_new("Content-Length: 0\n", CHARP, strlen("Content-Length: 0\n")));
   return resp;
 }
 
