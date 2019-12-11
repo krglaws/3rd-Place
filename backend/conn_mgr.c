@@ -26,7 +26,7 @@ void remove_connection(int fd)
 
   datacont_delete(dc);
 
-  --num_conns;
+  num_conns--;
 }
 
 
@@ -42,7 +42,6 @@ int initialize_fdset(fd_set* fds)
     dc = list_get(&conns, i);
     FD_SET(dc->i, fds);
     if (max < dc->i) max = dc->i;
-    datacont_delete(dc);
   }
   return max; 
 }
@@ -57,10 +56,8 @@ int get_active_fd(fd_set* fds)
     if (FD_ISSET(dc->i, fds))
     {
       int fd = dc->i;
-      datacont_delete(dc);
       return fd;
     }
-    datacont_delete(dc);
   }
   return -1;
 }
