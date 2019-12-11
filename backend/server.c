@@ -164,7 +164,7 @@ static void serve(const struct options* opts)
     {
       if ((client_fd = accept(server_fd, (struct sockaddr*) &client_addr, &addr_len)) < 0)
       {
-        perror("serve(): Failed to await connections");
+        perror("serve(): Failed to accept connection");
         exit(EXIT_FAILURE);
       }
       if (inet_ntop(client_addr.sin_family, &(client_addr.sin_addr), ip_str, sizeof(ip_str)) == NULL)
@@ -207,7 +207,7 @@ static datacont* receive_request(int client_fd, char* ip)
   char* curr_buff_ptr = message_buffer;
   int multiplier = 1;
   int total_bytes = 0, bytes = 0, cont_bytes = 0;
-  
+
   while (multiplier++ < MAXBUFFERMUL+1)
   {
     if (multiplier >= MAXBUFFERMUL)
@@ -238,56 +238,58 @@ static datacont* receive_request(int client_fd, char* ip)
     return NULL;
   }
 
-  datacont* req_str = datacont_new(message_buffer, CHARP, total_bytes);
-  free(message_buffer);
+  datacont* req_str = calloc(1, sizeof(datacont));
+  req_str->cp = message_buffer;
+  req_str->type = CHARP;
+  req_str->size = total_bytes;
 
   return req_str;
 }
 
 
-enum request_method get_request_method(char* req_str)
+enum request_method get_request_method(datacont* req_str)
 {
   if (req_str == NULL) return BAD_REQ;
 
-  char* endofline = strstr(req_str, "\n");
+  char* endofline = strstr(req_str->cp, "\n");
 
-  char* getloc = strstr(req_str, "GET");
+  char* getloc = strstr(req_str->cp, "GET");
   if (getloc && getloc < endofline) return GET_REQ;
 
-  char* headloc = strstr(req_str, "HEAD");
+  char* headloc = strstr(req_str->cp, "HEAD");
   if (headloc && headloc < endofline) return HEAD_REQ;
 
-  char* putloc = strstr(req_str, "PUT");
+  char* putloc = strstr(req_str->cp, "PUT");
   if (putloc && putloc < endofline) return PUT_REQ;
 
-  char* postloc = strstr(req_str, "POST");
+  char* postloc = strstr(req_str->cp, "POST");
   if (postloc && postloc < endofline) return POST_REQ;
 
-  char* delloc = strstr(req_str, "DELETE");
+  char* delloc = strstr(req_str->cp, "DELETE");
   if (delloc && delloc < endofline) return DELETE_REQ;
 
   return BAD_REQ;
 }
 
 
-list* get_request_header(char* req_str) 
+list* get_request_header(datacont* req_str) 
 {
   if (req_str == NULL) return NULL;
 
   list* header = list_new();
-  char *prev = req_str, *next;
+  char *prev = req_str->cp, *next;
   unsigned long int len;
 
   while (1)
   {
     next = strstr(prev, "\n");
     len = (unsigned long int) next - (unsigned long int) prev;
+
     if (next == NULL || len <= 1) break;
 
-    char line[len+1];
-    line[len] = '\0';
+    char line[len];
     memcpy(line, prev, len);
-    list_add(header, datacont_new(line, CHARP, len+1));
+    list_add(header, datacont_new(line, CHARP, len));
 
     prev = next + 1; 
   }
@@ -298,7 +300,7 @@ list* get_request_header(char* req_str)
 datacont* get_request_content(datacont* req_str) 
 {
   if (req_str == NULL) return NULL;
-  
+
   int len;
   char *content;
   char *contstart = strstr(req_str->cp, "\r\n\r\n");
@@ -319,10 +321,12 @@ static struct response* process_request(datacont* req_str)
   printf("\n%s\n", req_str->cp); 
 
   struct request* req = calloc(1, sizeof(struct request)); 
-  req->method = get_request_method(req_str->cp);
-  req->header = get_request_header(req_str->cp);
+
+  req->method = get_request_method(req_str);
+  req->header = get_request_header(req_str);
   req->content = get_request_content(req_str);
-  free(req_str); 
+
+  datacont_delete(req_str);
  
   if (req->method == GET_REQ || req->method == HEAD_REQ)
     return http_get(req);
@@ -343,16 +347,16 @@ static struct response* process_request(datacont* req_str)
   fprintf(stderr, "process_request(): 400 Bad Request\n");
 
   /* Set up bad request response */
-  char* h1 = "HTTP/1.1 400 Bad Request\n";
+  char* h1 = STAT400;
   char* h2 = "Connection: close\n";
   char* h3 = "Content-Length: 0\n";
 
   struct response* resp = calloc(1, sizeof(struct response));
   resp->header = list_new();
-  
-  list_add(resp->header, datacont_new(h1, CHARP, strlen(h1)+1));
-  list_add(resp->header, datacont_new(h2, CHARP, strlen(h2)+1));
-  list_add(resp->header, datacont_new(h3, CHARP, strlen(h3)+1));
+
+  list_add(resp->header, datacont_new(h1, CHARP, strlen(h1)));
+  list_add(resp->header, datacont_new(h2, CHARP, strlen(h2)));
+  list_add(resp->header, datacont_new(h3, CHARP, strlen(h3)));
 
   return resp;
 }
@@ -388,8 +392,7 @@ static void send_response(struct response* resp, int client_fd)
   {
     datacont* line = list_get(resp->header, i);
     printf("%s", line->cp);
-    send_msg(client_fd, line->cp, line->size-1);
-    datacont_delete(line); 
+    send_msg(client_fd, line->cp, line->size);
   }
   printf("\n");
   
