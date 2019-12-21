@@ -1,18 +1,37 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <my_global.h>
+#include <mysql.h>
 #include <kylestructs.h>
 
 #include "include/conn_mgr.h"
 
 
-static list conns = { NULL };
+MYSQL* sqlcon;
+
+static list* clients;
+
 static int num_conns = 0;
+
+
+int init_conn_mgr()
+{
+  clients = list_new();
+
+  sqlcon = mysql_init(NULL);
+ 
+  if (sqlcon == NULL)
+  {
+    fprintf(stderr, "Failed to connect to MySQL database: %s", mysql_error(NULL));
+    exit(EXIT_FAILURE);
+  }
+}
 
 
 void add_connection(int fd)
 {
-  list_add(&conns, datacont_new(&fd, INT, 1));
+  list_add(clients, datacont_new(&fd, INT, 1));
 
   num_conns++;
 }
@@ -22,7 +41,7 @@ void remove_connection(int fd)
 {
   datacont* dc = datacont_new(&fd, INT, 1);
 
-  list_remove_by(&conns, dc);
+  list_remove_by(clients, dc);
 
   datacont_delete(dc);
 
@@ -39,7 +58,7 @@ int initialize_fdset(fd_set* fds)
 
   for (int i = 0; i < num_conns; i++)
   {
-    dc = list_get(&conns, i);
+    dc = list_get(clients, i);
     FD_SET(dc->i, fds);
     if (max < dc->i) max = dc->i;
   }
@@ -52,7 +71,7 @@ int get_active_fd(fd_set* fds)
   datacont* dc;
   for (int i = 0; i < num_conns; i++)
   {
-    dc = list_get(&conns, i);
+    dc = list_get(clients, i);
     if (FD_ISSET(dc->i, fds))
     {
       int fd = dc->i;
