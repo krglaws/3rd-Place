@@ -21,6 +21,8 @@
 
 int main(int argc, char** argv)
 {
+  init_conn_mgr();
+  
   struct options opts;
   memset(&opts, 0, sizeof(opts));
 
@@ -34,7 +36,7 @@ int main(int argc, char** argv)
 
 static void get_options(const int argc, const char** argv, struct options* opts)
 {
-  char* usage = "Usage: ./FalconServer [-a address] [-p port] [-c clients]\n";
+  char* usage = "Usage: ./falcon.out [-a address] [-p port] [-c clients]\n";
 
   for (int i = 1; i < argc; i++)
   {
