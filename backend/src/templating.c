@@ -63,7 +63,7 @@ char* insert_html(char* contents, char* replace, char* with)
 	{
 		open = pairs[i];
 		close = pairs[i+1];
-		
+
 		bytes = (open - last_close);
 		memcpy(result_end, contents_end, bytes);
 		result_end += bytes;
@@ -93,31 +93,6 @@ char* insert_html(char* contents, char* replace, char* with)
 	free(contents);
 
 	return final;
-}
-
-
-char* load_html(char* fname)
-{
-	FILE* fd;
-	int filelen;
-	char* contents;
-
-	fd = fopen(fname, "r");
-	if (fd == 0)
-	{
-		perror("Failed to open file");
-		return NULL;
-	}
-
-	fseek(fd, 0, SEEK_END);
-	filelen = ftell(fd);
-	contents = calloc(1, filelen);
-	rewind(fd);
-	
-	for (int i = 0; i < filelen; i++)
-		contents[i] = fgetc(fd);
-	
-	return contents;
 }
 
 
