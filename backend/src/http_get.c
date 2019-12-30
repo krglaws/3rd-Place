@@ -3,9 +3,62 @@
 #include <stdlib.h>
 #include <string.h>
 #include <kylestructs.h>
+#include <my_global.h>
+#include <mysql.h>
 
 #include "include/common.h"
 #include "include/http_get.h"
+
+
+static list* recent_posts;
+
+extern MYSQL* sqlcon;
+
+
+char* get_feed(datacont* community, int offset)
+{
+  int len = strlen(community);
+
+  if (len = 0 || len > 32)
+    return NULL;
+
+  char[] post_query_template = "SELECT * FROM posts WHERE commid = \
+		      (SELECT uuid FROM communities WHERE name = '%s')\
+		      order by uuid desc limit %d,10;"
+
+  char post_query[sizeof(post_query_template) + 32 + 12] = {0};
+  sprintf(post_query, post_query_template, community->cp, offset);
+
+  list** result = query_database(query);
+
+  for (int i = 0; result[i]; i++)
+  {
+    list* row = result[i];
+    int len = list_length(row);
+    for (int j = 0; j < len; j++)
+    {
+      datacont* cell = list_get(row, j);
+      
+    }
+    list_delete(result[i]);
+  }
+
+  datacont* template = load_file("./templates/post.hml");
+  list* feedlist = list_new();
+}
+
+
+struct response* get_community(char* uri)
+{
+  if (uri == NULL)
+  {
+    sprintf(stderr, "get_community(): NULL URI");
+    exit(EXIT_FAILURE);
+  }
+
+  char* cname = strstr(uri, "./c/") + 4;
+
+}
 
 
 struct response* http_get(struct request* req)
@@ -20,7 +73,39 @@ struct response* http_get(struct request* req)
   datacont* line1 = list_get(req->header, 0);
   uri = parse_uri(line1->cp);
 
-  if (strstr(uri, ".html"))
+  if (strstr(uri, "./api/"))
+  {
+    free(uri);
+    list_delete(req->header);
+    if (req->content) free(req->content);
+    free(req);
+    return api_call(uri);
+  }
+  else if (strstr(uri, "./c/"))
+  {
+    free(uri);
+    list_delete(req->header);
+    if (req->content) free(req->content);
+    free(req);
+    return get_community(uri);
+  }
+  else if (strstr(uri, "./u/"))
+  {
+    free(uri);
+    list_delete(req->header);
+    if (req->content) free(req->content);
+    free(req);
+    return get_user(uri);
+  }
+  else if (strstr(uri, "./p/"))
+  {
+    free(uri);
+    list_delete(req->header);
+    if (req->content) free(req->content);
+    free(req);
+    return get_post(uri);
+  }
+  else if (strstr(uri, ".html"))
     conttype = TEXTHTML;
   else if (strstr(uri, ".css"))
     conttype = TEXTCSS;
