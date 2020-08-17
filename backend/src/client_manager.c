@@ -5,7 +5,7 @@
 #include <mysql.h>
 #include <kylestructs.h>
 
-#include "include/conn_mgr.h"
+#include <conn_mgr.h>
 
 
 static list* clients;
