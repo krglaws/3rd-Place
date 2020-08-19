@@ -10,13 +10,13 @@
 #include <inttypes.h>
 #include <kylestructs.h>
 
-#include "include/common.h"
-#include "include/conn_mgr.h"
-#include "include/http_post.h"
-#include "include/http_get.h"
-#include "include/http_put.h"
-#include "include/http_delete.h"
-#include "include/server.h"
+#include <common.h>
+#include <client_manager.h>
+#include <http_post.h>
+#include <http_get.h>
+#include <http_put.h>
+#include <http_delete.h>
+#include <server.h>
 
 
 int main(int argc, char** argv)

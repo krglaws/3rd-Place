@@ -5,7 +5,7 @@
 #include <mysql.h>
 #include <kylestructs.h>
 
-#include <conn_mgr.h>
+#include <client_manager.h>
 
 
 static list* clients;
@@ -70,6 +70,4 @@ int get_active_fd(fd_set* fds)
   }
   return -1;
 }
-
-
 

@@ -4,8 +4,8 @@
 #include <my_global.h>
 #include <mysql.h>
 
-#include "include/common.h"
-#include "include/http_post.h"
+#include <common.h>
+#include <http_post.h>
 
 
 extern MYSQL* sqlcon;

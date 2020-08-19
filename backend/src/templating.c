@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "include/templating.h"
+#include <templating.h>
 
 
 int check_braces(char* content)

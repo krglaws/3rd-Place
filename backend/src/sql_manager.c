@@ -4,7 +4,7 @@
 #include <mysql.h>
 #include <kylestructs.h>
 
-#include "include/sql_manager.h"
+#include <sql_manager.h>
 
 
 MYSQL* sqlcon;

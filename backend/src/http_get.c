@@ -6,8 +6,8 @@
 #include <my_global.h>
 #include <mysql.h>
 
-#include "include/common.h"
-#include "include/http_get.h"
+#include <common.h>
+#include <http_get.h>
 
 
 static list* recent_posts;
