@@ -2,6 +2,7 @@
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <string.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -174,6 +175,15 @@ static void serve(const struct options* opts)
         perror("serve(): Failed to read client address");
         exit(EXIT_FAILURE);
       }
+
+      struct timeval tv;
+      tv.tv_sec = 1;
+      tv.tv_usec = 0;
+
+      if (setsockopt(client_fd, SOL_SOCKET, SO_RCVTIMEO, (const void*)&tv, sizeof(tv))) {
+        perror("serve(): Failed on call to setsockopt()");
+        exit(EXIT_FAILURE);
+      }
       printf("Connected to %s.\n", ip_str);
       add_connection(client_fd);
       active_fd = client_fd;
@@ -220,12 +230,17 @@ static datacont* receive_request(int client_fd, char* ip)
     }
     if ((bytes = recv(client_fd, curr_buff_ptr, BUFFERLEN - 1, 0)) == -1)
     {
+      if (errno == EAGAIN)
+      {
+        break;
+      }
+
       perror("receive_request(): error while reading message from client");
       exit(EXIT_FAILURE);
     }
     total_bytes += bytes;
     if (bytes == 0 || bytes < BUFFERLEN - 1) break;
-    
+
     message_buffer = realloc(message_buffer, BUFFERLEN * multiplier);
     curr_buff_ptr = message_buffer + strlen(message_buffer);
     memset(curr_buff_ptr, 0, BUFFERLEN);
@@ -388,7 +403,7 @@ static void send_response(struct response* resp, int client_fd)
 
   int total, bytes, msg_len;
   int head_lines = list_length(resp->header);
-  
+
   printf("Sending response:\n\n"); 
   for (int i = 0; i < head_lines; i++)
   {
@@ -397,7 +412,7 @@ static void send_response(struct response* resp, int client_fd)
     send_msg(client_fd, line->cp, line->size);
   }
   printf("\n");
-  
+
   send_msg(client_fd, "\n", 1);
   if (resp->content)
     send_msg(client_fd, resp->content->cp, resp->content->size);

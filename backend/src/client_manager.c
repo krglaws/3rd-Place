@@ -1,8 +1,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <my_global.h>
-#include <mysql.h>
 #include <kylestructs.h>
 
 #include <client_manager.h>
@@ -13,7 +11,7 @@ static list* clients;
 static int num_conns = 0;
 
 
-int init_conn_mgr()
+void init_conn_mgr()
 {
   clients = list_new();
 }

@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <kylestructs.h>
-#include <my_global.h>
-#include <mysql.h>
 
 #include <common.h>
 #include <http_get.h>
@@ -12,9 +10,7 @@
 
 static list* recent_posts;
 
-extern MYSQL* sqlcon;
-
-
+/*
 char* get_feed(datacont* community, int offset)
 {
   int len = strlen(community);
@@ -46,13 +42,14 @@ char* get_feed(datacont* community, int offset)
   datacont* template = load_file("./templates/post.hml");
   list* feedlist = list_new();
 }
+*/
 
 
 struct response* get_community(char* uri)
 {
   if (uri == NULL)
   {
-    sprintf(stderr, "get_community(): NULL URI");
+    fprintf(stderr, "get_community(): NULL URI");
     exit(EXIT_FAILURE);
   }
 
@@ -73,7 +70,7 @@ struct response* http_get(struct request* req)
   datacont* line1 = list_get(req->header, 0);
   uri = parse_uri(line1->cp);
 
-  if (strstr(uri, "./api/"))
+  /*if (strstr(uri, "./api/"))
   {
     free(uri);
     list_delete(req->header);
@@ -105,7 +102,7 @@ struct response* http_get(struct request* req)
     free(req);
     return get_post(uri);
   }
-  else if (strstr(uri, ".html"))
+  else */if (strstr(uri, ".html"))
     conttype = TEXTHTML;
   else if (strstr(uri, ".css"))
     conttype = TEXTCSS;
