@@ -56,10 +56,9 @@ int initialize_fdset(fd_set* fds)
 
 int get_active_fd(fd_set* fds)
 {
-  datacont* dc;
   for (int i = 0; i < num_conns; i++)
   {
-    dc = list_get(clients, i);
+    datacont* dc = list_get(clients, i);
     if (FD_ISSET(dc->i, fds))
     {
       int fd = dc->i;
@@ -68,4 +67,13 @@ int get_active_fd(fd_set* fds)
   }
   return -1;
 }
+
+
+int login(int client_fd, char* uname, char* passwd) {
+
+  
+}
+
+
+int signup();
 

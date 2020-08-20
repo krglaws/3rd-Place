@@ -184,7 +184,7 @@ static void serve(const struct options* opts)
         perror("serve(): Failed on call to setsockopt()");
         exit(EXIT_FAILURE);
       }
-      printf("Connected to %s.\n", ip_str);
+      printf("Connected to %s (socket no. %d).\n", ip_str, client_fd);
       add_connection(client_fd);
       active_fd = client_fd;
     }
@@ -251,7 +251,7 @@ static datacont* receive_request(int client_fd, char* ip)
     remove_connection(client_fd);
     close(client_fd);
     free(message_buffer);
-    printf("Connection to %s closed\n", ip);
+    printf("Connection to %s closed (socket no. %d).\n", ip, client_fd);
     return NULL;
   }
 
