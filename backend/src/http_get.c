@@ -70,39 +70,7 @@ struct response* http_get(struct request* req)
   datacont* line1 = list_get(req->header, 0);
   uri = parse_uri(line1->cp);
 
-  /*if (strstr(uri, "./api/"))
-  {
-    free(uri);
-    list_delete(req->header);
-    if (req->content) free(req->content);
-    free(req);
-    return api_call(uri);
-  }
-  else if (strstr(uri, "./c/"))
-  {
-    free(uri);
-    list_delete(req->header);
-    if (req->content) free(req->content);
-    free(req);
-    return get_community(uri);
-  }
-  else if (strstr(uri, "./u/"))
-  {
-    free(uri);
-    list_delete(req->header);
-    if (req->content) free(req->content);
-    free(req);
-    return get_user(uri);
-  }
-  else if (strstr(uri, "./p/"))
-  {
-    free(uri);
-    list_delete(req->header);
-    if (req->content) free(req->content);
-    free(req);
-    return get_post(uri);
-  }
-  else */if (strstr(uri, ".html"))
+  if (strstr(uri, ".html"))
     conttype = TEXTHTML;
   else if (strstr(uri, ".css"))
     conttype = TEXTCSS;
@@ -143,6 +111,7 @@ struct response* http_get(struct request* req)
   char contline[80];
   int len = sprintf(contline, "Content-Length: %ld\n", content->size);
   list_add(resp->header, datacont_new(contline, CHARP, len));
+  list_add(resp->header, datacont_new("Set-Cookie: test-cookie=abcde\n", CHARP, 30));
 
   resp->content = content;
 

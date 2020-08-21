@@ -22,7 +22,7 @@
 
 int main(int argc, char** argv)
 {
-  init_conn_mgr();
+  init_client_mgr();
   
   struct options opts;
   memset(&opts, 0, sizeof(opts));
@@ -143,7 +143,8 @@ static void serve(const struct options* opts)
     exit(EXIT_FAILURE);
   }
 
-  add_connection(server_fd);
+  /* server socket is first in client socket list */
+  add_client(server_fd);
 
   printf("Listening on port %d...\n", ntohs(opts->server_port));
   while (1)
@@ -157,7 +158,7 @@ static void serve(const struct options* opts)
       exit(EXIT_FAILURE);
     }
 
-    if ((active_fd = get_active_fd(&readfds)) == -1)
+    if ((active_fd = get_active_client(&readfds)) == -1)
     {
       fprintf(stderr, "serve(): no active fds\n");
       exit(EXIT_FAILURE); 
@@ -176,6 +177,7 @@ static void serve(const struct options* opts)
         exit(EXIT_FAILURE);
       }
 
+      /* set recv() timeout to 1s for all client sockets */
       struct timeval tv;
       tv.tv_sec = 1;
       tv.tv_usec = 0;
@@ -185,7 +187,7 @@ static void serve(const struct options* opts)
         exit(EXIT_FAILURE);
       }
       printf("Connected to %s (socket no. %d).\n", ip_str, client_fd);
-      add_connection(client_fd);
+      add_client(client_fd);
       active_fd = client_fd;
     }
     
@@ -248,7 +250,7 @@ static datacont* receive_request(int client_fd, char* ip)
 
   if (total_bytes == 0)
   {
-    remove_connection(client_fd);
+    remove_client(client_fd);
     close(client_fd);
     free(message_buffer);
     printf("Connection to %s closed (socket no. %d).\n", ip, client_fd);

@@ -5,35 +5,36 @@
 
 #include <client_manager.h>
 
+/* client socket list */
+static list* client_list;
 
-static list* clients;
+/* current number of client sockets */
+static int num_clients = 0;
 
-static int num_conns = 0;
 
-
-void init_conn_mgr()
+void init_client_mgr()
 {
-  clients = list_new();
+  client_list = list_new();
 }
 
 
-void add_connection(int fd)
+void add_client(int fd)
 {
-  list_add(clients, datacont_new(&fd, INT, 1));
+  list_add(client_list, datacont_new(&fd, INT, 1));
 
-  num_conns++;
+  num_clients++;
 }
 
 
-void remove_connection(int fd)
+void remove_client(int fd)
 {
   datacont* dc = datacont_new(&fd, INT, 1);
 
-  list_remove_by(clients, dc);
+  list_remove_by(client_list, dc);
 
   datacont_delete(dc);
 
-  num_conns--;
+  num_clients--;
 }
 
 
@@ -44,9 +45,9 @@ int initialize_fdset(fd_set* fds)
 
   FD_ZERO(fds);
 
-  for (int i = 0; i < num_conns; i++)
+  for (int i = 0; i < num_clients; i++)
   {
-    dc = list_get(clients, i);
+    dc = list_get(client_list, i);
     FD_SET(dc->i, fds);
     if (max < dc->i) max = dc->i;
   }
@@ -54,11 +55,11 @@ int initialize_fdset(fd_set* fds)
 }
 
 
-int get_active_fd(fd_set* fds)
+int get_active_client(fd_set* fds)
 {
-  for (int i = 0; i < num_conns; i++)
+  for (int i = 0; i < num_clients; i++)
   {
-    datacont* dc = list_get(clients, i);
+    datacont* dc = list_get(client_list, i);
     if (FD_ISSET(dc->i, fds))
     {
       int fd = dc->i;
@@ -68,12 +69,4 @@ int get_active_fd(fd_set* fds)
   return -1;
 }
 
-
-int login(int client_fd, char* uname, char* passwd) {
-
-  
-}
-
-
-int signup();
 
