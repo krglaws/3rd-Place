@@ -34,7 +34,19 @@ static void serve(const struct options* opts);
 
 /* Allocates a buffer of up to (MAXBUFFERMUL * BUFFERLEN) bytes
    on the heap and returns it to the serve() function for precessing. */
-static datacont* receive_request(int client_fd, char* ip);
+static char* receive_request(int client_fd, char* ip);
+
+
+/* Parses request method into enum type */
+static enum request_method get_request_method(char* req_str);
+
+
+/* Gets login token from request */
+static char* get_login_token(char* req_str);
+
+
+/* Gets request content from request string */
+static char* get_request_content(char* req_str);
 
 
 /* Parses the request string into a 'request' struct, passes it to 

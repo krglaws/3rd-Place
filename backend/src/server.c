@@ -215,7 +215,7 @@ static void serve(const struct options* opts)
 }
 
 
-static datacont* receive_request(int client_fd, char* ip)
+static char* receive_request(int client_fd, char* ip)
 {
   char* message_buffer = calloc(1, BUFFERLEN);
   char* curr_buff_ptr = message_buffer;
@@ -257,111 +257,97 @@ static datacont* receive_request(int client_fd, char* ip)
     return NULL;
   }
 
-  datacont* req_str = calloc(1, sizeof(datacont));
-  req_str->cp = message_buffer;
-  req_str->type = CHARP;
-  req_str->size = total_bytes;
-
-  return req_str;
+  return message_buffer;
 }
 
 
-enum request_method get_request_method(datacont* req_str)
+static enum request_method get_request_method(char* req_str)
 {
   if (req_str == NULL) return BAD_REQ;
 
-  char* endofline = strstr(req_str->cp, "\n");
+  char* endofline = strstr(req_str, "\n");
 
-  char* getloc = strstr(req_str->cp, "GET");
+  char* getloc = strstr(req_str, "GET");
   if (getloc && getloc < endofline) return GET_REQ;
 
-  char* headloc = strstr(req_str->cp, "HEAD");
+  char* headloc = strstr(req_str, "HEAD");
   if (headloc && headloc < endofline) return HEAD_REQ;
 
-  char* putloc = strstr(req_str->cp, "PUT");
+  char* putloc = strstr(req_str, "PUT");
   if (putloc && putloc < endofline) return PUT_REQ;
 
-  char* postloc = strstr(req_str->cp, "POST");
+  char* postloc = strstr(req_str, "POST");
   if (postloc && postloc < endofline) return POST_REQ;
 
-  char* delloc = strstr(req_str->cp, "DELETE");
+  char* delloc = strstr(req_str, "DELETE");
   if (delloc && delloc < endofline) return DELETE_REQ;
 
   return BAD_REQ;
 }
 
 
-list* get_request_header(datacont* req_str) 
+static char* get_login_token(char* req_str)
 {
-  if (req_str == NULL) return NULL;
-
-  list* header = list_new();
-  char *prev = req_str->cp, *next;
-  unsigned long int len;
-
-  while (1)
+  if (req_str == NULL)
   {
-    next = strstr(prev, "\n");
-    len = (unsigned long int) next - (unsigned long int) prev;
-
-    if (next == NULL || len <= 1) break;
-
-    char line[len];
-    memcpy(line, prev, len);
-    list_add(header, datacont_new(line, CHARP, len));
-
-    prev = next + 1; 
+    return NULL;
   }
-  return header;
-} 
 
-
-datacont* get_request_content(datacont* req_str) 
-{
-  if (req_str == NULL) return NULL;
-
-  int len;
-  char *content;
-  char *contstart = strstr(req_str->cp, "\r\n\r\n");
-
-  if (contstart == NULL) return NULL;
-
-  contstart += 4; // skip over "\r\n\r\n"
-  len = req_str->size - (contstart - req_str->cp);
-
-  return datacont_new(contstart, CHARP, len);
+  char* token_loc = strstr(
 }
 
 
-static struct response* process_request(datacont* req_str) 
+static char* get_request_content(char* req_str) 
+{
+  if (req_str == NULL)
+  {
+    return NULL;
+  }
+
+  char* contstart = strstr(req_str, "\r\n\r\n");
+
+  if (contstart == NULL)
+  {
+    return NULL;
+  }
+
+  contstart += 4; // skip over "\r\n\r\n"
+
+  int len = req_str - (contstart - req_str);
+  char* content = malloc( len + 1);
+  memcpy(content, contstart, len);
+  content[len] = '\0';
+
+  return content;
+}
+
+
+static struct response* process_request(char* req_str) 
 { 
   if (req_str == NULL) return NULL; 
+  printf("\n%s\n", req_str); 
+
+  /* fill in request struct */
+  struct request req;
+  req.method = get_request_method(req_str);
+  req.login_token = get_login_token(req_str);
+  req.content = get_request_content(req_str);
+  free(req_str);
  
-  printf("\n%s\n", req_str->cp); 
-
-  struct request* req = calloc(1, sizeof(struct request)); 
-
-  req->method = get_request_method(req_str);
-  req->header = get_request_header(req_str);
-  req->content = get_request_content(req_str);
-
-  datacont_delete(req_str);
- 
-  if (req->method == GET_REQ || req->method == HEAD_REQ)
+  if (req.method == GET_REQ || req.method == HEAD_REQ)
     return http_get(req);
 
-  if (req->method == PUT_REQ)
+  if (req.method == PUT_REQ)
     return http_put(req);
 
-  if (req->method == POST_REQ)
+  if (req.method == POST_REQ)
     return http_post(req);
 
-  if (req->method == DELETE_REQ)
+  if (req.method == DELETE_REQ)
     return http_delete(req);
 
-  list_delete(req->header);
-  datacont_delete(req->content);
-  free(req);
+  free(req.login_token);
+  free(req.content);
 
   fprintf(stderr, "process_request(): 400 Bad Request\n");
 

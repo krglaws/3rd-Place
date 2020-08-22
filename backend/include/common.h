@@ -62,9 +62,10 @@ enum request_method
 /* struct containing stripped down request info */
 struct request
 {
+  unsigned int user_id;
   enum request_method method;
-  list* header;
-  datacont* content;
+  char* token;
+  char* content;
 };
 
 
