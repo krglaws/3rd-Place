@@ -56,7 +56,7 @@ static struct response* process_request(datacont* req_str);
 
 
 /* Sends the response to the client in chunks. */
-static void send_response(struct response* resp, const int client_fd);
+static void send_response(const int client_fd, char* resp);
 
 
 #endif

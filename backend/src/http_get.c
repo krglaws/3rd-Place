@@ -42,7 +42,6 @@ char* get_feed(datacont* community, int offset)
   datacont* template = load_file("./templates/post.hml");
   list* feedlist = list_new();
 }
-*/
 
 
 struct response* get_community(char* uri)
@@ -56,94 +55,75 @@ struct response* get_community(char* uri)
   char* cname = strstr(uri, "./c/") + 4;
 
 }
-
+*/
 
 struct response* http_get(struct request* req)
 {
   if (req == NULL) return NULL;
 
-  char *uri, *conttype;
-  datacont* content;
-  int contlen;
-
   /* what are we getting? */
-  datacont* line1 = list_get(req->header, 0);
-  uri = parse_uri(line1->cp);
-
-  if (strstr(uri, ".html"))
-    conttype = TEXTHTML;
-  else if (strstr(uri, ".css"))
-    conttype = TEXTCSS;
-  else if (strstr(uri, ".js"))
-    conttype = APPJS;
-  else if (strstr(uri, ".ico"))
-    conttype = IMGICO;
-  else
+  char* content_type;
+  char* content;
+  if (strstr(req->uri, ".html"))
   {
-    free(uri);
-    list_delete(req->header);
-    if (req->content) free(req->content);
-    free(req);
-    return send_404();
+    content_type = TEXTHTML;
+    content = load_file(req->uri);
+  }
+  else if (strstr(req->uri, ".css"))
+  {
+    content_type = TEXTCSS;
+    content = load_file(req->uri);
+  }
+  else if (strstr(req->uri, ".js"))
+  {
+    content_type = APPJS;
+    content = load_file(req->uri);
+  }
+  else if (strstr(req->uri, ".ico"))
+  {
+    content_type = IMGICO;
+    content = load_file(req->uri);
+  }
+  else if (strstr(req->uri, "./u/"))
+  {
+    content_type = TEXTHTML;
+    content = get_user(req->uri);
+  }
+  else if (strstr(req->uri, "./c/"))
+  {
+    content_type = TEXTHTML;
+    content = get_community(req->uri);
+  }
+  else if (strstr(req->uri, "./p/"))
+  {
+    content_type = TEXTHTML;
+    content = get_post(req->uri);
   }
 
   /* do we have it? */
-  if ((content = load_file(uri)) == NULL)
+  if (content_type == NULL || content == NULL)
   {
-    free(uri);
-    list_delete(req->header);
-    if (req->content) free(req->content);
-    free(req);
+    if (content != NULL)
+    {
+      free(content);
+    }
     return send_404();
   }
-  free(uri);
 
-  /* ship it! */
-  list_delete(req->header);
-  datacont_delete(req->content); 
-  free(req);
-
+  /* prepare response object */
   struct response* resp = calloc(1, sizeof(struct response));
   resp->header = list_new();
   list_add(resp->header, datacont_new(STAT200, CHARP, strlen(STAT200)));
   list_add(resp->header, datacont_new(conttype, CHARP, strlen(conttype)));
  
   char contline[80];
-  int len = sprintf(contline, "Content-Length: %ld\n", content->size);
+  int len = sprintf(contline, "Content-Length: %ld\n", strlen(content));
+
   list_add(resp->header, datacont_new(contline, CHARP, len));
   list_add(resp->header, datacont_new("Set-Cookie: test-cookie=abcde\n", CHARP, 30));
-
   resp->content = content;
 
   return resp;
-}
-
-
-struct response* send_404()
-{
-  struct response* resp = calloc(1, sizeof(struct response));
-  resp->header = list_new();
-  list_add(resp->header, datacont_new(STAT404, CHARP, strlen(STAT404)));
-  list_add(resp->header, datacont_new("Connection: close\n", CHARP, strlen("Connection: close\n")));
-  list_add(resp->header, datacont_new("Content-Length: 0\n", CHARP, strlen("Content-Length: 0\n")));
-  return resp;
-}
-
-
-char* parse_uri(char* request)
-{
-  char* uri, *getloc;
- 
-  uri = calloc(1, MAXURILEN);
-  uri[0] = '.';
-
-  getloc = strstr(request, "GET");
-  sscanf(getloc+4, "%s", uri+1);
-
-  if (strcmp(uri, "./") == 0)
-    memcpy(uri, "./index.html", strlen("./index.html")+1);
-
-  return uri;
 }
 
 
@@ -165,7 +145,9 @@ datacont* load_file(char* path)
   char content[filelen];
 
   for (int i = 0; i < filelen; i++)
+  {
     content[i] = fgetc(fd);
+  }
  
   fclose(fd);
 

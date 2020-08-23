@@ -62,8 +62,11 @@ enum request_method
 /* struct containing stripped down request info */
 struct request
 {
-  unsigned int user_id;
+  /* user_id is unsigned int, but we need it to be able to hold
+     anonymous user_id (-1) */
+  long int user_id;
   enum request_method method;
+  char* uri;
   char* token;
   char* content;
 };
@@ -72,8 +75,9 @@ struct request
 /* struct containing response info */
 struct response
 {
+  /* list of strings */
   list* header;
-  datacont* content;
+  char* content;
 };
 
 

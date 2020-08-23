@@ -205,9 +205,9 @@ static void serve(const struct options* opts)
       }
     }
 
-    send_response(
+    send_response(active_fd,
       process_request(
-        receive_request(active_fd, ip_str)), active_fd);
+        receive_request(active_fd, ip_str)));
 
     memset(&client_addr, 0, sizeof(client_addr));
     memset(ip_str, 0, sizeof(ip_str));
@@ -286,6 +286,47 @@ static enum request_method get_request_method(char* req_str)
 }
 
 
+char* parse_uri(enum request_method method, char* request)
+{
+  char* uri = calloc(1, MAXURILEN);
+  uri[0] = '.';
+
+  char* getloc;
+  if (method == GET_REQ)
+  {
+    sscanf(getloc + 4, "%s", uri + 1);
+    getloc = strstr(request, "GET");
+  }
+  else if (method == HEAD_REQ)
+  {
+    sscanf(getloc + 5, "%s", uri + 1);
+    getloc = strstr(request, "HEAD");
+  }
+  else if (method == PUT_REQ)
+  {
+    sscanf(getloc + 4, "%s", uri + 1);
+    getloc = strstr(request, "PUT");
+  }
+  else if (method == POST_REQ)
+  {
+    sscanf(getloc + 5, "%s", uri + 1);
+    getloc = strstr(request, "POST");
+  }
+  else /* DELETE_REQ */
+  {
+    sscanf(getloc + 6, "%s", uri + 1);
+    getloc = strstr(request, "DELETE");
+  }
+
+  if (strcmp(uri, "./") == 0)
+  {
+    memcpy(uri, "./index.html", strlen("./index.html") + 1);
+  }
+
+  return uri;
+}
+
+
 static char* get_login_token(char* req_str)
 {
   if (req_str == NULL)
@@ -293,7 +334,23 @@ static char* get_login_token(char* req_str)
     return NULL;
   }
 
-  char* token_loc = strstr(
+  /* locate token location within request string */
+  char* find = "Cookie: logintoken=";
+  char* token_loc = strstr(req_str, find) + strlen(find);
+  char* newline = strstr(token_loc, "\n");
+  int len = newline - token_loc;
+
+  if (len == 0)
+  {
+    return NULL;
+  }
+
+  /* copy token */
+  char* token = malloc(len + 1);
+  memcpy(token, token_loc, len);
+  token[len] = '\0';
+
+  return token;
 }
 
 
@@ -304,6 +361,7 @@ static char* get_request_content(char* req_str)
     return NULL;
   }
 
+  /* find end of request header */
   char* contstart = strstr(req_str, "\r\n\r\n");
 
   if (contstart == NULL)
@@ -322,46 +380,52 @@ static char* get_request_content(char* req_str)
 }
 
 
-static struct response* process_request(char* req_str) 
+static struct reponse* process_request(char* req_str) 
 { 
   if (req_str == NULL) return NULL; 
-  printf("\n%s\n", req_str); 
+  printf("\n%s\n", req_str);
+
+  struct response* resp;
 
   /* fill in request struct */
   struct request req;
   req.method = get_request_method(req_str);
+
+  if (req.method == BAD_REQ)
+  {
+    /* Set up bad request response */
+    char* header_str = STAT400"Connection: close\nContent-Length: 0\n";
+    resp = malloc(sizeof(struct response));
+
+    resp->header = list_new();
+    resp->content = NULL;
+    list_add(resp->header, datacont_new(header, CHARP, strlen(header)));
+
+    return response;
+  }
+
+  req.uri = get_uri(req_str);
   req.login_token = get_login_token(req_str);
   req.content = get_request_content(req_str);
+  req.user_id = valid_token(req.login_token);
+
   free(req_str);
  
   if (req.method == GET_REQ || req.method == HEAD_REQ)
-    return http_get(req);
+    resp = http_get(&req);
 
   if (req.method == PUT_REQ)
-    return http_put(req);
+    resp = http_put(&req);
 
   if (req.method == POST_REQ)
-    return http_post(req);
+    resp = http_post(&req);
 
   if (req.method == DELETE_REQ)
-    return http_delete(req);
+    resp = http_delete(&req);
 
+  free(req.uri);
   free(req.login_token);
   free(req.content);
-
-  fprintf(stderr, "process_request(): 400 Bad Request\n");
-
-  /* Set up bad request response */
-  char* h1 = STAT400;
-  char* h2 = "Connection: close\n";
-  char* h3 = "Content-Length: 0\n";
-
-  struct response* resp = calloc(1, sizeof(struct response));
-  resp->header = list_new();
-
-  list_add(resp->header, datacont_new(h1, CHARP, strlen(h1)));
-  list_add(resp->header, datacont_new(h2, CHARP, strlen(h2)));
-  list_add(resp->header, datacont_new(h3, CHARP, strlen(h3)));
 
   return resp;
 }
@@ -403,10 +467,10 @@ static void send_response(struct response* resp, int client_fd)
 
   send_msg(client_fd, "\n", 1);
   if (resp->content)
-    send_msg(client_fd, resp->content->cp, resp->content->size);
+    send_msg(client_fd, resp->content, strlen(resp->content));
 
   list_delete(resp->header);
-  datacont_delete(resp->content);
+  free(resp->content);
   free(resp);
 }
 
