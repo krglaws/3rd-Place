@@ -87,17 +87,17 @@ struct response* http_get(struct request* req)
   else if (strstr(req->uri, "./u/"))
   {
     content_type = TEXTHTML;
-    content = get_user(req->uri);
+    content = get_user(req->uri + 4);
   }
   else if (strstr(req->uri, "./c/"))
   {
     content_type = TEXTHTML;
-    content = get_community(req->uri);
+    content = get_community(req->uri + 4);
   }
   else if (strstr(req->uri, "./p/"))
   {
     content_type = TEXTHTML;
-    content = get_post(req->uri);
+    content = get_post(req->uri + 4);
   }
 
   /* do we have it? */
@@ -154,3 +154,52 @@ datacont* load_file(char* path)
   return datacont_new(content, CHARP, filelen);
 }
 
+
+struct response* get_user(char* uname)
+{
+  int len = strlen(uname);
+
+  if (len == 0)
+  {
+    return send_err(STAT404);
+  }
+
+  char* query_fmt = "SELECT * FROM posts WHERE authid = \
+		 (SELECT uuid FROM users WHERE uname = %s);";
+  char query[strlen(query) + len + 1];
+  sprintf(query, query_fmt, uname);
+  list** result = query_database(query);
+
+
+}
+
+/*
+list** query_database_ls(char* query)
+{
+  char*** result = query_database(query);
+  list** result_ls = NULL;
+
+  int i = 0;
+  char** row;
+  while ((row = *(result + (i)) != NULL)
+  {
+  */
+    /* create new list for this row */
+/*
+    result_ls = realloc(result_ls, (i + 1) * sizeof(list *));
+    *(result_ls + i) = list_new();
+
+    int j = 0;
+    char* cell;
+    while ((cell = *(row + j)) != NULL)
+    {
+      list_add(*(result_ls + i), datacont_new(cell, CHARP, strlen(cell)));
+      free(cell);
+    }
+    free(row);
+  }
+  free(result);
+
+  return result_ls;
+}
+*/

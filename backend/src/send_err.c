@@ -1,4 +1,8 @@
 
+#include <stdlib.h>
+#include <kylestructs.h>
+
+#include <send_err.h>
 
 struct response* send_err(char* status)
 {
