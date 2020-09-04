@@ -8,8 +8,8 @@
 struct token_entry
 {
   char token[TOKENLEN];
+  char uname[UNAMELEN];
   int days;
-  unsigned int user_id;
   struct token_entry* next;
 };
 
@@ -18,8 +18,8 @@ struct token_entry
 void remove_token(const int index);
 
 
-/* returns user_id belonging to cookie if present, else -1 */
-long int valid_token(const char* token);
+/* returns uname belonging to cookie if present, else NULL */
+const char* valid_token(const char* token);
 
 
 /* iterates over all tokens in list, removes them if days == 0,
@@ -27,8 +27,9 @@ long int valid_token(const char* token);
 void check_tokens();
 
 
-/* creates and returns a new token belonging to user_id */
-char* new_token(const unsigned int user_id);
+/* creates and returns a new token belonging to uname */
+const char* new_token(char* uname);
+
 
 #endif
 

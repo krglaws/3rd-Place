@@ -1,3 +1,4 @@
+
 function openPage(pageName, elmnt, color) {
 	
 	var i, tabcontent, tablinks;
@@ -19,5 +20,4 @@ function openPage(pageName, elmnt, color) {
 
 /* default tab */
 document.getElementById("overview").click();
-
 

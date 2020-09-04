@@ -2,9 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <kylestructs.h>
 
 #include <common.h>
+#include <send_err.h>
 #include <http_get.h>
 
 
@@ -87,17 +89,17 @@ struct response* http_get(struct request* req)
   else if (strstr(req->uri, "./u/"))
   {
     content_type = TEXTHTML;
-    content = get_user(req->uri + 4);
+    content = get_user(req->uri + 4, req->token);
   }
   else if (strstr(req->uri, "./c/"))
   {
     content_type = TEXTHTML;
-    content = get_community(req->uri + 4);
+    content = get_community(req->uri + 4, req->token);
   }
   else if (strstr(req->uri, "./p/"))
   {
     content_type = TEXTHTML;
-    content = get_post(req->uri + 4);
+    content = get_post(req->uri + 4, req->token);
   }
 
   /* do we have it? */
@@ -107,7 +109,7 @@ struct response* http_get(struct request* req)
     {
       free(content);
     }
-    return send_404();
+    return send_err(STAT404);
   }
 
   /* prepare response object */
@@ -127,7 +129,7 @@ struct response* http_get(struct request* req)
 }
 
 
-datacont* load_file(char* path)
+char* load_file(char* path)
 {
   int filelen;
   FILE* fd;
@@ -142,20 +144,21 @@ datacont* load_file(char* path)
   filelen = ftell(fd);
   rewind(fd);
 
-  char content[filelen];
+  char* content = malloc((filelen + 1) * sizeof(char));
 
   for (int i = 0; i < filelen; i++)
   {
     content[i] = fgetc(fd);
   }
+  content[filelen] = '\0';
  
   fclose(fd);
 
-  return datacont_new(content, CHARP, filelen);
+  return content;
 }
 
 
-struct response* get_user(char* uname)
+struct response* get_user(char* uname, char* token)
 {
   int len = strlen(uname);
 
@@ -168,38 +171,41 @@ struct response* get_user(char* uname)
 		 (SELECT uuid FROM users WHERE uname = %s);";
   char query[strlen(query) + len + 1];
   sprintf(query, query_fmt, uname);
-  list** result = query_database(query);
+  list** result = query_database_ls(query);
 
-
-}
-
-/*
-list** query_database_ls(char* query)
-{
-  char*** result = query_database(query);
-  list** result_ls = NULL;
-
-  int i = 0;
-  char** row;
-  while ((row = *(result + (i)) != NULL)
+  if (result[0] == NULL)
   {
-  */
-    /* create new list for this row */
-/*
-    result_ls = realloc(result_ls, (i + 1) * sizeof(list *));
-    *(result_ls + i) = list_new();
-
-    int j = 0;
-    char* cell;
-    while ((cell = *(row + j)) != NULL)
-    {
-      list_add(*(result_ls + i), datacont_new(cell, CHARP, strlen(cell)));
-      free(cell);
-    }
-    free(row);
+    free(result);
+    return send_err(STAT404);
   }
-  free(result);
 
-  return result_ls;
+  if (result[1] != NULL)
+  {
+    fprintf(stderr, "Critical error: multiple users with name %s\n", uname);
+    exit(EXIT_FAILURE);
+  }
+
+  char temp_str[128];
+  const char* client_uname = valid_token(token);
+  char* index_html = load_file("templates/index.html.tmp");
+  if (client_uname == NULL)
+  {
+    index_html = insert_html(index_html, "{UNAME}", 
+                     "<p><a href=\"/signup\">signup</a>/<a href=\"/login\">login</a></p>");
+  }
+  else
+  {
+    sprintf(temp_str, "<a href=\"/u/%s\">%s</a>", client_uname, client_uname);
+    index_html = insert_html(index_html, "{UNAME}", temp_str);
+  }
+
+  char* user_html = load_file("templates/user.html.tmp");
+
+  // fill in basic user info
+  user_html = insert_html(user_html, "{UNAME}", uname);
+  user_html = insert_html(user_html, "{NUM_POINTS}", list_get(*result, 2)->cp);
+  user_html = insert_html(user_html, "{NUM_POSTS}", list_get(*result, 3)->cp);
+  user_html = insert_html(user_html, "{NUM_COMMENTS}", list_get(*result, 4)->cp);
+  user_html = insert_html(user_html, "{BDAYUTC}", list_get(*result, 5)->cp);
 }
-*/
+

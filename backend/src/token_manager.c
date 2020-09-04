@@ -36,9 +36,8 @@ void remove_token(const int index)
 }
 
 
-/* returns user_id belonging to token if present,
-   else -1 */
-long int valid_token(const char* token)
+/* returns uname belonging to token if present, else NULL */
+const char* valid_token(const char* token)
 {
   struct token_entry* iter = head;
 
@@ -46,13 +45,14 @@ long int valid_token(const char* token)
   {
     if (strcmp(token, iter->token) == 0)
     {
-      return iter->user_id;
+      
+      return iter->uname;
     }
     iter = iter->next;
   }
 
   /* token not found */
-  return -1;
+  return NULL;
 }
 
 
@@ -89,17 +89,17 @@ static void random_token(char* token_buff)
 }
 
 
-/* creates and returns a new token belonging to user_id */
-char* new_token(const unsigned int user_id)
+/* creates and returns a new token belonging to uname */
+const char* new_token(char* uname)
 {
   struct token_entry* new_entry = calloc(1, sizeof(struct token_entry));
   new_entry->days = TOKENLIFESPAN;
-  new_entry->user_id = user_id;
+  memcpy(new_entry->uname, uname, strlen(uname));
 
   do
   {
     random_token(new_entry->token);
-  } while (valid_token(new_entry->token) != -1);
+  } while (valid_token(new_entry->token) != NULL);
 
   if (head == NULL)
   {

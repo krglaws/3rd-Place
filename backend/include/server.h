@@ -5,9 +5,11 @@
 
 /* server settings */
 
-#define BUFFERLEN 1024
+#define BUFFERLEN (1024)
 
-#define MAXBUFFERMUL 10
+#define MAXBUFFERMUL (10)
+
+#define MAXURILEN (256)
 
 
 /* commandline options container */

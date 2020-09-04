@@ -3,7 +3,9 @@
 <html>
 	<head>
 		<title> 3rd-Place </title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
 		<link rel="stylesheet" type="text/css" href="style/main.css">
+    <script src="/js/main.js"></script>
 	</head>
 	<body>
 		<!-- Header -->
@@ -26,7 +28,7 @@
 				</div>
 				<div class="column">
 					<h3>
-						<a href="#"> {UNAME} </a>
+						{UNAME}
 					</h3>
 				</div>
 			</div>

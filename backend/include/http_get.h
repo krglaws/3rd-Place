@@ -6,11 +6,17 @@ struct response* http_get(struct request* req);
 
 struct response* http_head(struct request* req);
 
-struct response* send_404();
-
 char* parse_uri(char* uri_line);
 
-datacont* load_file(char* path);
+char* load_file(char* path);
+
+struct* response get_user(char* uname, char* token);
+
+struct* response get_community(char* community, char* token);
+
+struct* response get_post(char* post, char* token);
+
+list** query_database_ls(char* query);
 
 #endif
 

@@ -1,15 +1,8 @@
 
-
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
-
-/* server settings */
-
 #define HTTPVERSION "HTTP/1.1"
-
-#define MAXURILEN 256
-
 
 /* content types */
 
@@ -20,7 +13,6 @@
 #define APPJS "Content-Type: application/javascript\n"
 
 #define IMGICO "Content-Type: image/x-icon\n"
-
 
 /* request methods */
 enum request_method
@@ -33,19 +25,14 @@ enum request_method
   BAD_REQ
 };
 
-
 /* struct containing stripped down request info */
 struct request
 {
-  /* user_id is unsigned int, but we need it to be able to hold
-     anonymous user_id (-1) */
-  long int user_id;
   enum request_method method;
   char* uri;
-  char* token;
+  char* token; // NULL token means client is not logged in
   char* content;
 };
-
 
 /* struct containing response info */
 struct response
@@ -54,7 +41,6 @@ struct response
   list* header;
   char* content;
 };
-
 
 #endif
 
