@@ -1,0 +1,10 @@
+
+<div class="comment_stub">
+
+  <p> {POST} </p>
+  <p> {BODY} </p>
+
+</div>
+
+{COMMENTS}
+

@@ -1,0 +1,10 @@
+
+<div class="post_stub">
+
+  <h3> {TITLE} </h3>
+  <p> {BODY} </p>
+
+</div>
+
+{POSTS}
+

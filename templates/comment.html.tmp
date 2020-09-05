@@ -1,9 +1,10 @@
 
 <div class="comment">
 
-	<h6> {UNAME} </h6>
+	<p> {UNAME} </p>
 	<p> {BODY} </p>
 
-  {COMMENTS}
 </div>
+
+{COMMENTS}
 

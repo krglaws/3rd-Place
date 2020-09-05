@@ -207,5 +207,11 @@ struct response* get_user(char* uname, char* token)
   user_html = insert_html(user_html, "{NUM_POSTS}", list_get(*result, 3)->cp);
   user_html = insert_html(user_html, "{NUM_COMMENTS}", list_get(*result, 4)->cp);
   user_html = insert_html(user_html, "{BDAYUTC}", list_get(*result, 5)->cp);
+
+  // fill in posts
+
+  // fill in comments
+
+  // fill in about
 }
 

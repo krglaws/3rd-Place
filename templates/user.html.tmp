@@ -6,7 +6,7 @@
 	<p> {NUM_POINTS} points</p>
   <p> {NUM_POSTS} posts </p>
   <p> {NUM_COMMENTS} comments </p>
-	<p id="joindate">{BDAYUTC}</p>
+	<p id="joindate"> {BDAYUTC} </p>
 
 	<button class="tablink" onclick="openPage('overview', this, 'red')"> Overview </button>
 	<button class="tablink" onclick="openPage('posts', this, 'green')"> Posts </button>
@@ -14,19 +14,14 @@
 	<button class="tablink" onclick="openPage('wall', this, 'grey')"> Wall </button>
 
 	<div id="posts" class="tabcontent">
-		<ul>
 			{POSTS}
-		</ul>
 	</div>
 
 	<div id="comments" class="tabcontent">
-		<ul>
 			{COMMENTS}
-		</ul>
 	</div>
 
 	<div id="about" class="tabcontent">
-    {EDIT_ABOUT}
 		<p> {ABOUT} </p>
 	</div>
 
