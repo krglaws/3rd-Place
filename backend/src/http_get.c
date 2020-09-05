@@ -158,47 +158,107 @@ char* load_file(char* path)
 }
 
 
-struct response* get_user(char* uname, char* token)
+list* get_user_info(char* uname)
 {
-  int len = strlen(uname);
+  char* query_fmt = "SELECT * FROM users WHERE uname = %s;";
+  char query[strlen(uname) + strlen(query_fmt) + 1];
 
-  if (len == 0)
+  sprintf(query, query_fmt, uname);
+
+  list** result = query_database_ls(query);
+
+  if (result[0] == NULL)
   {
-    return send_err(STAT404);
+    fprintf(stderr, "user %s not found\n", uname);
+    free(result);
+    return NULL;
   }
 
-  char* query_fmt = "SELECT * FROM posts WHERE authid = \
-		 (SELECT uuid FROM users WHERE uname = %s);";
-  char query[strlen(query) + len + 1];
+  if (result[1] == NULL)
+  {
+    fprintf(stderr, "Fatal error: multiple users with name %s\n", uname);
+    exit(EXIT_FAILURE);
+  }
+
+  list* user_info = result[0];
+  free(result);
+
+  return user_info;
+}
+
+
+list** get_user_posts(char* uname)
+{
+  // figure out how to order this by date
+  char* query_fmt = "SELECT * FROM posts WHERE author = %s;";
+  char query[strlen(query_fmt) + strlen(uname) + 1];
+
   sprintf(query, query_fmt, uname);
+
   list** result = query_database_ls(query);
 
   if (result[0] == NULL)
   {
     free(result);
-    return send_err(STAT404);
+    return NULL;
   }
 
-  if (result[1] != NULL)
+  return result;
+}
+
+
+list** get_user_comments(char* uname)
+{
+  // figure out how to order this by date
+  char* query_fmt = "SELECT * FROM comments WHERE author = %s;";
+  char query[strlen(query_fmt) + strlen(uname) + 1];
+
+  sprintf(query, query_fmt, uname);
+
+  list** result = query_database_ls(query);
+
+  if (result[0] == NULL)
   {
-    fprintf(stderr, "Critical error: multiple users with name %s\n", uname);
-    exit(EXIT_FAILURE);
+    free(result);
+    return NULL;
+  }
+
+  return result;
+}
+
+
+struct response* get_user(char* uname, char* token)
+{
+  if (uname == NULL || strlen(uname) == 0)
+  {
+    return NULL;
+  }
+
+  list* user_info = get_user_info(uname);
+  if (user_info == NULL)
+  {
+    return NULL;
   }
 
   char temp_str[128];
-  const char* client_uname = valid_token(token);
-  char* index_html = load_file("templates/index.html.tmp");
-  if (client_uname == NULL)
-  {
-    index_html = insert_html(index_html, "{UNAME}", 
-                     "<p><a href=\"/signup\">signup</a>/<a href=\"/login\">login</a></p>");
-  }
-  else
+
+  // load main template
+  char* index_tmp = load_file("templates/index.html.tmp");
+
+  // check if client is logged in
+  char* client_uname = valid_token(token);
+  if (client_uname != NULL)
   {
     sprintf(temp_str, "<a href=\"/u/%s\">%s</a>", client_uname, client_uname);
     index_html = insert_html(index_html, "{UNAME}", temp_str);
   }
+  else
+  {
+  index_html = insert_html(index_html, "{UNAME}", 
+               "<p><a href=\"/signup\">signup</a>/<a href=\"/login\">login</a></p>");
+  }
 
+  // load user template
   char* user_html = load_file("templates/user.html.tmp");
 
   // fill in basic user info

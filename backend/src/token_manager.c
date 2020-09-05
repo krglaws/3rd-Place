@@ -39,6 +39,11 @@ void remove_token(const int index)
 /* returns uname belonging to token if present, else NULL */
 const char* valid_token(const char* token)
 {
+  if (token == NULL)
+  {
+    return NULL;
+  }
+
   struct token_entry* iter = head;
 
   while (iter != NULL)
