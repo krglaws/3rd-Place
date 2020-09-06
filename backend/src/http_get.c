@@ -7,57 +7,13 @@
 
 #include <common.h>
 #include <send_err.h>
+#include <templating.h>
+#include <sql_wrapper.h>
 #include <http_get.h>
 
 
 static list* recent_posts;
 
-/*
-char* get_feed(datacont* community, int offset)
-{
-  int len = strlen(community);
-
-  if (len = 0 || len > 32)
-    return NULL;
-
-  char[] post_query_template = "SELECT * FROM posts WHERE commid = \
-		      (SELECT uuid FROM communities WHERE name = '%s')\
-		      order by uuid desc limit %d,10;"
-
-  char post_query[sizeof(post_query_template) + 32 + 12] = {0};
-  sprintf(post_query, post_query_template, community->cp, offset);
-
-  list** result = query_database(query);
-
-  for (int i = 0; result[i]; i++)
-  {
-    list* row = result[i];
-    int len = list_length(row);
-    for (int j = 0; j < len; j++)
-    {
-      datacont* cell = list_get(row, j);
-      
-    }
-    list_delete(result[i]);
-  }
-
-  datacont* template = load_file("./templates/post.hml");
-  list* feedlist = list_new();
-}
-
-
-struct response* get_community(char* uri)
-{
-  if (uri == NULL)
-  {
-    fprintf(stderr, "get_community(): NULL URI");
-    exit(EXIT_FAILURE);
-  }
-
-  char* cname = strstr(uri, "./c/") + 4;
-
-}
-*/
 
 struct response* http_get(struct request* req)
 {
@@ -91,6 +47,7 @@ struct response* http_get(struct request* req)
     content_type = TEXTHTML;
     content = get_user(req->uri + 4, req->token);
   }
+/*
   else if (strstr(req->uri, "./c/"))
   {
     content_type = TEXTHTML;
@@ -101,7 +58,7 @@ struct response* http_get(struct request* req)
     content_type = TEXTHTML;
     content = get_post(req->uri + 4, req->token);
   }
-
+*/
   /* do we have it? */
   if (content_type == NULL || content == NULL)
   {
@@ -227,6 +184,67 @@ list** get_user_comments(char* uname)
 }
 
 
+void fill_in_posts(char* template, char* uname)
+{
+  char* query_fmt = "SELECT * FROM posts WHERE author = %s;";
+  char query[strlen(query_fmt) + strlen(uname) + 1];
+
+  sprintf(query, query_fmt, uname);
+
+  list** posts = query_database_ls(query);
+
+  for (int i = 0; posts[i] != NULL; i++)
+  {
+    list* p = posts[i];
+
+    char* post_stub = load_file("templates/post_stub.html.tmp");
+    post_stub = insert_html(post_stub, "{TITLE}", list_get(p, 5)->cp);
+    post_stub = insert_html(post_stub, "{COMMUNITY}", list_get(p, 2)->cp);
+
+    char body[65];
+    int end = sprintf(body, "%61s", list_get(p, 7)->cp);
+    memcpy(body + end, "...", 3);
+    body[end+3] = '\0';
+
+    post_stub = insert_html(post_stub, "{BODY}", body);
+    template = insert_html(template, "{POSTS}", post_stub);
+
+    free(post_stub);
+  }
+
+  return insert_html(template, "{POSTS}", "");
+}
+
+
+char* fill_in_comments(char* template, char* uname)
+{
+  char* query_fmt = "SELECT * FROM comments WHERE author = %s;";
+  char query[strlen(query_fmt) + strlen(uname) + 1];
+
+  sprintf(query, query_fmt, uname);
+
+  list** comments = query_database_ls(query);
+
+  for (int i = 0; comments[i] != NULL; i++)
+  {
+    char* comment_stub = load_file("templates/comment_stub");
+    comment_stub = insert_html(comment_stub, "{POST}", list_get(comments, 4));
+
+    char body[65];
+    int end = sprintf(body, "%61s", list_get(p, 7)->cp);
+    memcpy(body + end, "...", 3);
+    body[end+3] = '\0';
+
+    comment_stub = insert_html(comment_stub, "{BODY}", body);
+    template = insert_html(template, "{COMMENTS}", comment_stub);
+
+    free(comment_stub);
+  }
+
+  return insert_html(template, "{COMMENTS}", "");
+}
+
+
 struct response* get_user(char* uname, char* token)
 {
   if (uname == NULL || strlen(uname) == 0)
@@ -240,10 +258,8 @@ struct response* get_user(char* uname, char* token)
     return NULL;
   }
 
-  char temp_str[128];
-
-  // load main template
-  char* index_tmp = load_file("templates/index.html.tmp");
+  char temp_str[128]; // load main template
+  char* index_html = load_file("templates/index.html.tmp");
 
   // check if client is logged in
   char* client_uname = valid_token(token);
@@ -255,23 +271,81 @@ struct response* get_user(char* uname, char* token)
   else
   {
   index_html = insert_html(index_html, "{UNAME}", 
-               "<p><a href=\"/signup\">signup</a>/<a href=\"/login\">login</a></p>");
+               "<p><a href=\"/login\">login</a>/<a href=\"/signup\">signup</a></p>");
   }
 
   // load user template
   char* user_html = load_file("templates/user.html.tmp");
 
-  // fill in basic user info
+  // fill in user info
   user_html = insert_html(user_html, "{UNAME}", uname);
-  user_html = insert_html(user_html, "{NUM_POINTS}", list_get(*result, 2)->cp);
-  user_html = insert_html(user_html, "{NUM_POSTS}", list_get(*result, 3)->cp);
-  user_html = insert_html(user_html, "{NUM_COMMENTS}", list_get(*result, 4)->cp);
-  user_html = insert_html(user_html, "{BDAYUTC}", list_get(*result, 5)->cp);
+  user_html = insert_html(user_html, "{NUM_POINTS}", list_get(user_info, 2)->cp);
+  user_html = insert_html(user_html, "{NUM_POSTS}", list_get(user_info, 3)->cp);
+  user_html = insert_html(user_html, "{NUM_COMMENTS}", list_get(user_info, 4)->cp);
+  user_html = insert_html(user_html, "{BDAYUTC}", list_get(user_info, 5)->cp);
 
   // fill in posts
+  user_html = fill_in_posts(user_html, uname);
 
   // fill in comments
+  user_html = fill_in_comments(user_html, uname);
 
   // fill in about
+  user_html = insert_html(user_html, "{ABOUT}", list_get(user_info, 2));
+
+  // insert user_data into main html
+  index_html = insert_html(index_html, "{CONTENT}", user_html);
+
+  free(user_html);
+  list_delete(user_info);
+
+  return index_html;
 }
+
+/*
+char* get_feed(datacont* community, int offset)
+{
+  int len = strlen(community);
+
+  if (len = 0 || len > 32)
+    return NULL;
+
+  char[] post_query_template = "SELECT * FROM posts WHERE commid = \
+		      (SELECT uuid FROM communities WHERE name = '%s')\
+		      order by uuid desc limit %d,10;"
+
+  char post_query[sizeof(post_query_template) + 32 + 12] = {0};
+  sprintf(post_query, post_query_template, community->cp, offset);
+
+  list** result = query_database(query);
+
+  for (int i = 0; result[i]; i++)
+  {
+    list* row = result[i];
+    int len = list_length(row);
+    for (int j = 0; j < len; j++)
+    {
+      datacont* cell = list_get(row, j);
+      
+    }
+    list_delete(result[i]);
+  }
+
+  datacont* template = load_file("./templates/post.hml");
+  list* feedlist = list_new();
+}
+
+
+struct response* get_community(char* uri)
+{
+  if (uri == NULL)
+  {
+    fprintf(stderr, "get_community(): NULL URI");
+    exit(EXIT_FAILURE);
+  }
+
+  char* cname = strstr(uri, "./c/") + 4;
+
+}
+*/
 

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <kylestructs.h>
 
+#include <common.h>
 #include <send_err.h>
 
 struct response* send_err(char* status)
@@ -10,8 +11,8 @@ struct response* send_err(char* status)
   struct response* resp = calloc(1, sizeof(struct response));
   resp->header = list_new();
 
-  list_add(resp->header, datacont(status, CHARP, strlen(status)));
-  list_add(resp->header, datacont(header, CHARP, strlen(header)));
+  list_add(resp->header, datacont_new(status, CHARP, strlen(status)));
+  list_add(resp->header, datacont_new(header, CHARP, strlen(header)));
 
   return resp;
 }

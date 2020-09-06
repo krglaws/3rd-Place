@@ -3,6 +3,7 @@
 #include <string.h>
 #include <math.h>
 
+#include <common.h>
 #include <token_manager.h>
 
 /* list of active tokens */

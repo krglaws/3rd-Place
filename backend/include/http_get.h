@@ -4,19 +4,19 @@
 
 struct response* http_get(struct request* req);
 
-struct response* http_head(struct request* req);
-
-char* parse_uri(char* uri_line);
-
 char* load_file(char* path);
 
-struct* response get_user(char* uname, char* token);
+list* get_user_info(char* uname);
 
-struct* response get_community(char* community, char* token);
+list** get_user_posts(char* uname);
 
-struct* response get_post(char* post, char* token);
+list** get_user_comments(char* uname);
 
-list** query_database_ls(char* query);
+char* fill_in_posts(char* template, char* uname);
+
+char* fill_in_comments(char* template, char* uname);
+
+char* get_user(char* uname, char* token);
 
 #endif
 

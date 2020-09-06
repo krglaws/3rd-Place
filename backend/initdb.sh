@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS $DB.users(
 CREATE TABLE IF NOT EXISTS $DB.posts(
 	uuid INT NOT NULL AUTO_INCREMENT,
 	communityid INT NOT NULL,
+  communityname VARCHAR(32),
   authid INT,
   author VARCHAR(16),
 	title VARCHAR(32) NOT NULL,
@@ -33,6 +34,7 @@ CREATE TABLE IF NOT EXISTS $DB.posts(
 CREATE TABLE IF NOT EXISTS $DB.comments(
 	uuid INT NOT NULL AUTO_INCREMENT,
 	postid INT NOT NULL,
+  posttitle VARCHAR(32) NOT NULL,
   authid INT,
   author VARCHAR(16),
 	body VARCHAR(512) NOT NULL,
