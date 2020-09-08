@@ -43,6 +43,10 @@ static char* receive_request(int client_fd, char* ip);
 static enum request_method get_request_method(char* req_str);
 
 
+/* Parses the request URI */
+static char* get_uri(enum request_method method, char* request);
+
+
 /* Gets login token from request */
 static char* get_login_token(char* req_str);
 
@@ -54,11 +58,15 @@ static char* get_request_content(char* req_str);
 /* Parses the request string into a 'request' struct, passes it to 
    the corresponding HTTP method handler, and returns a 'response' 
    struct. */
-static struct response* process_request(datacont* req_str);
+static struct response* process_request(char* req_str);
 
 
-/* Sends the response to the client in chunks. */
-static void send_response(const int client_fd, char* resp);
+/* Sends the contents of a buffer to a specified socket */
+static void send_msg(int fd, char* buffer, int msg_len);
+
+
+/* Uses send_msg() to send the response in pieces */
+static void send_response(struct response* resp, const int client_fd);
 
 
 #endif

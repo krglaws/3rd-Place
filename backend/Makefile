@@ -1,19 +1,18 @@
 
 CC := gcc
+CFLAGS := -Iinclude -lkylestructs -lmysqlclient `mysql_config --cflags --libs`
 
-CFLAGS := -I ./include -g -lkylestructs -lmysqlclient `mysql_config --cflags --libs`
+SRC := ./src
+INC := ./include
+
+HDRS := $(INC)/*.h
+DEPS := $(SRC)/*.c
 
 default: all
 
-
-SERVER := falcon.out
-
-DEPS := src/server.c src/client_manager.c src/http_delete.c src/http_get.c src/http_post.c src/http_put.c 
-
-all: $(DEPS) 
-	$(CC) $^ -o $(SERVER) $(CFLAGS)
-
+all: $(DEPS)
+	$(CC) $^ -o server $(CFLAGS)
 
 clean:
-	if [ -f "falcon.out" ]; then rm falcon.out; fi;
+	if [ -f "server" ]; then rm server; fi;
 

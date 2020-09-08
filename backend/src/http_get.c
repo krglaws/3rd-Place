@@ -8,6 +8,7 @@
 #include <common.h>
 #include <send_err.h>
 #include <templating.h>
+#include <token_manager.h>
 #include <sql_wrapper.h>
 #include <http_get.h>
 
@@ -73,7 +74,7 @@ struct response* http_get(struct request* req)
   struct response* resp = calloc(1, sizeof(struct response));
   resp->header = list_new();
   list_add(resp->header, datacont_new(STAT200, CHARP, strlen(STAT200)));
-  list_add(resp->header, datacont_new(conttype, CHARP, strlen(conttype)));
+  list_add(resp->header, datacont_new(content_type, CHARP, strlen(content_type)));
  
   char contline[80];
   int len = sprintf(contline, "Content-Length: %ld\n", strlen(content));
@@ -184,7 +185,7 @@ list** get_user_comments(char* uname)
 }
 
 
-void fill_in_posts(char* template, char* uname)
+char* fill_in_posts(char* template, char* uname)
 {
   char* query_fmt = "SELECT * FROM posts WHERE author = %s;";
   char query[strlen(query_fmt) + strlen(uname) + 1];
@@ -198,21 +199,21 @@ void fill_in_posts(char* template, char* uname)
     list* p = posts[i];
 
     char* post_stub = load_file("templates/post_stub.html.tmp");
-    post_stub = insert_html(post_stub, "{TITLE}", list_get(p, 5)->cp);
-    post_stub = insert_html(post_stub, "{COMMUNITY}", list_get(p, 2)->cp);
+    post_stub = replace_with(post_stub, "{TITLE}", list_get(p, 5)->cp);
+    post_stub = replace_with(post_stub, "{COMMUNITY}", list_get(p, 2)->cp);
 
     char body[65];
     int end = sprintf(body, "%61s", list_get(p, 7)->cp);
     memcpy(body + end, "...", 3);
     body[end+3] = '\0';
 
-    post_stub = insert_html(post_stub, "{BODY}", body);
-    template = insert_html(template, "{POSTS}", post_stub);
+    post_stub = replace_with(post_stub, "{BODY}", body);
+    template = replace_with(template, "{POSTS}", post_stub);
 
     free(post_stub);
   }
 
-  return insert_html(template, "{POSTS}", "");
+  return replace_with(template, "{POSTS}", "");
 }
 
 
@@ -228,24 +229,24 @@ char* fill_in_comments(char* template, char* uname)
   for (int i = 0; comments[i] != NULL; i++)
   {
     char* comment_stub = load_file("templates/comment_stub");
-    comment_stub = insert_html(comment_stub, "{POST}", list_get(comments, 4));
+    comment_stub = replace_with(comment_stub, "{POST}", list_get(comments[i], 4)->cp);
 
     char body[65];
-    int end = sprintf(body, "%61s", list_get(p, 7)->cp);
+    int end = sprintf(body, "%61s", list_get(comments[i], 7)->cp);
     memcpy(body + end, "...", 3);
     body[end+3] = '\0';
 
-    comment_stub = insert_html(comment_stub, "{BODY}", body);
-    template = insert_html(template, "{COMMENTS}", comment_stub);
+    comment_stub = replace_with(comment_stub, "{BODY}", body);
+    template = replace_with(template, "{COMMENTS}", comment_stub);
 
     free(comment_stub);
   }
 
-  return insert_html(template, "{COMMENTS}", "");
+  return replace_with(template, "{COMMENTS}", "");
 }
 
 
-struct response* get_user(char* uname, char* token)
+char* get_user(char* uname, char* token)
 {
   if (uname == NULL || strlen(uname) == 0)
   {
@@ -262,15 +263,15 @@ struct response* get_user(char* uname, char* token)
   char* index_html = load_file("templates/index.html.tmp");
 
   // check if client is logged in
-  char* client_uname = valid_token(token);
+  const char* client_uname = valid_token(token);
   if (client_uname != NULL)
   {
     sprintf(temp_str, "<a href=\"/u/%s\">%s</a>", client_uname, client_uname);
-    index_html = insert_html(index_html, "{UNAME}", temp_str);
+    index_html = replace_with(index_html, "{UNAME}", temp_str);
   }
   else
   {
-  index_html = insert_html(index_html, "{UNAME}", 
+  index_html = replace_with(index_html, "{UNAME}", 
                "<p><a href=\"/login\">login</a>/<a href=\"/signup\">signup</a></p>");
   }
 
@@ -278,11 +279,11 @@ struct response* get_user(char* uname, char* token)
   char* user_html = load_file("templates/user.html.tmp");
 
   // fill in user info
-  user_html = insert_html(user_html, "{UNAME}", uname);
-  user_html = insert_html(user_html, "{NUM_POINTS}", list_get(user_info, 2)->cp);
-  user_html = insert_html(user_html, "{NUM_POSTS}", list_get(user_info, 3)->cp);
-  user_html = insert_html(user_html, "{NUM_COMMENTS}", list_get(user_info, 4)->cp);
-  user_html = insert_html(user_html, "{BDAYUTC}", list_get(user_info, 5)->cp);
+  user_html = replace_with(user_html, "{UNAME}", uname);
+  user_html = replace_with(user_html, "{NUM_POINTS}", list_get(user_info, 2)->cp);
+  user_html = replace_with(user_html, "{NUM_POSTS}", list_get(user_info, 3)->cp);
+  user_html = replace_with(user_html, "{NUM_COMMENTS}", list_get(user_info, 4)->cp);
+  user_html = replace_with(user_html, "{BDAYUTC}", list_get(user_info, 5)->cp);
 
   // fill in posts
   user_html = fill_in_posts(user_html, uname);
@@ -291,10 +292,10 @@ struct response* get_user(char* uname, char* token)
   user_html = fill_in_comments(user_html, uname);
 
   // fill in about
-  user_html = insert_html(user_html, "{ABOUT}", list_get(user_info, 2));
+  user_html = replace_with(user_html, "{ABOUT}", list_get(user_info, 2)->cp);
 
   // insert user_data into main html
-  index_html = insert_html(index_html, "{CONTENT}", user_html);
+  index_html = replace_with(index_html, "{CONTENT}", user_html);
 
   free(user_html);
   list_delete(user_info);

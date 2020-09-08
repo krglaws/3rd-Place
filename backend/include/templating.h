@@ -6,7 +6,7 @@ int check_braces(char* content);
 
 void fill_pair_list(char* contents, int* pair_list);
 
-char* insert_html(char* contents, char* replace, char* with);
+char* replace_with(char* contents, char* replace, char* with);
 
 #endif
 

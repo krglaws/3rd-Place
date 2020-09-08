@@ -13,6 +13,7 @@
 
 #include <common.h>
 #include <client_manager.h>
+#include <token_manager.h>
 #include <http_post.h>
 #include <http_get.h>
 #include <http_put.h>
@@ -205,9 +206,9 @@ static void serve(const struct options* opts)
       }
     }
 
-    send_response(active_fd,
+    send_response(
       process_request(
-        receive_request(active_fd, ip_str)));
+        receive_request(active_fd, ip_str)), active_fd);
 
     memset(&client_addr, 0, sizeof(client_addr));
     memset(ip_str, 0, sizeof(ip_str));
@@ -286,7 +287,7 @@ static enum request_method get_request_method(char* req_str)
 }
 
 
-char* parse_uri(enum request_method method, char* request)
+static char* get_uri(enum request_method method, char* request)
 {
   char* uri = calloc(1, MAXURILEN);
   uri[0] = '.';
@@ -371,7 +372,7 @@ static char* get_request_content(char* req_str)
 
   contstart += 4; // skip over "\r\n\r\n"
 
-  int len = req_str - (contstart - req_str);
+  int len = ((long int)req_str) - (contstart - req_str);
   char* content = malloc( len + 1);
   memcpy(content, contstart, len);
   content[len] = '\0';
@@ -380,7 +381,7 @@ static char* get_request_content(char* req_str)
 }
 
 
-static struct reponse* process_request(char* req_str) 
+static struct response* process_request(char* req_str) 
 { 
   if (req_str == NULL) return NULL; 
   printf("\n%s\n", req_str);
@@ -394,20 +395,19 @@ static struct reponse* process_request(char* req_str)
   if (req.method == BAD_REQ)
   {
     /* Set up bad request response */
-    char* header_str = STAT400"Connection: close\nContent-Length: 0\n";
+    char* header_str = STAT400 "Connection: close\nContent-Length: 0\n";
     resp = malloc(sizeof(struct response));
 
     resp->header = list_new();
     resp->content = NULL;
-    list_add(resp->header, datacont_new(header, CHARP, strlen(header)));
+    list_add(resp->header, datacont_new(header_str, CHARP, strlen(header_str)));
 
-    return response;
+    return resp;
   }
 
-  req.uri = get_uri(req_str);
-  req.login_token = get_login_token(req_str);
+  req.uri = get_uri(req.method, req_str);
+  req.token = get_login_token(req_str);
   req.content = get_request_content(req_str);
-  req.user_id = valid_token(req.login_token);
 
   free(req_str);
  
@@ -424,14 +424,14 @@ static struct reponse* process_request(char* req_str)
     resp = http_delete(&req);
 
   free(req.uri);
-  free(req.login_token);
+  free(req.token);
   free(req.content);
 
   return resp;
 }
 
 
-void send_msg(int fd, char* buffer, int msg_len)
+static void send_msg(int fd, char* buffer, int msg_len)
 {
   if (buffer == NULL) return;
   int total = 0, bytes = 0;

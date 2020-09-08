@@ -27,6 +27,7 @@ void fill_pair_list(char* contents, int* pair_list)
 {
   int len = strlen(contents);
   for (int i = 0; i < len; i++)
+  {
     if (contents[i] == '{')
     {
       *pair_list = i;
@@ -37,6 +38,7 @@ void fill_pair_list(char* contents, int* pair_list)
       *pair_list = i;
       pair_list++;
     }
+  }
 }
 
 
@@ -97,19 +99,20 @@ char* replace_with(char* contents, char* replace, char* with)
   return final;
 }
 
-
-datacont* replace_all(datacont* html, list* replace, list* with)
+/*
+char* replace_all(char* html, list* replace, list* with)
 {
   int count = list_length(replace);
+  int len = strlen(html);
 
-  char init[html->size + 1];
-  memcpy(init, html->cp, html->size);
+  char init[len + 1];
+  memcpy(init, html, len);
 
-  char* result = html->cp;
+  char* result = html;
 
   for (int i = 0; i < count; i++)
   {
     result = replace_with(result, list_get(replace, i), list_get(with, i));
   }
 }
-
+*/
