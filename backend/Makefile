@@ -13,6 +13,9 @@ default: all
 all: $(DEPS)
 	$(CC) $^ -o server $(CFLAGS)
 
+debug: $(DEPS)
+	$(CC) $^ -o server.dbg $(CFLAGS) -g
+
 clean:
 	if [ -f "server" ]; then rm server; fi;
 

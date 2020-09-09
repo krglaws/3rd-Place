@@ -11,34 +11,34 @@ CREATE DATABASE IF NOT EXISTS $DB;
 CREATE TABLE IF NOT EXISTS $DB.users(
 	uuid INT NOT NULL AUTO_INCREMENT,
 	uname VARCHAR(16) NOT NULL,
-  about VARCHAR(256),
-	points UNSIGNED INT NOT NULL,
-	posts UNSIGNED INT NOT NULL,
-	comments UNSIGNED INT NOT NULL,
-	bday DATETIME NOT NULL,
+	about VARCHAR(256),
+	points INT NOT NULL,
+	posts INT NOT NULL,
+	comments INT NOT NULL,
+	bday INT NOT NULL,
 	PRIMARY KEY (uuid)
 );
 
 CREATE TABLE IF NOT EXISTS $DB.posts(
 	uuid INT NOT NULL AUTO_INCREMENT,
 	communityid INT NOT NULL,
-  communityname VARCHAR(32),
-  authid INT,
-  author VARCHAR(16),
+	communityname VARCHAR(32),
+	authid INT,
+  	author VARCHAR(16),
 	title VARCHAR(32) NOT NULL,
 	body VARCHAR(512),
-	bday DATETIME NOT NULL,
+	bday INT NOT NULL,
 	PRIMARY KEY (uuid)
 );
 
 CREATE TABLE IF NOT EXISTS $DB.comments(
 	uuid INT NOT NULL AUTO_INCREMENT,
 	postid INT NOT NULL,
-  posttitle VARCHAR(32) NOT NULL,
-  authid INT,
-  author VARCHAR(16),
+  	posttitle VARCHAR(32) NOT NULL,
+	authid INT,
+	author VARCHAR(16),
 	body VARCHAR(512) NOT NULL,
-	bday DATETIME NOT NULL,
+	bday INT NOT NULL,
 	PRIMARY KEY (uuid)
 );
 
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS $DB.communities(
 	uuid INT NOT NULL AUTO_INCREMENT,
 	name VARCHAR(32) NOT NULL,
 	about VARCHAR(512) NOT NULL,
-	bday DATETIME NOT NULL,
+	bday INT NOT NULL,
 	PRIMARY KEY (uuid)
 );
 
@@ -59,6 +59,13 @@ CREATE USER IF NOT EXISTS $USER@$HOST IDENTIFIED BY "$PASS";
 GRANT ALL PRIVILEGES ON $DB.* TO $USER@$HOST;
 
 FLUSH PRIVILEGES;
+
+###########
+# TEST DATA
+
+#USE falcondb;
+
+#INSERT INTO users ('testuser', 'this is a test user', 2, 1, 1, CURDATE());
 
 INIT_SCRIPT
 

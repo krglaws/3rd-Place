@@ -337,7 +337,13 @@ static char* get_login_token(char* req_str)
 
   /* locate token location within request string */
   char* find = "Cookie: logintoken=";
-  char* token_loc = strstr(req_str, find) + strlen(find);
+  char* token_loc = strstr(req_str, find);
+  if (token_loc == NULL)
+  {
+    return NULL;
+  }
+  token_loc += strlen(find);
+
   char* newline = strstr(token_loc, "\n");
   int len = newline - token_loc;
 
@@ -371,6 +377,10 @@ static char* get_request_content(char* req_str)
   }
 
   contstart += 4; // skip over "\r\n\r\n"
+  if (*contstart == '\0')
+  {
+    return NULL;
+  }
 
   int len = ((long int)req_str) - (contstart - req_str);
   char* content = malloc( len + 1);

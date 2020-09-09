@@ -21,14 +21,9 @@ struct response* http_get(struct request* req)
   if (req == NULL) return NULL;
 
   /* what are we getting? */
-  char* content_type;
-  char* content;
-  if (strstr(req->uri, ".html"))
-  {
-    content_type = TEXTHTML;
-    content = load_file(req->uri);
-  }
-  else if (strstr(req->uri, ".css"))
+  char* content_type = NULL;
+  char* content = NULL;
+  if (strstr(req->uri, ".css"))
   {
     content_type = TEXTCSS;
     content = load_file(req->uri);
