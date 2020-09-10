@@ -113,7 +113,7 @@ char* load_file(char* path)
 
 list* get_user_info(char* uname)
 {
-  char* query_fmt = "SELECT * FROM users WHERE uname = %s;";
+  char* query_fmt = "SELECT * FROM users WHERE uname = '%s';";
   char query[strlen(uname) + strlen(query_fmt) + 1];
 
   sprintf(query, query_fmt, uname);
@@ -127,7 +127,7 @@ list* get_user_info(char* uname)
     return NULL;
   }
 
-  if (result[1] == NULL)
+  if (result[1] != NULL)
   {
     fprintf(stderr, "Fatal error: multiple users with name %s\n", uname);
     exit(EXIT_FAILURE);
@@ -143,7 +143,7 @@ list* get_user_info(char* uname)
 list** get_user_posts(char* uname)
 {
   // figure out how to order this by date
-  char* query_fmt = "SELECT * FROM posts WHERE author = %s;";
+  char* query_fmt = "SELECT * FROM posts WHERE author = '%s';";
   char query[strlen(query_fmt) + strlen(uname) + 1];
 
   sprintf(query, query_fmt, uname);
@@ -163,7 +163,7 @@ list** get_user_posts(char* uname)
 list** get_user_comments(char* uname)
 {
   // figure out how to order this by date
-  char* query_fmt = "SELECT * FROM comments WHERE author = %s;";
+  char* query_fmt = "SELECT * FROM comments WHERE author = '%s';";
   char query[strlen(query_fmt) + strlen(uname) + 1];
 
   sprintf(query, query_fmt, uname);
@@ -182,7 +182,7 @@ list** get_user_comments(char* uname)
 
 char* fill_in_posts(char* template, char* uname)
 {
-  char* query_fmt = "SELECT * FROM posts WHERE author = %s;";
+  char* query_fmt = "SELECT * FROM posts WHERE author = '%s';";
   char query[strlen(query_fmt) + strlen(uname) + 1];
 
   sprintf(query, query_fmt, uname);
@@ -214,7 +214,7 @@ char* fill_in_posts(char* template, char* uname)
 
 char* fill_in_comments(char* template, char* uname)
 {
-  char* query_fmt = "SELECT * FROM comments WHERE author = %s;";
+  char* query_fmt = "SELECT * FROM comments WHERE author = '%s';";
   char query[strlen(query_fmt) + strlen(uname) + 1];
 
   sprintf(query, query_fmt, uname);

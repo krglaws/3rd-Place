@@ -13,6 +13,7 @@
 
 #include <common.h>
 #include <client_manager.h>
+#include <sql_manager.h>
 #include <token_manager.h>
 #include <http_post.h>
 #include <http_get.h>
@@ -24,11 +25,12 @@
 int main(int argc, char** argv)
 {
   init_client_mgr();
+  init_sql_manager();
   
   struct options opts;
   memset(&opts, 0, sizeof(opts));
 
-  get_options(argc, (const char**) argv, &opts);
+  get_options(argc, argv, &opts);
 
   serve(&opts);
 
@@ -36,79 +38,58 @@ int main(int argc, char** argv)
 }
 
 
-static void get_options(const int argc, const char** argv, struct options* opts)
+void usage(char* name)
 {
-  char* usage = "Usage: ./falcon.out [-a address] [-p port] [-c clients]\n";
+  fprintf(stderr, "usage: %s [-a <server address>] [-c <max clients] [-p <port>]\n", name);
+}
 
-  for (int i = 1; i < argc; i++)
+
+static void get_options(const int argc, char* const* argv, struct options* opts)
+{
+  // defaults
+  opts->server_port = htons(80);
+  opts->max_clients = 10;
+  // default ip is already set to 0.0.0.0
+
+  int c, port;
+  struct sockaddr_in sa;
+  while ((c = getopt(argc, argv, "a:c:p:")) != -1)
   {
-    if (strcmp("-p", argv[i]) == 0)
+    switch(c)
     {
-      unsigned int port = 0;
-      if (i + 1 < argc)
-        port = strtol(argv[i+1], NULL, 10);
-      else
-      {
-        fprintf(stderr, "No value supplied for option -p.\n%s", usage);
-        exit(-1);
-      }
+    case 'p':
+      port = strtol(optarg, NULL, 10);
       if (port < 1 || port > 65535)
       {
-        fprintf(stderr, "Invalid port number: %s\n%s", argv[i+1], usage);
-        exit(-1);
+        usage(argv[0]);
+        abort();
       }
-      opts->server_port = port;
-      i++;
-    }
-    else if (strcmp("-c", argv[i]) == 0)
-    {
-      int clients = 0;
-      if (i + 1 < argc)
-        clients = strtol(argv[i+1], NULL, 10);
-      else
+      opts->server_port = htons(port);
+      break;
+    case 'c':
+      opts->max_clients = strtol(optarg, NULL, 10);
+    case 'a':
+      if (inet_pton(AF_INET, optarg, &(sa.sin_addr)) == 0) 
       {
-        fprintf(stderr, "No value supplied for option -c.\n%s", usage);
-        exit(-1);
-      }
-      if (clients < 1)
-      {
-        fprintf(stderr, "Invalid number of clients: %s\n%s", argv[i+1], usage);
-        exit(-1);
-      }
-      opts->max_clients = clients;
-      i++;
-    }
-    else if (strcmp("-a", argv[i]) == 0)
-    {
-      struct sockaddr_in sa;
-      if (i + 1 < argc)
-      {
-        if (inet_pton(AF_INET, argv[i+1], &(sa.sin_addr)) == 0) 
-        {
-          fprintf(stderr, "Invalid server IP address: %s\n", argv[i+1]);
-	  exit(-1);
-        }
-      }
-      else
-      {
-        fprintf(stderr, "No value supplied for option -a.\n%s", usage);
-	exit(-1);
+        fprintf(stderr, "Invalid server IP address: %s\n", optarg);
+        abort();
       }
       opts->server_ip = sa.sin_addr.s_addr;
-      i++;
-    }
-    else
-    {
-      fprintf(stderr, "Unknown option: %s\n%s", argv[i], usage);
-      exit(-1);
+      break;
+    case '?':
+    default:
+      usage(argv[0]);
+      abort();
     }
   }
 
-  // defaults
-  if (opts->server_port == 0) opts->server_port = htons(80);
-  if (opts->max_clients == 0) opts->max_clients = 10;
-  // default ip is already set to 0.0.0.0
-}// end get_options
+  if (optind < argc && argv[optind])
+  {
+    fprintf(stderr, "%s: unknown argument -- '%s'\n", argv[0], argv[optind]);
+    usage(argv[0]);
+    abort();
+  }
+}
 
 
 static void serve(const struct options* opts)
@@ -295,35 +276,35 @@ static char* get_uri(enum request_method method, char* request)
   char* getloc;
   if (method == GET_REQ)
   {
-    sscanf(getloc + 4, "%s", uri + 1);
     getloc = strstr(request, "GET");
+    sscanf(getloc + 4, "%s", uri + 1);
   }
   else if (method == HEAD_REQ)
   {
-    sscanf(getloc + 5, "%s", uri + 1);
     getloc = strstr(request, "HEAD");
+    sscanf(getloc + 5, "%s", uri + 1);
   }
   else if (method == PUT_REQ)
   {
-    sscanf(getloc + 4, "%s", uri + 1);
     getloc = strstr(request, "PUT");
+    sscanf(getloc + 4, "%s", uri + 1);
   }
   else if (method == POST_REQ)
   {
-    sscanf(getloc + 5, "%s", uri + 1);
     getloc = strstr(request, "POST");
+    sscanf(getloc + 5, "%s", uri + 1);
   }
   else /* DELETE_REQ */
   {
-    sscanf(getloc + 6, "%s", uri + 1);
     getloc = strstr(request, "DELETE");
+    sscanf(getloc + 6, "%s", uri + 1);
   }
-
+/*
   if (strcmp(uri, "./") == 0)
   {
     memcpy(uri, "./index.html", strlen("./index.html") + 1);
   }
-
+*/
   return uri;
 }
 

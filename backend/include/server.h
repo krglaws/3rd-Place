@@ -26,7 +26,7 @@ struct options
 /* Fills out an options structure with information from args
    passed via commandline. Uses default options if no args 
    passed. */
-static void get_options(const int argc, const char** argv, struct options* opts);
+static void get_options(const int argc, char* const* argv, struct options* opts);
 
 
 /* Takes in a structure of execution options and listens for

@@ -1,4 +1,5 @@
 
+    <script src="/js/user.js"></script>
 <div id="user_cont">
 	
 	<h3> u/{UNAME} </h3>
