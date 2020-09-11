@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <my_global.h>
 #include <mysql.h>
 
@@ -24,6 +25,12 @@ void init_sql_manager()
     mysql_close(sqlcon);
     exit(EXIT_FAILURE);
   }
+}
+
+
+void terminate_sql_manager()
+{
+  mysql_close(sqlcon);
 }
 
 
@@ -64,7 +71,7 @@ char*** query_database(char* query)
       if (sqlrow[j])
       {
         int fieldlen = strlen(sqlrow[j]);
-        rows[i][j] = malloc((fieldlen + 1) * sizeof(char));
+        rows[i][j] = calloc((fieldlen + 1), sizeof(char));
         memcpy(rows[i][j], sqlrow[j], fieldlen);
       }
       else

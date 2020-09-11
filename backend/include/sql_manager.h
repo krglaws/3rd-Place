@@ -4,6 +4,8 @@
 
 void init_sql_manager();
 
+void terminate_sql_manager();
+
 char*** query_database(char* query);
 
 #endif

@@ -275,10 +275,10 @@ char* get_user(char* uname, char* token)
 
   // fill in user info
   user_html = replace_with(user_html, "{UNAME}", uname);
-  user_html = replace_with(user_html, "{NUM_POINTS}", list_get(user_info, 2)->cp);
-  user_html = replace_with(user_html, "{NUM_POSTS}", list_get(user_info, 3)->cp);
-  user_html = replace_with(user_html, "{NUM_COMMENTS}", list_get(user_info, 4)->cp);
-  user_html = replace_with(user_html, "{BDAYUTC}", list_get(user_info, 5)->cp);
+  user_html = replace_with(user_html, "{NUM_POINTS}", list_get(user_info, 3)->cp);
+  user_html = replace_with(user_html, "{NUM_POSTS}", list_get(user_info, 4)->cp);
+  user_html = replace_with(user_html, "{NUM_COMMENTS}", list_get(user_info, 5)->cp);
+  user_html = replace_with(user_html, "{BDAYUTC}", list_get(user_info, 6)->cp);
 
   // fill in posts
   user_html = fill_in_posts(user_html, uname);

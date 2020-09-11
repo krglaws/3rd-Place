@@ -8,23 +8,33 @@
 
 list** query_database_ls(char* query)
 {
+  // query database
   char*** result = query_database(query);
-  list** result_ls = malloc( sizeof(list*));
 
+  // get number of rows
+  int rows = 0;
+  for (; result[rows] != NULL; rows++);
+
+  list** result_ls = calloc(rows + 1, sizeof(list*));
+
+  // for each row
   int i;
-  for (i = 0; result[i] != NULL; i++)
+  for (i = 0; i < rows; i++)
   {
-    result_ls = realloc(result_ls, i + 2);
     result_ls[i] = list_new();
+
+    // for each column
     for (int j = 0; result[i][j] != NULL; j++)
     {
       if (result[i][j] == NULL)
       {
-        list_add(result_ls[i], datacont_new("NULL", CHARP, 4));
+        datacont* dc = datacont_new("NULL", CHARP, 4);
+        list_add(result_ls[i], dc);
       }
       else
       {
-        list_add(result_ls[i], datacont_new(result[i][j], CHARP, strlen(result[i][j])));
+        datacont* dc = datacont_new(result[i][j], CHARP, strlen(result[i][j]));
+        list_add(result_ls[i], dc);
       }
       free(result[i][j]);
     }
