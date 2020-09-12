@@ -3,7 +3,6 @@ html, body {
 	height: 100%;
 	font-family: helvetica;
 }
-
 #topview {
 	border-style: solid;
 	padding: 2% 5% 2% 5%;
@@ -20,4 +19,41 @@ html, body {
 	padding: 2%;
 	margin: 1% 8% 2% 8%;
 }
+/*
+#user_cont {
+	height: 100%;
+	margin: 0;
+	font-family: Arial;
+}
+*/
+
+.tablink {
+	/*background-color: #555;*/
+	color: white;
+	float: left;
+	border: none;
+	outline: none;
+	cursor: pointer;
+	padding: 14px;
+	font-size: 17px;
+	width: 25%;
+}
+
+.tablink:hover {
+	background-color: #777;
+}
+
+.tabcontent {
+	color: white;
+	display: none;
+	padding: 100px 20px;
+	height: 100%;
+}
+
+/*
+#overview {background-color: red;}
+#posts {background-color: green;}
+#comments {background-color: blue;}
+#comments {background-color: grey;}
+*/
 

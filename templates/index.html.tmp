@@ -1,11 +1,10 @@
-<!Doctype HTML>
 
+<!Doctype HTML>
 <html>
   <head>
     <title> 3rd-Place </title>
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" type="text/css" href="/style/main.css">
-    <script src="/js/main.js"></script>
     <script src="/js/user.js"></script>
   </head>
   <body>

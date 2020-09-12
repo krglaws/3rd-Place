@@ -1,17 +1,21 @@
 
 <div id="user_cont">
  
-  <h3> {UNAME} </h3>
+  <h2> {UNAME} </h2>
+  <h4 id="joindate"> {BDAYUTC} </h4>
 
-  <p> {NUM_POINTS} points </p>
-  <p> {NUM_POSTS} posts </p>
-  <p> {NUM_COMMENTS} comments </p>
-  <p id="joindate"> {BDAYUTC} </p>
+  <button class="tablink" onclick="openPage('overview', this, 'grey')"> Overview </button>
+  <button class="tablink" onclick="openPage('posts', this, 'grey')"> Posts </button>
+  <button class="tablink" onclick="openPage('comments', this, 'grey')"> Comments </button>
+  <button class="tablink" onclick="openPage('about', this, 'grey')"> About </button>
 
-  <button class="tablink" onclick="openPage('overview', this, 'red')"> Overview </button>
-  <button class="tablink" onclick="openPage('posts', this, 'green')"> Posts </button>
-  <button class="tablink" onclick="openPage('comments', this, 'blue')"> Comments </button>
-  <button class="tablink" onclick="openPage('wall', this, 'grey')"> Wall </button>
+  <div id="overview" class="tabcontent">
+    <ul>
+      <li> {NUM_POINTS} points </li>
+      <li> {NUM_POSTS} posts </li>
+      <li> {NUM_COMMENTS} comments </li>
+    </ul>
+  </div>
 
   <div id="posts" class="tabcontent">
       {POSTS}
@@ -22,7 +26,7 @@
   </div>
 
   <div id="about" class="tabcontent">
-    <p> {ABOUT} </p>
+      <p> {ABOUT} </p>
   </div>
 
 </div>
