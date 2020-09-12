@@ -11,10 +11,10 @@ DEPS := $(SRC)/*.c
 default: all
 
 all: $(DEPS)
-	$(CC) $^ -o server $(CFLAGS)
+	$(CC) $^ -o server.out $(CFLAGS)
 
 debug: $(DEPS)
-	$(CC) $^ -o server.dbg $(CFLAGS) -g
+	$(CC) $^ -o serverdebug.out $(CFLAGS) -g
 
 clean:
 	if [ -f "server" ]; then rm server; fi;
