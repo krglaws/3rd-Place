@@ -19,9 +19,11 @@ void init_sql_manager()
   }
 
   if (mysql_real_connect(sqlcon, "localhost", "falcon", "falcon123",
-			  "falcondb", 3306, NULL, 0) == NULL)
+			  "falcondb", 0, NULL, 0) == NULL)
   {
-    fprintf(stderr, "%s\n", mysql_error(NULL));
+    // this doesnt print anything for some reason
+    //fprintf(stderr, "%s\n", mysql_error(NULL));
+    fprintf(stderr, "Failed to connect to database\n");
     mysql_close(sqlcon);
     exit(EXIT_FAILURE);
   }

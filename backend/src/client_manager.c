@@ -1,6 +1,6 @@
 
-#include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <kylestructs.h>
 
 #include <client_manager.h>
@@ -12,9 +12,19 @@ static list* client_list;
 static int num_clients = 0;
 
 
-void init_client_mgr()
+void init_client_manager()
 {
   client_list = list_new();
+}
+
+
+void terminate_client_manager()
+{
+  for (int i = 0; i < list_length(client_list); i++)
+  {
+    close(list_get(client_list, i)->i);
+  }
+  list_delete(client_list);
 }
 
 
@@ -28,6 +38,8 @@ void add_client(int fd)
 
 void remove_client(int fd)
 {
+  close(fd);
+
   datacont* dc = datacont_new(&fd, INT, 1);
 
   list_remove_by(client_list, dc);

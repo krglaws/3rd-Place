@@ -24,7 +24,7 @@
 
 int main(int argc, char** argv)
 {
-  init_client_mgr();
+  init_client_manager();
   init_sql_manager();
   
   struct options opts;
@@ -193,6 +193,11 @@ static void serve(const struct options* opts)
 
     memset(&client_addr, 0, sizeof(client_addr));
     memset(ip_str, 0, sizeof(ip_str));
+
+    terminate_client_manager();
+    terminate_sql_manager();
+
+    return;
   }
 }
 
@@ -233,7 +238,6 @@ static char* receive_request(int client_fd, char* ip)
   if (total_bytes == 0)
   {
     remove_client(client_fd);
-    close(client_fd);
     free(message_buffer);
     printf("Connection to %s closed (socket no. %d).\n", ip, client_fd);
     return NULL;

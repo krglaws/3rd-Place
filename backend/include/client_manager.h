@@ -2,7 +2,9 @@
 #ifndef _CONN_MGR_H_
 #define _CONN_MGR_H_
 
-void init_client_mgr();
+void init_client_manager();
+
+void terminate_client_manager();
 
 void add_client(int fd);
 

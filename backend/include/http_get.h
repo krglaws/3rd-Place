@@ -18,5 +18,7 @@ char* fill_in_comments(char* template, char* uname);
 
 char* get_user(char* uname, char* token);
 
+char* replace(char* template, char* this, char* withthat);
+
 #endif
 
