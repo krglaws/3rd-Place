@@ -17,5 +17,6 @@ debug: $(DEPS)
 	$(CC) $^ -o serverdebug.out $(CFLAGS) -g
 
 clean:
-	if [ -f "server" ]; then rm server; fi;
+	if [ -f "server.out" ]; then rm server.out; fi;
+	if [ -f "serverdebug.out" ]; then rm serverdebug.out; fi;
 
