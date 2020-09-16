@@ -205,7 +205,10 @@ char* fill_in_posts(char* template, char* uname)
     template = replace(template, "{POSTS}", post_stub);
 
     free(post_stub);
+    list_delete(p);
   }
+
+  free(posts);
 
   return replace(template, "{POSTS}", "");
 }
@@ -222,11 +225,13 @@ char* fill_in_comments(char* template, char* uname)
 
   for (int i = 0; comments[i] != NULL; i++)
   {
+    list* c = comments[i];
+
     char* comment_stub = load_file("templates/comment_stub");
-    comment_stub = replace(comment_stub, "{POST}", list_get(comments[i], 4)->cp);
+    comment_stub = replace(comment_stub, "{POST}", list_get(c, 4)->cp);
 
     char body[65];
-    int end = sprintf(body, "%61s", list_get(comments[i], 7)->cp);
+    int end = sprintf(body, "%61s", list_get(c, 7)->cp);
     memcpy(body + end, "...", 3);
     body[end+3] = '\0';
 
@@ -234,7 +239,10 @@ char* fill_in_comments(char* template, char* uname)
     template = replace(template, "{COMMENTS}", comment_stub);
 
     free(comment_stub);
+    list_delete(c);
   }
+
+  free(comments);
 
   return replace(template, "{COMMENTS}", "");
 }

@@ -194,8 +194,8 @@ static void serve(const struct options* opts)
     memset(&client_addr, 0, sizeof(client_addr));
     memset(ip_str, 0, sizeof(ip_str));
 
-    terminate_client_manager();
-    terminate_sql_manager();
+    //terminate_client_manager();
+    //terminate_sql_manager();
 
     return;
   }
