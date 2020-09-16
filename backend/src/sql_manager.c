@@ -33,6 +33,7 @@ void init_sql_manager()
 void terminate_sql_manager()
 {
   mysql_close(sqlcon);
+  mysql_server_end();
 }
 
 
