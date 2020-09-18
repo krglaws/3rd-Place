@@ -1,0 +1,36 @@
+
+html, body {
+  background-color: #CACBCC;
+}
+
+.container {
+  background-color: white;
+	border-style: solid;
+}
+
+#topnav {
+  padding: 0% 3% 0% 3%;
+  margin: 2% 5% 2% 5%;
+  font-size: 22px;
+}
+
+.navitem {
+  display: table-cell;
+  text-align: center;
+  width: 25%;
+}
+
+#title {
+  /*padding: 0% 3% 0% 3%;
+  margin: 2% 5% 2% 5%;*/
+  width: 75%;
+  text-align: center;
+}
+
+#titlecontainer {
+  width: 100%;
+  padding: 0% 3% 0% 3%;
+  margin: 2% 5% 2% 5%;
+  /*align-items: center;*/
+}
+

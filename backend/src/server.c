@@ -197,7 +197,7 @@ static void serve(const struct options* opts)
     //terminate_client_manager();
     //terminate_sql_manager();
 
-    return;
+    //return;
   }
 }
 

@@ -3,6 +3,7 @@ html, body {
 	height: 100%;
 	font-family: helvetica;
 }
+
 #topview {
 	border-style: solid;
 	padding: 2% 5% 2% 5%;
@@ -19,13 +20,6 @@ html, body {
 	padding: 2%;
 	margin: 1% 8% 2% 8%;
 }
-/*
-#user_cont {
-	height: 100%;
-	margin: 0;
-	font-family: Arial;
-}
-*/
 
 .tablink {
 	/*background-color: #555;*/
@@ -34,9 +28,9 @@ html, body {
 	border: none;
 	outline: none;
 	cursor: pointer;
-	padding: 14px;
-	font-size: 17px;
-	width: 25%;
+	/*padding: 14px;*/
+	/*font-size: 17px;*/
+	/*width: 25%;*/
 }
 
 .tablink:hover {
@@ -49,6 +43,14 @@ html, body {
 	padding: 100px 20px;
 	height: 100%;
 }
+
+/*
+#user_cont {
+	height: 100%;
+	margin: 0;
+	font-family: Arial;
+}
+*/
 
 /*
 #overview {background-color: red;}
