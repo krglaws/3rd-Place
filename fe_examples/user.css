@@ -60,29 +60,41 @@ html, body {
 .user-content {
   background-color: white;
   border: 1px solid black;
-  padding: 1% 10% 1% 10%;
   display: table;
   margin: 0 auto;
   width: 75%;
 }
 
+.tab-link-container {
+  margin: 0% 0% 6% 0%;
+}
+
 .tab-link {
-  color: white;
   float: left;
   border: none;
   outline: none;
   cursor: pointer;
-  padding: 14px 16px;
+  padding: 10px 12px;
   font-size: 17px;
   width: 25%;
+  height: 100%;
 }
 
-.tab-link:hover {
-  background-color: white;
+.tab-content-container {
+  display: none;
+}
+.tab-content-container a {
+  color: black;
+  text-decoration: none;
+}
+
+.tab-content-container a:hover {
+  text-decoration: underline;
 }
 
 .tab-content {
-  display: none;
-  color: white;
+  margin: 3% 1% 1% 1%;
+  padding: 1%;
+  border: 1px solid black;
 }
 

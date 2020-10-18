@@ -2,7 +2,7 @@
 function openPage(pageName, button) {
   var i, tabcontent, tablinks;
 
-  tabcontent = document.getElementsByClassName("tab-content");
+  tabcontent = document.getElementsByClassName("tab-content-container");
   for (i = 0; i < tabcontent.length; i++) {
     tabcontent[i].style.display = "none";
   }
@@ -16,5 +16,7 @@ function openPage(pageName, button) {
   button.style.backgroundColor = "white";
 }
 
-document.getElementById('overview').click();
+function selectOverview() {
+  document.getElementById("default-tab").click();
+}
 

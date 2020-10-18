@@ -1,0 +1,87 @@
+
+<!doctype html>
+
+<!-- this is the page used for viewing a particular user -->
+
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title> 3rd-Place </title>
+    <link rel="stylesheet" type="text/css" href="style/user.css">
+    <script src="js/user.js"></script>
+  </head>
+
+  <body onload="selectOverview()">
+    <!-- Top Nav -->
+    <div class="top-navigation-bar-container">
+      <div class="top-navigation-bar">
+        <a href="#">3rd-Place</a>
+        <a href="#">Popular</a>
+        <a href="#">Communities</a>
+        <a href="#">uname</a>
+      </div>
+    </div>
+
+    <div class="user-title-container">
+      <div class="user-title">
+       u/testuser1
+     </div>
+    </div>
+
+    <div class="user-content-container">
+      <div class="user-content">
+        <div class="tab-link-container">
+          <button id="default-tab" class="tab-link" onclick="openPage('overview', this);">Overview</button>
+          <button class="tab-link" onclick="openPage('posts', this);">Posts</button>
+          <button class="tab-link" onclick="openPage('comments', this);">Comments</button>
+          <button class="tab-link" onclick="openPage('about', this);">About</button>
+        </div>
+
+        <div id="overview" class="tab-content-container">
+          <div class="tab-content">
+            <p>Points: 1,337</p>
+            <p>Posts: 49</p>
+            <p>Comments: 245</p>
+          </div>
+        </div>
+
+        <div id="posts" class="tab-content-container">
+          <div class="tab-content">
+            <a href="#">
+              <h3>"Post Title" in "Community Name"</h3>
+              <p>This is a test post and it will go on for up to some predetermined number of chars</p>
+            </a>
+          </div>
+          <div class="tab-content">
+            <a href="#">
+              <h3>"Post Title" in "Community Name"</h3>
+              <p>This is a test post and it will go on for up to some predetermined number of chars</p>
+            </a>
+          </div>
+          <div class="tab-content">
+            <a href="#">
+              <h3>"Post Title" in "Community Name"</h3>
+              <p>This is a test post and it will go on for up to some predetermined number of chars</p>
+            </a>
+          </div>
+        </div>
+
+        <div id="comments" class="tab-content-container">
+          <div class="tab-content">
+            <a href="#">
+              <p>This is a test comment and it will go on for up to some predetermined number of chars</p>
+              <h3>On "Post Title" from "Community Name"</h3>
+            </a>
+          </div>
+        </div>
+
+        <div id="about" class="tab-content-container">
+          <div class="tab-content">
+            <p>I am a test user</p>
+          </div>
+        </div>
+      </div>
+    <div>
+  </body>
+</html>
+
