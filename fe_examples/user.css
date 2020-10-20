@@ -1,4 +1,11 @@
 
+:root {
+  --nav-font-size: 17px;
+  --title-font-size: 20px;
+  --body-font-size: 15;
+  --uname-font-size: 12;
+}
+
 * {box-sizing: border-box}
 
 html, body {
@@ -23,7 +30,7 @@ html, body {
   float: left;
   padding: 12px;
   text-decoration: none;
-  font-size: 17px;
+  font-size: var(--nav-font-size);
   width: 25%;
   text-align: center;
 }
@@ -49,7 +56,7 @@ html, body {
   display: table;
   margin: 0 auto;
   text-align: center;
-  font-size: 22px;
+  font-size: var(--title-font-size);
 }
 
 .user-content-container {
@@ -75,7 +82,7 @@ html, body {
   outline: none;
   cursor: pointer;
   padding: 10px 12px;
-  font-size: 17px;
+  font-size: var(--nav-font-size);
   width: 25%;
   height: 100%;
 }
@@ -83,6 +90,7 @@ html, body {
 .tab-content-container {
   display: none;
 }
+
 .tab-content-container a {
   color: black;
   text-decoration: none;
