@@ -1,20 +1,2 @@
 # 3rd Place
-Basic HTTP server + frontend
-
-## style notes
-Berlin Sans FB - used in logo, use also in headings
-colors: #000 and #1ba40c
-
-
-## design
-
-### endpoints
-
-/c/{community\_name} - community
-
-/p/{post\_id} - post
-
-/u/{user\_name} - user
-
-/api/
-
+This is meant to be a Reddit-like content sharing website with a backend written entirely in C, and a bare-bones frontend built with only basic HTML, CSS, and JavaScript. For some reason I really like to do everything myself. Probably unnecessary, but I like the challenge. The backend is about 60% complete (estimating here). So far it can serve up templated files for the front-end in response to GET requests, but no capacity for POST, DELETE, or UPDATE yet. A rough sketch of the database schema has been mapped out, but probably needs work. Not screenshots yet, but hoping to get this website done by January.
