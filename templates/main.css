@@ -1,0 +1,64 @@
+/*************************/
+/* general purpose items */
+:root {
+  --nav-font-size: 17px;
+  --title-font-size: 20px;
+  --body-font-size: 15px;
+  --uname-font-size: 12px;
+
+  --border-color: black;
+  --border-style: solid;
+  --border-width: 1px;
+
+  --inner-bg-color: #FFFFFF;
+  --outer-bg-color: #CACBCC;
+}
+
+* {box-sizing: border-box}
+
+html, body {
+  background-color: var(--outer-bg-color);
+}
+
+.border-box {
+  background-color: var(--inner-bg-color);
+  border-color: var(--border-color);
+  border-style: var(--border-style);
+  border-width: var(--border-width); 
+}
+/* end gp */
+/**********/
+
+/*************/
+/* start nav */
+.top-navigation-container {
+  width: 100%;
+  padding: 1%;
+}
+
+.top-navigation {
+  width: 90%;
+  overflow: auto;
+  display: table;
+  margin: 0 auto;
+}
+
+.top-navigation a {
+  float: left;
+  padding: 12px;
+  text-decoration: none;
+  font-size: var(--nav-font-size);
+  width: 25%;
+  text-align: center;
+}
+
+@media screen and (max-width: 500px) {
+  .topnav a {
+    float: none;
+    display: block;
+    width: 100%;
+    text-align: left;
+  }
+} 
+/* end nav */
+/***********/
