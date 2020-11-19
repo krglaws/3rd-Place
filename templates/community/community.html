@@ -1,0 +1,26 @@
+    <div class="community-title-container">
+      <div class="community-title border-box">
+        {COMMUNITY_NAME}
+      </div>
+    </div>
+
+    <div class="community-content-container">
+      <div class="community-content border-box">
+
+        <div class="community-tab-link-container">
+          <button id="default-tab" class="community-tab-link" onclick="openPage('post-list', this)">Posts</button>
+          <button class="community-tab-link" onclick="openPage('about', this)">About</button>
+        </div>
+
+        <div id="post-list" class="community-tab-content-container">
+          {POST_STUB}
+        </div>
+
+        <div id="about" class="community-tab-content-container">
+          <div class="community-tab-content border-box">
+            {ABOUT_COMMUNITY}
+          </div>
+        </div>
+
+      </div>
+    </div>
