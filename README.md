@@ -8,18 +8,24 @@ This is meant to be a Reddit-like content sharing website with a backend written
 
 `git clone https://github.com/krglaws/3rd-Place`
 
-2. install mysql + client library
+2. install mysql + client library:
 
 `sudo apt install mysql libmysqlclient-dev`
 
-3. execute initdb.sh script
+3. configure the database by editing 3rd-Place/backend/db.config 
+
+4. execute initdb.sh script:
 
 `cd 3rd-Place/backend/; sudo ./initdb.sh`
 
-4. execute testdata.sh script
+5. execute testdata.sh script:
 
 `sudo ./testdata.sh`
 
-5. compile backend
+6. compile backend:
 
 `make debug`
+
+7. run server from root project dir:
+
+`cd ../;backend/serverdebug.out`
