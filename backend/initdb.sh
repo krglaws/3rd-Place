@@ -7,50 +7,51 @@ mysql -uroot <<INIT_SCRIPT
 CREATE DATABASE IF NOT EXISTS $DBNAME;
 
 CREATE TABLE IF NOT EXISTS $DBNAME.users(
-	uuid INT NOT NULL AUTO_INCREMENT,
-	uname VARCHAR(16) NOT NULL,
-	about VARCHAR(256),
-	points INT NOT NULL,
-	posts INT NOT NULL,
-	comments INT NOT NULL,
-	bday INT NOT NULL,
-	PRIMARY KEY (uuid)
+  uuid INT NOT NULL AUTO_INCREMENT,
+  uname VARCHAR(16) NOT NULL,
+  about VARCHAR(256),
+  points INT NOT NULL,
+  posts INT NOT NULL,
+  comments INT NOT NULL,
+  bday INT NOT NULL,
+  PRIMARY KEY (uuid)
 );
 
 CREATE TABLE IF NOT EXISTS $DBNAME.posts(
-	uuid INT NOT NULL AUTO_INCREMENT,
-	communityid INT NOT NULL,
-	communityname VARCHAR(32),
-	authid INT,
-		author VARCHAR(16),
-	title VARCHAR(32) NOT NULL,
-	body VARCHAR(512),
-	bday INT NOT NULL,
-	PRIMARY KEY (uuid)
+  uuid INT NOT NULL AUTO_INCREMENT,
+  communityid INT NOT NULL,
+  communityname VARCHAR(32) NOT NULL,
+  authid INT NOT NULL,
+  author VARCHAR(16),
+  title VARCHAR(32) NOT NULL,
+  body VARCHAR(512),
+  bday INT NOT NULL,
+  PRIMARY KEY (uuid)
 );
 
 CREATE TABLE IF NOT EXISTS $DBNAME.comments(
-	uuid INT NOT NULL AUTO_INCREMENT,
-	postid INT NOT NULL,
-		posttitle VARCHAR(32) NOT NULL,
-	authid INT,
-	author VARCHAR(16),
-	body VARCHAR(512) NOT NULL,
-	bday INT NOT NULL,
-	PRIMARY KEY (uuid)
+  uuid INT NOT NULL AUTO_INCREMENT,
+  postid INT NOT NULL,
+  posttitle VARCHAR(32) NOT NULL,
+  communityname VARCHAR(32) NOT NULL,
+  authid INT NOT NULL,
+  author VARCHAR(16),
+  body VARCHAR(512) NOT NULL,
+  bday INT NOT NULL,
+  PRIMARY KEY (uuid)
 );
 
 CREATE TABLE IF NOT EXISTS $DBNAME.communities(
-	uuid INT NOT NULL AUTO_INCREMENT,
-	name VARCHAR(32) NOT NULL,
-	about VARCHAR(512) NOT NULL,
-	bday INT NOT NULL,
-	PRIMARY KEY (uuid)
+  uuid INT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(32) NOT NULL,
+  about VARCHAR(512) NOT NULL,
+  bday INT NOT NULL,
+  PRIMARY KEY (uuid)
 );
 
 CREATE TABLE IF NOT EXISTS $DBNAME.subs(
-	userid INT NOT NULL,
-	communityid INT NOT NULL
+  userid INT NOT NULL,
+  communityid INT NOT NULL
 );
 
 CREATE USER IF NOT EXISTS $DBUSER@$DBHOST IDENTIFIED BY '$DBPASS';
