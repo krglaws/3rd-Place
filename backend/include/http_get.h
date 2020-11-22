@@ -4,8 +4,6 @@
 
 struct response* http_get(struct request* req);
 
-char* load_file(char* path);
-
 list* get_user_info(char* uname);
 
 list** get_user_posts(char* uname);

@@ -6,6 +6,7 @@
 #include <kylestructs.h>
 
 #include <common.h>
+#include <util.h>
 #include <send_err.h>
 #include <token_manager.h>
 #include <sql_wrapper.h>
@@ -42,8 +43,7 @@ struct response* http_get(struct request* req)
     content_type = TEXTHTML;
     content = get_user(req->uri + 4, req->token);
   }
-/*
-  else if (strstr(req->uri, "./c/"))
+/*  else if (strstr(req->uri, "./c/"))
   {
     content_type = TEXTHTML;
     content = get_community(req->uri + 4, req->token);
@@ -81,35 +81,6 @@ struct response* http_get(struct request* req)
 }
 
 
-char* load_file(char* path)
-{
-  int filelen;
-  FILE* fd;
-
-  if ((fd = fopen(path, "r")) == NULL)
-  {
-    perror("http_get(): failed to open file");
-    return NULL;
-  }
-
-  fseek(fd, 0, SEEK_END);
-  filelen = ftell(fd);
-  rewind(fd);
-
-  char* content = malloc((filelen + 1) * sizeof(char));
-
-  for (int i = 0; i < filelen; i++)
-  {
-    content[i] = fgetc(fd);
-  }
-  content[filelen] = '\0';
- 
-  fclose(fd);
-
-  return content;
-}
-
-
 list* get_user_info(char* uname)
 {
   char* query_fmt = "SELECT * FROM users WHERE uname = '%s';";
@@ -139,70 +110,37 @@ list* get_user_info(char* uname)
 }
 
 
-list** get_user_posts(char* uname)
-{
-  // figure out how to order this by date
-  char* query_fmt = "SELECT * FROM posts WHERE author = '%s';";
-  char query[strlen(query_fmt) + strlen(uname) + 1];
-
-  sprintf(query, query_fmt, uname);
-
-  list** result = query_database_ls(query);
-
-  if (result[0] == NULL)
-  {
-    free(result);
-    return NULL;
-  }
-
-  return result;
-}
-
-
-list** get_user_comments(char* uname)
-{
-  // figure out how to order this by date
-  char* query_fmt = "SELECT * FROM comments WHERE author = '%s';";
-  char query[strlen(query_fmt) + strlen(uname) + 1];
-
-  sprintf(query, query_fmt, uname);
-
-  list** result = query_database_ls(query);
-
-  if (result[0] == NULL)
-  {
-    free(result);
-    return NULL;
-  }
-
-  return result;
-}
-
-
 char* fill_in_posts(char* template, char* uname)
 {
+  // prepare query string
   char* query_fmt = "SELECT * FROM posts WHERE author = '%s';";
   char query[strlen(query_fmt) + strlen(uname) + 1];
-
   sprintf(query, query_fmt, uname);
 
+  // grab user post list from database
   list** posts = query_database_ls(query);
 
+  // iterate through each post
   for (int i = 0; posts[i] != NULL; i++)
   {
+    // current post (list of fields)
     list* p = posts[i];
 
-    char* post_stub = load_file("templates/post_stub.html.tmp");
-    post_stub = replace(post_stub, "{TITLE}", list_get(p, 5)->cp);
-    post_stub = replace(post_stub, "{COMMUNITY}", list_get(p, 2)->cp);
+    // load post_stub template and do replacements
+    char* post_stub = load_file("templates/user/post_stub.html");
+    post_stub = replace(post_stub, "{POST_ID}", list_get(p, SF_POST_ID)->cp);
+    post_stub = replace(post_stub, "{POST_TITLE}", list_get(p, SF_POST_TITLE)->cp);
+    post_stub = replace(post_stub, "{COMMUNITY_NAME}", list_get(p, SF_POST_COMMUNITY_NAME)->cp);
 
+    // limit post body to 64 chars in stub
     char body[65];
-    int end = sprintf(body, "%61s", list_get(p, 7)->cp);
+    int end = sprintf(body, "%61s", list_get(p, SF_POST_BODY)->cp);
     memcpy(body + end, "...", 3);
     body[end+3] = '\0';
+    post_stub = replace(post_stub, "{POST_BODY}", body);
 
-    post_stub = replace(post_stub, "{BODY}", body);
-    template = replace(template, "{POSTS}", post_stub);
+    // copy stub into main template
+    template = replace(template, "{POST_STUB}", post_stub);
 
     free(post_stub);
     list_delete(p);
@@ -210,33 +148,43 @@ char* fill_in_posts(char* template, char* uname)
 
   free(posts);
 
-  return replace(template, "{POSTS}", "");
+  // remove trailing template string
+  return replace(template, "{POST_STUB}", "");
 }
 
 
 char* fill_in_comments(char* template, char* uname)
 {
+  // prepare query string
   char* query_fmt = "SELECT * FROM comments WHERE author = '%s';";
   char query[strlen(query_fmt) + strlen(uname) + 1];
-
   sprintf(query, query_fmt, uname);
 
+  // grab user comment list from database
   list** comments = query_database_ls(query);
 
+  // iterate over each comment
   for (int i = 0; comments[i] != NULL; i++)
   {
+    // current comment (list of fields)
     list* c = comments[i];
 
-    char* comment_stub = load_file("templates/comment_stub");
-    comment_stub = replace(comment_stub, "{POST}", list_get(c, 4)->cp);
+    // load comment_stub template and do replacements
+    char* comment_stub = load_file("templates/user/comment_stub.html");
+    comment_stub = replace(comment_stub, "{POST_ID}", list_get(c, SF_COMMENT_POST_ID)->cp);
+    comment_stub = replace(comment_stub, "{COMMENT_ID}", list_get(c, SF_COMMENT_ID)->cp);
 
+    // limit comment body to 64 chars in stub
     char body[65];
-    int end = sprintf(body, "%61s", list_get(c, 7)->cp);
+    int end = sprintf(body, "%61s", list_get(c, SF_COMMENT_BODY)->cp);
     memcpy(body + end, "...", 3);
     body[end+3] = '\0';
+    comment_stub = replace(comment_stub, "{COMMENT_BODY}", body);
+    comment_stub = replace(comment_stub, "{POST_TITLE}", list_get(c, SF_COMMENT_POST_TITLE)->cp);
+    comment_stub = replace(comment_stub, "{COMMUNITY_NAME}", list_get(c, SF_COMMENT_COMMUNITY_NAME)->cp);
 
-    comment_stub = replace(comment_stub, "{BODY}", body);
-    template = replace(template, "{COMMENTS}", comment_stub);
+    // copy stub into main template
+    template = replace(template, "{COMMENT_STUB}", comment_stub);
 
     free(comment_stub);
     list_delete(c);
@@ -244,7 +192,8 @@ char* fill_in_comments(char* template, char* uname)
 
   free(comments);
 
-  return replace(template, "{COMMENTS}", "");
+  // remove trailing template string
+  return replace(template, "{COMMENT_STUB}", "");
 }
 
 
@@ -255,37 +204,46 @@ char* get_user(char* uname, char* token)
     return NULL;
   }
 
+  // pull user info from database
   list* user_info = get_user_info(uname);
   if (user_info == NULL)
   {
     return NULL;
   }
 
-  char temp_str[128]; // load main template
-  char* index_html = load_file("templates/index.html.tmp");
+  // load main template
+  char* main_html = load_file("templates/main/main.html");
+
+  // insert style link
+  main_html = replace(main_html, "{STYLE}", "<link rel=\"stylesheet\" href=\"/templates/user/user.css\">");
+
+  // insert js link
+  main_html = replace(main_html, "{SCRIPT}", "<script src=\"/templates/user/user.js\"></script>");
 
   // check if client is logged in
+  char temp_str[128];
   const char* client_uname = valid_token(token);
   if (client_uname != NULL)
   {
     sprintf(temp_str, "<a href=\"/u/%s\">%s</a>", client_uname, client_uname);
-    index_html = replace(index_html, "{UNAME}", temp_str);
+    main_html = replace(main_html, "{UNAME}", temp_str);
   }
   else
   {
-  index_html = replace(index_html, "{UNAME}", 
-               "<p><a href=\"/login\">login</a>/<a href=\"/signup\">signup</a></p>");
+    main_html = replace(main_html, "{UNAME}", 
+               "<a href=\"/signup\">signup</a>");
   }
 
   // load user template
-  char* user_html = load_file("templates/user.html.tmp");
+  char* user_html = load_file("templates/user/user.html");
 
   // fill in user info
-  user_html = replace(user_html, "{UNAME}", uname);
-  user_html = replace(user_html, "{NUM_POINTS}", list_get(user_info, 3)->cp);
-  user_html = replace(user_html, "{NUM_POSTS}", list_get(user_info, 4)->cp);
-  user_html = replace(user_html, "{NUM_COMMENTS}", list_get(user_info, 5)->cp);
-  user_html = replace(user_html, "{BDAYUTC}", list_get(user_info, 6)->cp);
+  user_html = replace(user_html, "{USER_NAME}", uname);
+  user_html = replace(user_html, "{USER_POINTS}", list_get(user_info, SF_USER_POINTS)->cp);
+  user_html = replace(user_html, "{USER_POSTS}", list_get(user_info, SF_USER_POSTS)->cp);
+  user_html = replace(user_html, "{USER_COMMENTS}", list_get(user_info, SF_USER_COMMENTS)->cp);
+  user_html = replace(user_html, "{USER_BDAY}", list_get(user_info, SF_USER_BDAY)->cp);
+  user_html = replace(user_html, "{USER_ABOUT}", list_get(user_info, SF_USER_ABOUT)->cp);
 
   // fill in posts
   user_html = fill_in_posts(user_html, uname);
@@ -293,16 +251,13 @@ char* get_user(char* uname, char* token)
   // fill in comments
   user_html = fill_in_comments(user_html, uname);
 
-  // fill in about
-  user_html = replace(user_html, "{ABOUT}", list_get(user_info, 2)->cp);
-
   // insert user_data into main html
-  index_html = replace(index_html, "{CONTENT}", user_html);
+  main_html = replace(main_html, "{PAGE_BODY}", user_html);
 
   free(user_html);
   list_delete(user_info);
 
-  return index_html;
+  return main_html;
 }
 
 

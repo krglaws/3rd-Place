@@ -1,7 +1,9 @@
 
+eval $(cat ./db.config)
+
 mysql -uroot <<TEST_DATA
 
-USE falcondb;
+USE $DBNAME;
 
 # create test users
 INSERT INTO users (uname, about, points, posts, comments, bday)
@@ -23,7 +25,7 @@ INSERT INTO communities (name, about, bday)
 
 # create test posts
 INSERT INTO posts (communityid, communityname, authid, author, title, body, bday)
-  VALUES (1, 'Hockey', 2, 'rolyat', 'Wayne Gretzky', 'You miss all the shots you don't take', UNIX_TIMESTAMP());
+  VALUES (1, 'Hockey', 2, 'rolyat', 'Wayne Gretzky', 'You miss all the shots you don\'t take', UNIX_TIMESTAMP());
 INSERT INTO posts (communityid, communityname, authid, author, title, body, bday)
   VALUES (2, 'LOTR', 3, 'beans', 'Aragorn', 'He was a real G.', UNIX_TIMESTAMP());
 INSERT INTO posts (communityid, communityname, authid, author, title, body, bday)
