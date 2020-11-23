@@ -4,6 +4,8 @@
 
 #include <util.h>
 
+
+// load a file into a NULL terminated string
 char* load_file(const char* path)
 {
   int filelen;
@@ -11,7 +13,7 @@ char* load_file(const char* path)
 
   if ((fd = fopen(path, "r")) == NULL)
   {
-    perror("http_get(): failed to open file");
+    perror("load_file(): failed to open file");
     return NULL;
   }
 
@@ -19,15 +21,54 @@ char* load_file(const char* path)
   filelen = ftell(fd);
   rewind(fd);
 
-  char* content = malloc((filelen + 1) * sizeof(char));
+  char* file = malloc((sizeof(char) * filelen) + 1);
 
   for (int i = 0; i < filelen; i++)
   {
-    content[i] = fgetc(fd);
+    file[i] = fgetc(fd);
   }
-  content[filelen] = '\0';
+
+  fclose(fd);
+
+  return file;
+}
+
+
+// loads a file into a struct which also contains the file length.
+// this is useful for files that may contain NULL bytes and thus
+// cannot be NULL terminated.
+struct file_str* load_file_str(const char* path)
+{
+  int filelen;
+  FILE* fd;
+
+  if ((fd = fopen(path, "r")) == NULL)
+  {
+    perror("load_file_str(): failed to open file");
+    return NULL;
+  }
+
+  fseek(fd, 0, SEEK_END);
+  filelen = ftell(fd);
+  rewind(fd);
+
+  struct file_str* file = malloc(sizeof(struct file_str));
+  file->contents = malloc(filelen * sizeof(char));
+  file->len = filelen;
+
+  for (int i = 0; i < filelen; i++)
+  {
+    file->contents[i] = fgetc(fd);
+  }
  
   fclose(fd);
 
-  return content;
+  return file;
+}
+
+
+void del_file_str(struct file_str* file)
+{
+  free(file->contents);
+  free(file);
 }

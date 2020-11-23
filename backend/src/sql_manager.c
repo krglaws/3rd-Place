@@ -73,6 +73,7 @@ void init_sql_manager()
     fprintf(stderr, "init_sql_manager(): failed to parse db.config\n");
     exit(EXIT_FAILURE);
   }
+  free(config);
 
   // initialize sql connection object
   if ((sqlcon = mysql_init(NULL)) == NULL)

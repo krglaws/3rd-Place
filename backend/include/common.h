@@ -54,6 +54,7 @@ struct response
 {
   /* list of strings */
   list* header;
+  int content_length;
   char* content;
 };
 

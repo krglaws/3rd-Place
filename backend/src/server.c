@@ -41,8 +41,7 @@ int main(int argc, char** argv)
 void usage(char* name)
 {
   fprintf(stderr, "usage: %s [-a <server address>] [-c <max clients] [-p <port>]\n", name);
-}
-
+} 
 
 static void get_options(const int argc, char* const* argv, struct options* opts)
 {
@@ -178,7 +177,7 @@ static void serve(const struct options* opts)
       if (getpeername(active_fd, &client_addr, &addr_len) == -1)
       {
         perror("serve(): getpeername() failed");
-	exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
       }
       if (inet_ntop(client_addr.sin_family, &(client_addr.sin_addr), ip_str, sizeof(ip_str)) == NULL)
       {
@@ -431,6 +430,8 @@ static void send_msg(int fd, char* buffer, int msg_len)
   if (buffer == NULL) return;
   int total = 0, bytes = 0;
 
+  int ct = 0;
+
   while (total < msg_len)
   {
     if ((bytes = send(fd, buffer + total, msg_len - total, 0)) == -1)
@@ -439,7 +440,10 @@ static void send_msg(int fd, char* buffer, int msg_len)
       exit(EXIT_FAILURE);
     }
     total += bytes; 
+    ct ++;
   }
+
+  printf("Message sent in %d passes\n", ct);
 }
 
 
@@ -462,7 +466,7 @@ static void send_response(struct response* resp, int client_fd)
 
   send_msg(client_fd, "\n", 1);
   if (resp->content)
-    send_msg(client_fd, resp->content, strlen(resp->content));
+    send_msg(client_fd, resp->content, resp->content_length);
 
   list_delete(resp->header);
   free(resp->content);

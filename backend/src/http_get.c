@@ -23,37 +23,48 @@ struct response* http_get(struct request* req)
   /* what are we getting? */
   char* content_type = NULL;
   char* content = NULL;
+  int content_length = 0;
   if (strstr(req->uri, ".css"))
   {
     content_type = TEXTCSS;
     content = load_file(req->uri);
+    content_length = strlen(content);
   }
   else if (strstr(req->uri, ".js"))
   {
     content_type = APPJS;
     content = load_file(req->uri);
+    content_length = strlen(content);
   }
   else if (strstr(req->uri, ".ico"))
   {
     content_type = IMGICO;
-    content = load_file(req->uri);
+    struct file_str* ico = load_file_str(req->uri);
+    content = ico->contents;
+    content_length = ico->len;
+
+    // just free the struct, dont call del_file_str()
+    free(ico);
   }
   else if (strstr(req->uri, "./u/"))
   {
     content_type = TEXTHTML;
     content = get_user(req->uri + 4, req->token);
+    content_length = strlen(content);
   }
 /*  else if (strstr(req->uri, "./c/"))
   {
     content_type = TEXTHTML;
     content = get_community(req->uri + 4, req->token);
   }
+*/
   else if (strstr(req->uri, "./p/"))
   {
     content_type = TEXTHTML;
     content = get_post(req->uri + 4, req->token);
+    content_length = strlen(content);
   }
-*/
+
   /* do we have it? */
   if (content_type == NULL || content == NULL)
   {
@@ -70,26 +81,81 @@ struct response* http_get(struct request* req)
   list_add(resp->header, datacont_new(STAT200, CHARP, strlen(STAT200)));
   list_add(resp->header, datacont_new(content_type, CHARP, strlen(content_type)));
  
-  char contline[80];
-  int len = sprintf(contline, "Content-Length: %ld\n", strlen(content));
+  char contlenline[80];
+  int len = sprintf(contlenline, "Content-Length: %d\n", content_length);
 
-  list_add(resp->header, datacont_new(contline, CHARP, len));
-  list_add(resp->header, datacont_new("Set-Cookie: test-cookie=abcde\n", CHARP, 30));
+  list_add(resp->header, datacont_new(contlenline, CHARP, len));
+  //list_add(resp->header, datacont_new("Set-Cookie: test-cookie=abcde\n", CHARP, 30));
   resp->content = content;
+  resp->content_length = content_length;
 
   return resp;
 }
 
 
-list* get_user_info(char* uname)
+char* replace(char* template, char* this, char* withthat)
 {
+  char* location;
+
+  // check if 'this' is in template
+  if ((location = strstr(template, this)) == NULL)
+  {
+    return template;
+  }
+
+  // figure out sizes
+  int templen = strlen(template);
+  int thislen = strlen(this);
+  int withlen = strlen(withthat);
+  int outputsize = (templen - thislen) + withlen + 1;
+
+  // create output buffer
+  char* output = malloc(outputsize);
+  output[outputsize - 1] = '\0';
+
+  // do the replacement
+  int dist = (location - template); 
+  memcpy(output, template, dist);
+  memcpy(output + dist, withthat, withlen);
+  memcpy(output + dist + withlen, template + dist + thislen, strlen(template + dist + thislen));
+
+  free(template);
+
+  return output;
+}
+
+
+char* fill_nav_login(char* template, char* token)
+{
+  char temp_str[128];
+  const char* client_uname = valid_token(token);
+
+  if (client_uname != NULL)
+  {
+    sprintf(temp_str, "<a href=\"/u/%s\">%s</a>", client_uname, client_uname);
+    template = replace(template, "{USER_NAME}", temp_str);
+  }
+
+  else
+  {
+    template = replace(template, "{USER_NAME}", 
+               "<a href=\"/signup\">signup</a>");
+  }
+
+  return template;
+}
+
+
+char* fill_user_info(char* template, char* uname)
+{
+  // prepare query string
   char* query_fmt = "SELECT * FROM users WHERE uname = '%s';";
   char query[strlen(uname) + strlen(query_fmt) + 1];
-
   sprintf(query, query_fmt, uname);
 
   list** result = query_database_ls(query);
 
+  // make sure we got exactly ONE entry
   if (result[0] == NULL)
   {
     fprintf(stderr, "user %s not found\n", uname);
@@ -102,15 +168,24 @@ list* get_user_info(char* uname)
     fprintf(stderr, "Fatal error: multiple users with name %s\n", uname);
     exit(EXIT_FAILURE);
   }
-
   list* user_info = result[0];
   free(result);
 
-  return user_info;
+  // fill in user info
+  template = replace(template, "{USER_NAME}", uname);
+  template = replace(template, "{USER_POINTS}", list_get(user_info, SF_USER_POINTS)->cp);
+  template = replace(template, "{USER_POSTS}", list_get(user_info, SF_USER_POSTS)->cp);
+  template = replace(template, "{USER_COMMENTS}", list_get(user_info, SF_USER_COMMENTS)->cp);
+  template = replace(template, "{USER_BDAY}", list_get(user_info, SF_USER_BDAY)->cp);
+  template = replace(template, "{USER_ABOUT}", list_get(user_info, SF_USER_ABOUT)->cp);
+
+  list_delete(user_info);
+
+  return template;
 }
 
 
-char* fill_in_posts(char* template, char* uname)
+char* fill_user_posts(char* template, char* uname)
 {
   // prepare query string
   char* query_fmt = "SELECT * FROM posts WHERE author = '%s';";
@@ -153,7 +228,7 @@ char* fill_in_posts(char* template, char* uname)
 }
 
 
-char* fill_in_comments(char* template, char* uname)
+char* fill_user_comments(char* template, char* uname)
 {
   // prepare query string
   char* query_fmt = "SELECT * FROM comments WHERE author = '%s';";
@@ -204,13 +279,6 @@ char* get_user(char* uname, char* token)
     return NULL;
   }
 
-  // pull user info from database
-  list* user_info = get_user_info(uname);
-  if (user_info == NULL)
-  {
-    return NULL;
-  }
-
   // load main template
   char* main_html = load_file("templates/main/main.html");
 
@@ -220,76 +288,122 @@ char* get_user(char* uname, char* token)
   // insert js link
   main_html = replace(main_html, "{SCRIPT}", "<script src=\"/templates/user/user.js\"></script>");
 
-  // check if client is logged in
-  char temp_str[128];
-  const char* client_uname = valid_token(token);
-  if (client_uname != NULL)
-  {
-    sprintf(temp_str, "<a href=\"/u/%s\">%s</a>", client_uname, client_uname);
-    main_html = replace(main_html, "{UNAME}", temp_str);
-  }
-  else
-  {
-    main_html = replace(main_html, "{UNAME}", 
-               "<a href=\"/signup\">signup</a>");
-  }
+  // fill login button on nav bar
+  main_html = fill_nav_login(main_html, token);
 
   // load user template
   char* user_html = load_file("templates/user/user.html");
+  main_html = replace(main_html, "{PAGE_BODY}", user_html);
+  free(user_html);
 
   // fill in user info
-  user_html = replace(user_html, "{USER_NAME}", uname);
-  user_html = replace(user_html, "{USER_POINTS}", list_get(user_info, SF_USER_POINTS)->cp);
-  user_html = replace(user_html, "{USER_POSTS}", list_get(user_info, SF_USER_POSTS)->cp);
-  user_html = replace(user_html, "{USER_COMMENTS}", list_get(user_info, SF_USER_COMMENTS)->cp);
-  user_html = replace(user_html, "{USER_BDAY}", list_get(user_info, SF_USER_BDAY)->cp);
-  user_html = replace(user_html, "{USER_ABOUT}", list_get(user_info, SF_USER_ABOUT)->cp);
-
-  // fill in posts
-  user_html = fill_in_posts(user_html, uname);
-
-  // fill in comments
-  user_html = fill_in_comments(user_html, uname);
-
-  // insert user_data into main html
-  main_html = replace(main_html, "{PAGE_BODY}", user_html);
-
-  free(user_html);
-  list_delete(user_info);
+  main_html = fill_user_info(main_html, uname);
+  main_html = fill_user_posts(main_html, uname);
+  main_html = fill_user_comments(main_html, uname);
 
   return main_html;
 }
 
 
-char* replace(char* template, char* this, char* withthat)
+char* fill_post_info(char* template, char* postid)
 {
-  char* location;
+  // prepare query string
+  char* query_fmt = "SELECT * FROM comments WHERE postid = '%s';";
+  char query[strlen(query_fmt) + strlen(postid) + 1];
+  sprintf(query, query_fmt, postid);
 
-  // check if 'this' is in template
-  if ((location = strstr(template, this)) == NULL)
+  list** result = query_database_ls(query);
+
+  // make sure we got exactly ONE entry
+  if (result[0] == NULL)
   {
-    return template;
+    fprintf(stderr, "post %s not found\n", postid);
+    free(result);
+    return NULL;
   }
 
-  // figure out sizes
-  int templen = strlen(template);
-  int thislen = strlen(this);
-  int withlen = strlen(withthat);
-  int outputsize = (templen - thislen) + withlen + 1;
+  if (result[1] != NULL)
+  {
+    fprintf(stderr, "Fatal error: multiple posts with id %s\n", postid);
+    exit(EXIT_FAILURE);
+  }
+  list* post_info = result[0];
+  free(result);
 
-  // create output buffer
-  char* output = malloc(outputsize);
-  output[outputsize - 1] = '\0';
+  // fill in user info
+  template = replace(template, "{USER_NAME}", list_get(post_info, SF_POST_AUTHOR_NAME)->cp);
+  template = replace(template, "{POST_TITLE}", list_get(post_info, SF_POST_TITLE)->cp);
+  template = replace(template, "{POST_BODY}", list_get(post_info, SF_POST_BODY)->cp);
 
-  // do the replacement
-  int dist = (location - template); 
-  memcpy(output, template, dist);
-  memcpy(output + dist, withthat, withlen);
-  memcpy(output + dist + withlen, template + dist + thislen, strlen(template + dist + thislen));
+  list_delete(post_info);
 
-  free(template);
+  return template;
+}
 
-  return output;
+
+char* fill_post_comments(char* template, char* postid)
+{
+  // prepare query string
+  char* query_fmt = "SELECT * FROM comments WHERE postid = '%s';";
+  char query[strlen(query_fmt) + strlen(postid) + 1];
+  sprintf(query, query_fmt, postid);
+
+  // grab user comment list from database
+  list** comments = query_database_ls(query);
+
+  // iterate over each comment
+  for (int i = 0; comments[i] != NULL; i++)
+  {
+    // current comment (list of fields)
+    list* c = comments[i];
+
+    // load comment_stub template and do replacements
+    char* comment_html = load_file("templates/post/comment.html");
+    comment_html = replace(comment_html, "{USER_NAME}", list_get(c, SF_COMMENT_AUTHOR_NAME)->cp);
+    comment_html = replace(comment_html, "{COMMENT_BODY}", list_get(c, SF_COMMENT_BODY)->cp);
+
+    template = replace(template, "{COMMENT}", comment_html);
+
+    free(comment_html);
+    list_delete(c);
+  }
+
+  free(comments);
+
+  // remove trailing template string
+  return replace(template, "{COMMENT}", "");
+}
+
+
+char* get_post(char* postid, char* token)
+{
+  if (postid == NULL || strlen(postid) == 0)
+  {
+    return NULL;
+  }
+
+  // load main html
+  char* main_html = load_file("templates/post/post.html");
+
+  // insert style link
+  main_html = replace(main_html, "{STYLE}", "<link rel=\"stylesheet\" href=\"/templates/post/post.css\">");
+
+  // insert js link
+  main_html = replace(main_html, "{SCRIPT}", "");
+
+  // fill login button on nav bar
+  main_html = fill_nav_login(main_html, token);
+
+  // load post template
+  char* post_html = load_file("templates/post/post.html");
+  main_html = replace(main_html, "{PAGE_BODY}", post_html);
+  free(post_html);
+
+  // fill in post info
+  main_html = fill_post_info(main_html, postid);
+  main_html = fill_post_comments(main_html, postid);
+
+  return main_html;
 }
 
 
