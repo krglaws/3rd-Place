@@ -27,6 +27,7 @@ char* load_file(const char* path)
   {
     file[i] = fgetc(fd);
   }
+  file[filelen] = '\0';
 
   fclose(fd);
 

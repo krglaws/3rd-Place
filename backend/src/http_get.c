@@ -27,42 +27,50 @@ struct response* http_get(struct request* req)
   if (strstr(req->uri, ".css"))
   {
     content_type = TEXTCSS;
-    content = load_file(req->uri);
-    content_length = strlen(content);
+    if (content = load_file(req->uri))
+    {
+      content_length = strlen(content);
+    }
   }
   else if (strstr(req->uri, ".js"))
   {
     content_type = APPJS;
-    content = load_file(req->uri);
-    content_length = strlen(content);
+    if (content = load_file(req->uri))
+    {
+      content_length = strlen(content);
+    }
   }
   else if (strstr(req->uri, ".ico"))
   {
+    struct file_str* ico;
     content_type = IMGICO;
-    struct file_str* ico = load_file_str(req->uri);
-    content = ico->contents;
-    content_length = ico->len;
-
-    // just free the struct, dont call del_file_str()
-    free(ico);
+    if (ico = load_file_str(req->uri))
+    {
+      content = ico->contents;
+      content_length = ico->len;
+      free(ico);
+    }
   }
   else if (strstr(req->uri, "./u/"))
   {
     content_type = TEXTHTML;
-    content = get_user(req->uri + 4, req->token);
-    content_length = strlen(content);
+    if (content = get_user(req->uri + 4, req->token))
+    {
+      content_length = strlen(content);
+    }
   }
 /*  else if (strstr(req->uri, "./c/"))
   {
     content_type = TEXTHTML;
     content = get_community(req->uri + 4, req->token);
-  }
-*/
+  }*/
   else if (strstr(req->uri, "./p/"))
   {
     content_type = TEXTHTML;
-    content = get_post(req->uri + 4, req->token);
-    content_length = strlen(content);
+    if (content = get_post(req->uri + 4, req->token))
+    {
+      content_length = strlen(content);
+    }
   }
 
   /* do we have it? */
@@ -127,19 +135,20 @@ char* replace(char* template, char* this, char* withthat)
 
 char* fill_nav_login(char* template, char* token)
 {
-  char temp_str[128];
+  char user_link[64];
   const char* client_uname = valid_token(token);
 
   if (client_uname != NULL)
   {
-    sprintf(temp_str, "<a href=\"/u/%s\">%s</a>", client_uname, client_uname);
-    template = replace(template, "{USER_NAME}", temp_str);
+    sprintf(user_link, "/u/%s", client_uname);
+    template = replace(template, "{USER_LINK}", user_link);
+    template = replace(template, "{USER_NAME}", client_uname);
   }
 
   else
   {
-    template = replace(template, "{USER_NAME}", 
-               "<a href=\"/signup\">signup</a>");
+    template = replace(template, "{USER_NAME}", "/signup");
+    template = replace(template, "{USER_NAME}", "Sign Up");
   }
 
   return template;
@@ -149,7 +158,7 @@ char* fill_nav_login(char* template, char* token)
 char* fill_user_info(char* template, char* uname)
 {
   // prepare query string
-  char* query_fmt = "SELECT * FROM users WHERE uname = '%s';";
+  char* query_fmt = QUSER_BY_UNAME;
   char query[strlen(uname) + strlen(query_fmt) + 1];
   sprintf(query, query_fmt, uname);
 
@@ -159,6 +168,7 @@ char* fill_user_info(char* template, char* uname)
   if (result[0] == NULL)
   {
     fprintf(stderr, "user %s not found\n", uname);
+    free(template);// delete template so get_user doesn't have to
     free(result);
     return NULL;
   }
@@ -188,7 +198,7 @@ char* fill_user_info(char* template, char* uname)
 char* fill_user_posts(char* template, char* uname)
 {
   // prepare query string
-  char* query_fmt = "SELECT * FROM posts WHERE author = '%s';";
+  char* query_fmt = QPOST_BY_UNAME;
   char query[strlen(query_fmt) + strlen(uname) + 1];
   sprintf(query, query_fmt, uname);
 
@@ -202,7 +212,7 @@ char* fill_user_posts(char* template, char* uname)
     list* p = posts[i];
 
     // load post_stub template and do replacements
-    char* post_stub = load_file("templates/user/post_stub.html");
+    char* post_stub = load_file(HTMLUSERPOSTSTUB);
     post_stub = replace(post_stub, "{POST_ID}", list_get(p, SF_POST_ID)->cp);
     post_stub = replace(post_stub, "{POST_TITLE}", list_get(p, SF_POST_TITLE)->cp);
     post_stub = replace(post_stub, "{COMMUNITY_NAME}", list_get(p, SF_POST_COMMUNITY_NAME)->cp);
@@ -279,27 +289,41 @@ char* get_user(char* uname, char* token)
     return NULL;
   }
 
-  // load main template
-  char* main_html = load_file("templates/main/main.html");
-
-  // insert style link
-  main_html = replace(main_html, "{STYLE}", "<link rel=\"stylesheet\" href=\"/templates/user/user.css\">");
-
-  // insert js link
-  main_html = replace(main_html, "{SCRIPT}", "<script src=\"/templates/user/user.js\"></script>");
-
-  // fill login button on nav bar
-  main_html = fill_nav_login(main_html, token);
-
   // load user template
-  char* user_html = load_file("templates/user/user.html");
-  main_html = replace(main_html, "{PAGE_BODY}", user_html);
-  free(user_html);
+  char* user_html;
+  if ((user_html = load_file(HTMLUSER)) == NULL)
+  {
+    fprintf(stderr, "get_user(): failed to load %s\n", HTMLUSER);
+    return NULL;
+  }
 
   // fill in user info
-  main_html = fill_user_info(main_html, uname);
-  main_html = fill_user_posts(main_html, uname);
-  main_html = fill_user_comments(main_html, uname);
+  if ((user_html = fill_user_info(user_html, uname)) == NULL)
+  {
+    return NULL;
+  }
+  user_html = fill_user_posts(user_html, uname);
+  user_html = fill_user_comments(user_html, uname);
+
+  // load main template
+  char* main_html;
+  if ((main_html = load_file(HTMLMAIN)) == NULL)
+  {
+    fprintf(stderr, "get_user(): failed to load %s\n", HTMLMAIN);
+    free(user_html);
+    return NULL;
+  }
+
+  // insert header info
+  main_html = replace(main_html, "{STYLE}", CSSUSER);
+  main_html = replace(main_html, "{SCRIPT}", JSUSER);
+
+  // is client logged in?
+  main_html = fill_nav_login(main_html, token);
+
+  // insert user html into main
+  main_html = replace(main_html, "{PAGE_BODY}", user_html);
+  free(user_html);
 
   return main_html;
 }
@@ -308,7 +332,7 @@ char* get_user(char* uname, char* token)
 char* fill_post_info(char* template, char* postid)
 {
   // prepare query string
-  char* query_fmt = "SELECT * FROM comments WHERE postid = '%s';";
+  char* query_fmt = "SELECT * FROM posts WHERE uuid = '%s';";
   char query[strlen(query_fmt) + strlen(postid) + 1];
   sprintf(query, query_fmt, postid);
 
@@ -331,6 +355,7 @@ char* fill_post_info(char* template, char* postid)
   free(result);
 
   // fill in user info
+  template = replace(template, "{USER_NAME}", list_get(post_info, SF_POST_AUTHOR_NAME)->cp);
   template = replace(template, "{USER_NAME}", list_get(post_info, SF_POST_AUTHOR_NAME)->cp);
   template = replace(template, "{POST_TITLE}", list_get(post_info, SF_POST_TITLE)->cp);
   template = replace(template, "{POST_BODY}", list_get(post_info, SF_POST_BODY)->cp);
@@ -359,6 +384,9 @@ char* fill_post_comments(char* template, char* postid)
 
     // load comment_stub template and do replacements
     char* comment_html = load_file("templates/post/comment.html");
+
+    // insert user name into '<a href=\"{USER_NAME}\">{USER_NAME}</a>'
+    comment_html = replace(comment_html, "{USER_NAME}", list_get(c, SF_COMMENT_AUTHOR_NAME)->cp);
     comment_html = replace(comment_html, "{USER_NAME}", list_get(c, SF_COMMENT_AUTHOR_NAME)->cp);
     comment_html = replace(comment_html, "{COMMENT_BODY}", list_get(c, SF_COMMENT_BODY)->cp);
 
@@ -383,7 +411,7 @@ char* get_post(char* postid, char* token)
   }
 
   // load main html
-  char* main_html = load_file("templates/post/post.html");
+  char* main_html = load_file("templates/main/main.html");
 
   // insert style link
   main_html = replace(main_html, "{STYLE}", "<link rel=\"stylesheet\" href=\"/templates/post/post.css\">");
@@ -396,12 +424,13 @@ char* get_post(char* postid, char* token)
 
   // load post template
   char* post_html = load_file("templates/post/post.html");
-  main_html = replace(main_html, "{PAGE_BODY}", post_html);
-  free(post_html);
 
   // fill in post info
-  main_html = fill_post_info(main_html, postid);
-  main_html = fill_post_comments(main_html, postid);
+  post_html = fill_post_info(post_html, postid);
+  post_html = fill_post_comments(post_html, postid);
+
+  main_html = replace(main_html, "{PAGE_BODY}", post_html);
+  free(post_html);
 
   return main_html;
 }

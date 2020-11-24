@@ -443,7 +443,7 @@ static void send_msg(int fd, char* buffer, int msg_len)
     ct ++;
   }
 
-  printf("Message sent in %d passes\n", ct);
+  //printf("Message sent in %d passes\n", ct);
 }
 
 
