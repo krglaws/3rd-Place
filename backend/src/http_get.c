@@ -7,7 +7,7 @@
 
 #include <common.h>
 #include <util.h>
-#include <send_err.h>
+#include <senderr.h>
 #include <token_manager.h>
 #include <sql_wrapper.h>
 #include <http_get.h>
@@ -80,7 +80,7 @@ struct response* http_get(struct request* req)
     {
       free(content);
     }
-    return send_err(STAT404);
+    return senderr(NOT_FOUND);
   }
 
   /* prepare response object */
@@ -101,7 +101,7 @@ struct response* http_get(struct request* req)
 }
 
 
-char* replace(char* template, char* this, char* withthat)
+char* replace(char* template, const char* this, const char* withthat)
 {
   char* location;
 
@@ -136,6 +136,7 @@ char* replace(char* template, char* this, char* withthat)
 char* fill_nav_login(char* template, char* token)
 {
   char user_link[64];
+
   const char* client_uname = valid_token(token);
 
   if (client_uname != NULL)
@@ -158,7 +159,7 @@ char* fill_nav_login(char* template, char* token)
 char* fill_user_info(char* template, char* uname)
 {
   // prepare query string
-  char* query_fmt = QUSER_BY_UNAME;
+  char* query_fmt = QUERY_USER_BY_UNAME;
   char query[strlen(uname) + strlen(query_fmt) + 1];
   sprintf(query, query_fmt, uname);
 
@@ -168,14 +169,14 @@ char* fill_user_info(char* template, char* uname)
   if (result[0] == NULL)
   {
     fprintf(stderr, "user %s not found\n", uname);
-    free(template);// delete template so get_user doesn't have to
+    free(template);
     free(result);
     return NULL;
   }
 
   if (result[1] != NULL)
   {
-    fprintf(stderr, "Fatal error: multiple users with name %s\n", uname);
+    fprintf(stderr, "fill_user_info(): multiple users with name %s\n", uname);
     exit(EXIT_FAILURE);
   }
   list* user_info = result[0];
@@ -183,11 +184,11 @@ char* fill_user_info(char* template, char* uname)
 
   // fill in user info
   template = replace(template, "{USER_NAME}", uname);
-  template = replace(template, "{USER_POINTS}", list_get(user_info, SF_USER_POINTS)->cp);
-  template = replace(template, "{USER_POSTS}", list_get(user_info, SF_USER_POSTS)->cp);
-  template = replace(template, "{USER_COMMENTS}", list_get(user_info, SF_USER_COMMENTS)->cp);
-  template = replace(template, "{USER_BDAY}", list_get(user_info, SF_USER_BDAY)->cp);
-  template = replace(template, "{USER_ABOUT}", list_get(user_info, SF_USER_ABOUT)->cp);
+  template = replace(template, "{USER_POINTS}", list_get(user_info, SQL_FIELD_USER_POINTS)->cp);
+  template = replace(template, "{USER_POSTS}", list_get(user_info, SQL_FIELD_USER_POSTS)->cp);
+  template = replace(template, "{USER_COMMENTS}", list_get(user_info, SQL_FIELD_USER_COMMENTS)->cp);
+  template = replace(template, "{USER_BDAY}", list_get(user_info, SQL_FIELD_USER_BDAY)->cp);
+  template = replace(template, "{USER_ABOUT}", list_get(user_info, SQL_FIELD_USER_ABOUT)->cp);
 
   list_delete(user_info);
 
@@ -198,40 +199,59 @@ char* fill_user_info(char* template, char* uname)
 char* fill_user_posts(char* template, char* uname)
 {
   // prepare query string
-  char* query_fmt = QPOST_BY_UNAME;
+  char* query_fmt = QUERY_POSTS_BY_UNAME;
   char query[strlen(query_fmt) + strlen(uname) + 1];
   sprintf(query, query_fmt, uname);
 
   // grab user post list from database
   list** posts = query_database_ls(query);
 
+  // load post stub template and do replacements
+  char* post_stub;
+  if ((post_stub = load_file(HTML_USER_POST_STUB)) == NULL)
+  {
+    // failed to load post stub file
+    fprintf(stderr, "fill_user_posts(): failed to load file %s\n", HTML_USER_POST_STUB);
+    for (int i = 0; posts[i] != NULL; i++)
+    {
+      list_delete(posts[i]);
+    }
+    free(posts);
+    free(template);
+    return NULL;
+  }
+
+  int post_stub_len = strlen(post_stub);
+
   // iterate through each post
   for (int i = 0; posts[i] != NULL; i++)
   {
+    // copy post stub string instead of read it from disk every loop
+    char* post_stub_copy = malloc((post_stub_len + 1) * sizeof(char));
+    memcpy(post_stub_copy, post_stub, post_stub_len + 1);
+
     // current post (list of fields)
     list* p = posts[i];
-
-    // load post_stub template and do replacements
-    char* post_stub = load_file(HTMLUSERPOSTSTUB);
-    post_stub = replace(post_stub, "{POST_ID}", list_get(p, SF_POST_ID)->cp);
-    post_stub = replace(post_stub, "{POST_TITLE}", list_get(p, SF_POST_TITLE)->cp);
-    post_stub = replace(post_stub, "{COMMUNITY_NAME}", list_get(p, SF_POST_COMMUNITY_NAME)->cp);
+    post_stub_copy = replace(post_stub_copy, "{POST_ID}", list_get(p, SQL_FIELD_POST_ID)->cp);
+    post_stub_copy = replace(post_stub_copy, "{POST_TITLE}", list_get(p, SQL_FIELD_POST_TITLE)->cp);
+    post_stub_copy = replace(post_stub_copy, "{COMMUNITY_NAME}", list_get(p, SQL_FIELD_POST_COMMUNITY_NAME)->cp);
 
     // limit post body to 64 chars in stub
     char body[65];
-    int end = sprintf(body, "%61s", list_get(p, SF_POST_BODY)->cp);
+    int end = sprintf(body, "%61s", list_get(p, SQL_FIELD_POST_BODY)->cp);
     memcpy(body + end, "...", 3);
     body[end+3] = '\0';
-    post_stub = replace(post_stub, "{POST_BODY}", body);
+    post_stub_copy = replace(post_stub_copy, "{POST_BODY}", body);
 
     // copy stub into main template
-    template = replace(template, "{POST_STUB}", post_stub);
+    template = replace(template, "{POST_STUB}", post_stub_copy);
 
-    free(post_stub);
+    free(post_stub_copy);
     list_delete(p);
   }
 
   free(posts);
+  free(post_stub);
 
   // remove trailing template string
   return replace(template, "{POST_STUB}", "");
@@ -241,12 +261,29 @@ char* fill_user_posts(char* template, char* uname)
 char* fill_user_comments(char* template, char* uname)
 {
   // prepare query string
-  char* query_fmt = "SELECT * FROM comments WHERE author = '%s';";
+  char* query_fmt = QUERY_COMMENTS_BY_UNAME;
   char query[strlen(query_fmt) + strlen(uname) + 1];
   sprintf(query, query_fmt, uname);
 
   // grab user comment list from database
   list** comments = query_database_ls(query);
+
+  // load comment stub template and do replacements
+  char* comment_stub;
+  if ((comment_stub = load_file(HTML_USER_COMMENT_STUB)) == NULL)
+  {
+    // failed to load comment stub file
+    fprintf(stderr, "fill_user_posts(): failed to load file %s\n", HTML_USER_COMMENT_STUB);
+    for (int i = 0; comments[i] != NULL; i++)
+    {
+      list_delete(comments[i]);
+    }
+    free(comments);
+    free(template);
+    return NULL;
+  }
+
+  int comment_stub_len = strlen(comment_stub);
 
   // iterate over each comment
   for (int i = 0; comments[i] != NULL; i++)
@@ -254,28 +291,32 @@ char* fill_user_comments(char* template, char* uname)
     // current comment (list of fields)
     list* c = comments[i];
 
+    // copy comment stub string instead of read it from disk every loop
+    char* comment_stub_copy = malloc((comment_stub_len + 1) * sizeof(char));
+    memcpy(comment_stub_copy, comment_stub, comment_stub_len + 1);
+
     // load comment_stub template and do replacements
-    char* comment_stub = load_file("templates/user/comment_stub.html");
-    comment_stub = replace(comment_stub, "{POST_ID}", list_get(c, SF_COMMENT_POST_ID)->cp);
-    comment_stub = replace(comment_stub, "{COMMENT_ID}", list_get(c, SF_COMMENT_ID)->cp);
+    comment_stub_copy = replace(comment_stub_copy, "{POST_ID}", list_get(c, SQL_FIELD_COMMENT_POST_ID)->cp);
+    comment_stub_copy = replace(comment_stub_copy, "{COMMENT_ID}", list_get(c, SQL_FIELD_COMMENT_ID)->cp);
 
     // limit comment body to 64 chars in stub
     char body[65];
-    int end = sprintf(body, "%61s", list_get(c, SF_COMMENT_BODY)->cp);
+    int end = sprintf(body, "%61s", list_get(c, SQL_FIELD_COMMENT_BODY)->cp);
     memcpy(body + end, "...", 3);
     body[end+3] = '\0';
-    comment_stub = replace(comment_stub, "{COMMENT_BODY}", body);
-    comment_stub = replace(comment_stub, "{POST_TITLE}", list_get(c, SF_COMMENT_POST_TITLE)->cp);
-    comment_stub = replace(comment_stub, "{COMMUNITY_NAME}", list_get(c, SF_COMMENT_COMMUNITY_NAME)->cp);
+    comment_stub_copy = replace(comment_stub_copy, "{COMMENT_BODY}", body);
+    comment_stub_copy = replace(comment_stub_copy, "{POST_TITLE}", list_get(c, SQL_FIELD_COMMENT_POST_TITLE)->cp);
+    comment_stub_copy = replace(comment_stub_copy, "{COMMUNITY_NAME}", list_get(c, SQL_FIELD_COMMENT_COMMUNITY_NAME)->cp);
 
     // copy stub into main template
-    template = replace(template, "{COMMENT_STUB}", comment_stub);
+    template = replace(template, "{COMMENT_STUB}", comment_stub_copy);
 
-    free(comment_stub);
+    free(comment_stub_copy);
     list_delete(c);
   }
 
   free(comments);
+  free(comment_stub);
 
   // remove trailing template string
   return replace(template, "{COMMENT_STUB}", "");
@@ -291,32 +332,34 @@ char* get_user(char* uname, char* token)
 
   // load user template
   char* user_html;
-  if ((user_html = load_file(HTMLUSER)) == NULL)
+  if ((user_html = load_file(HTML_USER)) == NULL)
   {
-    fprintf(stderr, "get_user(): failed to load %s\n", HTMLUSER);
+    fprintf(stderr, "get_user(): failed to load %s\n", HTML_USER);
     return NULL;
   }
 
   // fill in user info
   if ((user_html = fill_user_info(user_html, uname)) == NULL)
   {
+    // user does not exist
     return NULL;
   }
+
   user_html = fill_user_posts(user_html, uname);
   user_html = fill_user_comments(user_html, uname);
 
   // load main template
   char* main_html;
-  if ((main_html = load_file(HTMLMAIN)) == NULL)
+  if ((main_html = load_file(HTML_MAIN)) == NULL)
   {
-    fprintf(stderr, "get_user(): failed to load %s\n", HTMLMAIN);
+    fprintf(stderr, "get_user(): failed to load %s\n", HTML_MAIN);
     free(user_html);
     return NULL;
   }
 
   // insert header info
-  main_html = replace(main_html, "{STYLE}", CSSUSER);
-  main_html = replace(main_html, "{SCRIPT}", JSUSER);
+  main_html = replace(main_html, "{STYLE}", CSS_USER);
+  main_html = replace(main_html, "{SCRIPT}", JS_USER);
 
   // is client logged in?
   main_html = fill_nav_login(main_html, token);
@@ -332,7 +375,7 @@ char* get_user(char* uname, char* token)
 char* fill_post_info(char* template, char* postid)
 {
   // prepare query string
-  char* query_fmt = "SELECT * FROM posts WHERE uuid = '%s';";
+  char* query_fmt = QUERY_POST_BY_UUID;
   char query[strlen(query_fmt) + strlen(postid) + 1];
   sprintf(query, query_fmt, postid);
 
@@ -342,23 +385,24 @@ char* fill_post_info(char* template, char* postid)
   if (result[0] == NULL)
   {
     fprintf(stderr, "post %s not found\n", postid);
+    free(template);
     free(result);
     return NULL;
   }
 
   if (result[1] != NULL)
   {
-    fprintf(stderr, "Fatal error: multiple posts with id %s\n", postid);
+    fprintf(stderr, "fill_post_info(): multiple posts with id %s\n", postid);
     exit(EXIT_FAILURE);
   }
   list* post_info = result[0];
   free(result);
 
-  // fill in user info
-  template = replace(template, "{USER_NAME}", list_get(post_info, SF_POST_AUTHOR_NAME)->cp);
-  template = replace(template, "{USER_NAME}", list_get(post_info, SF_POST_AUTHOR_NAME)->cp);
-  template = replace(template, "{POST_TITLE}", list_get(post_info, SF_POST_TITLE)->cp);
-  template = replace(template, "{POST_BODY}", list_get(post_info, SF_POST_BODY)->cp);
+  // fill in post info
+  template = replace(template, "{USER_NAME}", list_get(post_info, SQL_FIELD_POST_AUTHOR_NAME)->cp);
+  template = replace(template, "{USER_NAME}", list_get(post_info, SQL_FIELD_POST_AUTHOR_NAME)->cp);
+  template = replace(template, "{POST_TITLE}", list_get(post_info, SQL_FIELD_POST_TITLE)->cp);
+  template = replace(template, "{POST_BODY}", list_get(post_info, SQL_FIELD_POST_BODY)->cp);
 
   list_delete(post_info);
 
@@ -369,34 +413,51 @@ char* fill_post_info(char* template, char* postid)
 char* fill_post_comments(char* template, char* postid)
 {
   // prepare query string
-  char* query_fmt = "SELECT * FROM comments WHERE postid = '%s';";
+  char* query_fmt = QUERY_COMMENTS_BY_POSTID;
   char query[strlen(query_fmt) + strlen(postid) + 1];
   sprintf(query, query_fmt, postid);
 
   // grab user comment list from database
   list** comments = query_database_ls(query);
 
+  // load comment stub template
+  char* comment_stub;
+  if ((comment_stub = load_file(HTML_POST_COMMENT)) == NULL)
+  {
+    // failed to load comment stub
+    fprintf(stderr, "fill_user_posts(): failed to load file %s\n", HTML_POST_COMMENT);
+    for (int i = 0; comments[i] != NULL; i++)
+    {
+      list_delete(comments[i]);
+    }
+    free(comments); 
+    free(template);
+    return NULL;
+  }
+
+  int comment_stub_len = strlen(comment_stub);
+
   // iterate over each comment
   for (int i = 0; comments[i] != NULL; i++)
   {
+    // copy comment stub string instead of read it from disk every loop
+    char* comment_stub_copy = malloc((comment_stub_len + 1) * sizeof(char));
+    memcpy(comment_stub_copy, comment_stub, comment_stub_len + 1);
+
     // current comment (list of fields)
     list* c = comments[i];
+    comment_stub_copy = replace(comment_stub_copy, "{USER_NAME}", list_get(c, SQL_FIELD_COMMENT_AUTHOR_NAME)->cp);
+    comment_stub_copy = replace(comment_stub_copy, "{USER_NAME}", list_get(c, SQL_FIELD_COMMENT_AUTHOR_NAME)->cp);
+    comment_stub_copy = replace(comment_stub_copy, "{COMMENT_BODY}", list_get(c, SQL_FIELD_COMMENT_BODY)->cp);
 
-    // load comment_stub template and do replacements
-    char* comment_html = load_file("templates/post/comment.html");
+    template = replace(template, "{COMMENT}", comment_stub_copy);
 
-    // insert user name into '<a href=\"{USER_NAME}\">{USER_NAME}</a>'
-    comment_html = replace(comment_html, "{USER_NAME}", list_get(c, SF_COMMENT_AUTHOR_NAME)->cp);
-    comment_html = replace(comment_html, "{USER_NAME}", list_get(c, SF_COMMENT_AUTHOR_NAME)->cp);
-    comment_html = replace(comment_html, "{COMMENT_BODY}", list_get(c, SF_COMMENT_BODY)->cp);
-
-    template = replace(template, "{COMMENT}", comment_html);
-
-    free(comment_html);
+    free(comment_stub_copy);
     list_delete(c);
   }
 
   free(comments);
+  free(comment_stub);
 
   // remove trailing template string
   return replace(template, "{COMMENT}", "");
@@ -410,25 +471,39 @@ char* get_post(char* postid, char* token)
     return NULL;
   }
 
-  // load main html
-  char* main_html = load_file("templates/main/main.html");
-
-  // insert style link
-  main_html = replace(main_html, "{STYLE}", "<link rel=\"stylesheet\" href=\"/templates/post/post.css\">");
-
-  // insert js link
-  main_html = replace(main_html, "{SCRIPT}", "");
-
-  // fill login button on nav bar
-  main_html = fill_nav_login(main_html, token);
-
   // load post template
-  char* post_html = load_file("templates/post/post.html");
+  char* post_html;
+  if ((post_html = load_file(HTML_POST)) == NULL)
+  {
+    fprintf(stderr, "get_post(): failed to load %s\n", HTML_POST);
+    return NULL;
+  }
 
   // fill in post info
-  post_html = fill_post_info(post_html, postid);
+  if ((post_html = fill_post_info(post_html, postid)) == NULL)
+  {
+    // post does not exist
+    return NULL;
+  }
+
   post_html = fill_post_comments(post_html, postid);
 
+  char* main_html;
+  if ((main_html = load_file(HTML_MAIN)) == NULL)
+  {
+    fprintf(stderr, "get_post() failed to load %s\n", HTML_MAIN);
+    free(post_html);
+    return NULL;
+  }
+
+  // insert header info
+  main_html = replace(main_html, "{STYLE}", CSS_POST);
+  main_html = replace(main_html, "{SCRIPT}", "");
+
+  // is client logged in?
+  main_html = fill_nav_login(main_html, token);
+
+  // insert post html into main
   main_html = replace(main_html, "{PAGE_BODY}", post_html);
   free(post_html);
 

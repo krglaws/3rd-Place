@@ -37,7 +37,7 @@ enum request_method
   PUT_REQ,
   POST_REQ,
   DELETE_REQ,
-  BAD_REQ
+  NO_REQUEST_METHOD
 };
 
 /* struct containing stripped down request info */

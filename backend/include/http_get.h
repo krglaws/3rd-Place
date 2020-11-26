@@ -3,30 +3,35 @@
 #define _HTTP_GET_H_
 
 /* html template paths */
-#define HTMLMAIN "templates/main/main.html"
-#define HTMLUSER "templates/user/user.html"
-#define HTMLPOST "templates/post/post.html"
-#define HTMLUSERPOSTSTUB "templates/user/post_stub.html"
+#define HTML_MAIN "templates/main/main.html"
+#define HTML_USER "templates/user/user.html"
+#define HTML_USER_POST_STUB "templates/user/post_stub.html"
+#define HTML_USER_COMMENT_STUB "templates/user/comment_stub.html"
+#define HTML_POST "templates/post/post.html"
+#define HTML_POST_COMMENT "templates/post/comment.html"
 
 /* paths hereafter need the leading '/' since
    they will be requested by the client browser
    directly */
 
 /* css paths */
-#define CSSMAIN "/templates/main/main.css"
-#define CSSUSER "/templates/user/user.css"
-#define CSSPOST "/templates/post/post.css"
+#define CSS_MAIN "/templates/main/main.css"
+#define CSS_USER "/templates/user/user.css"
+#define CSS_POST "/templates/post/post.css"
 
 /* js paths */
-#define JSUSER "/templates/user/user.js"
-
+#define JS_USER "/templates/user/user.js"
 
 /* query templates */
-#define QUSER_BY_UNAME "SELECT * FROM users WHERE uname = '%s';"
-#define QPOST_BY_UNAME "SELECT * FROM posts WHERE author = '%s';"
-
+#define QUERY_USER_BY_UNAME "SELECT * FROM users WHERE uname = '%s';"
+#define QUERY_POSTS_BY_UNAME "SELECT * FROM posts WHERE author = '%s';"
+#define QUERY_COMMENTS_BY_UNAME "SELECT * FROM comments WHERE author = '%s';"
+#define QUERY_POST_BY_UUID "SELECT * FROM posts WHERE uuid = '%s';"
+#define QUERY_COMMENTS_BY_POSTID "SELECT * FROM comments WHERE postid = '%s';"
 
 struct response* http_get(struct request* req);
+
+char* replace(char* template, const char* this, const char* withthat);
 
 char* fill_user_info(char* template, char* uname);
 
@@ -42,7 +47,4 @@ char* fill_post_comments(char* template, char* postid);
 
 char* get_post(char* postid, char* token);
 
-char* replace(char* template, char* this, char* withthat);
-
 #endif
-

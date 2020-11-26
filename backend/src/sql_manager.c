@@ -1,7 +1,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <my_global.h>
+#include <string.h>
 #include <mysql.h>
 
 #include <util.h>

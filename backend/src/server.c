@@ -12,6 +12,7 @@
 #include <kylestructs.h>
 
 #include <common.h>
+#include <senderr.h>
 #include <client_manager.h>
 #include <sql_manager.h>
 #include <token_manager.h>
@@ -248,26 +249,44 @@ static char* receive_request(int client_fd, char* ip)
 
 static enum request_method get_request_method(char* req_str)
 {
-  if (req_str == NULL) return BAD_REQ;
+  if (req_str == NULL)
+  {
+    return NO_REQUEST_METHOD;
+  }
 
   char* endofline = strstr(req_str, "\n");
 
-  char* getloc = strstr(req_str, "GET");
-  if (getloc && getloc < endofline) return GET_REQ;
+  char* loc = strstr(req_str, "GET");
+  if (loc && loc < endofline)
+  {
+    return GET_REQ;
+  }
 
-  char* headloc = strstr(req_str, "HEAD");
-  if (headloc && headloc < endofline) return HEAD_REQ;
+  loc = strstr(req_str, "HEAD");
+  if (loc && loc < endofline)
+  {
+    return HEAD_REQ;
+  }
 
-  char* putloc = strstr(req_str, "PUT");
-  if (putloc && putloc < endofline) return PUT_REQ;
+  loc = strstr(req_str, "PUT");
+  if (loc && loc < endofline)
+  {
+    return PUT_REQ;
+  }
 
-  char* postloc = strstr(req_str, "POST");
-  if (postloc && postloc < endofline) return POST_REQ;
+  loc = strstr(req_str, "POST");
+  if (loc && loc < endofline)
+  {
+    return POST_REQ;
+  }
 
-  char* delloc = strstr(req_str, "DELETE");
-  if (delloc && delloc < endofline) return DELETE_REQ;
+  loc = strstr(req_str, "DELETE");
+  if (loc && loc < endofline)
+  {
+    return DELETE_REQ;
+  }
 
-  return BAD_REQ;
+  return NO_REQUEST_METHOD;
 }
 
 
@@ -302,12 +321,7 @@ static char* get_uri(enum request_method method, char* request)
     getloc = strstr(request, "DELETE");
     sscanf(getloc + 6, "%s", uri + 1);
   }
-/*
-  if (strcmp(uri, "./") == 0)
-  {
-    memcpy(uri, "./index.html", strlen("./index.html") + 1);
-  }
-*/
+
   return uri;
 }
 
@@ -380,42 +394,48 @@ static struct response* process_request(char* req_str)
   if (req_str == NULL) return NULL; 
   printf("\n%s\n", req_str);
 
-  struct response* resp;
 
   /* fill in request struct */
   struct request req;
   req.method = get_request_method(req_str);
-
-  if (req.method == BAD_REQ)
-  {
-    /* Set up bad request response */
-    char* header_str = STAT400 "Connection: close\nContent-Length: 0\n";
-    resp = malloc(sizeof(struct response));
-
-    resp->header = list_new();
-    resp->content = NULL;
-    list_add(resp->header, datacont_new(header_str, CHARP, strlen(header_str)));
-
-    return resp;
-  }
 
   req.uri = get_uri(req.method, req_str);
   req.token = get_login_token(req_str);
   req.content = get_request_content(req_str);
 
   free(req_str);
- 
-  if (req.method == GET_REQ || req.method == HEAD_REQ)
+
+  struct response* resp;
+
+  /* determine correct request handler */ 
+  switch (req.method)
+  {
+  case GET_REQ:
+  case HEAD_REQ:
     resp = http_get(&req);
+    break;
 
-  if (req.method == PUT_REQ)
+  case PUT_REQ:
     resp = http_put(&req);
+    break;
 
-  if (req.method == POST_REQ)
+  case POST_REQ:
     resp = http_post(&req);
+    break;
 
-  if (req.method == DELETE_REQ)
+  case DELETE_REQ:
     resp = http_delete(&req);
+    break;
+
+  case NO_REQUEST_METHOD:
+  default:
+
+    free(req.uri);
+    free(req.token);
+    free(req.content);
+   
+    return senderr(BAD_REQUEST);
+  }
 
   free(req.uri);
   free(req.token);

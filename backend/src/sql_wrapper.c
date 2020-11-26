@@ -1,5 +1,6 @@
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <sql_manager.h>
 #include <kylestructs.h>
 
@@ -9,7 +10,12 @@
 list** query_database_ls(char* query)
 {
   // query database
-  char*** result = query_database(query);
+  char*** result;
+  if ((result = query_database(query)) == NULL)
+  {
+    fprintf(stderr, "query_database_ls(): query failed: \"%s\"\n", query);
+    return NULL;
+  }
 
   // get number of rows
   int rows = 0;
