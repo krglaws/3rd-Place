@@ -59,11 +59,14 @@ struct response* http_get(struct request* req)
       content_length = strlen(content);
     }
   }
-/*  else if (strstr(req->uri, "./c/"))
+  else if (strstr(req->uri, "./c/"))
   {
     content_type = TEXTHTML;
-    content = get_community(req->uri + 4, req->token);
-  }*/
+    if (content = get_community(req->uri + 4, req->token))
+    {
+      content_length = strlen(content);
+    }
+  }
   else if (strstr(req->uri, "./p/"))
   {
     content_type = TEXTHTML;
@@ -148,7 +151,7 @@ char* fill_nav_login(char* template, char* token)
 
   else
   {
-    template = replace(template, "{USER_NAME}", "/signup");
+    template = replace(template, "{USER_LINK}", "/signup");
     template = replace(template, "{USER_NAME}", "Sign Up");
   }
 
@@ -511,50 +514,143 @@ char* get_post(char* postid, char* token)
 }
 
 
-/*
-char* get_feed(datacont* community, int offset)
+char* fill_community_info(char* template, char* community_name)
 {
-  int len = strlen(community);
+  // prepare query string
+  char* query_fmt = QUERY_COMMUNITY_BY_NAME;
+  char query[strlen(query_fmt) + strlen(community_name) + 1];
+  sprintf(query, query_fmt, community_name);
 
-  if (len = 0 || len > 32)
-    return NULL;
+  list** result = query_database_ls(query);
 
-  char[] post_query_template = "SELECT * FROM posts WHERE commid = \
-		      (SELECT uuid FROM communities WHERE name = '%s')\
-		      order by uuid desc limit %d,10;"
-
-  char post_query[sizeof(post_query_template) + 32 + 12] = {0};
-  sprintf(post_query, post_query_template, community->cp, offset);
-
-  list** result = query_database(query);
-
-  for (int i = 0; result[i]; i++)
+  // make sure we got exactly ONE entry
+  if (result[0] == NULL)
   {
-    list* row = result[i];
-    int len = list_length(row);
-    for (int j = 0; j < len; j++)
-    {
-      datacont* cell = list_get(row, j);
-      
-    }
-    list_delete(result[i]);
+    fprintf(stderr, "community '%s' not found\n", community_name);
+    free(template);
+    free(result);
+    return NULL;
   }
 
-  datacont* template = load_file("./templates/post.hml");
-  list* feedlist = list_new();
-}
-
-
-struct response* get_community(char* uri)
-{
-  if (uri == NULL)
+  if (result[1] != NULL)
   {
-    fprintf(stderr, "get_community(): NULL URI");
+    fprintf(stderr, "fill_community_info(): multiple communities with name '%s'\n", community_name);
     exit(EXIT_FAILURE);
   }
+  list* community_info = result[0];
+  free(result);
 
-  char* cname = strstr(uri, "./c/") + 4;
+  // fill in community info
+  template = replace(template, "{COMMUNITY_NAME}", list_get(community_info, SQL_FIELD_COMMUNITY_NAME)->cp);
+  template = replace(template, "{COMMUNITY_ABOUT}", list_get(community_info, SQL_FIELD_COMMUNITY_ABOUT)->cp);
 
+  list_delete(community_info);
+
+  return template;
 }
-*/
 
+
+char* fill_community_posts(char* template, char* community_name)
+{
+  // prepare query string
+  char* query_fmt = QUERY_POSTS_BY_COMMUNITY_NAME;
+  char query[strlen(query_fmt) + strlen(community_name) + 1];
+  sprintf(query, query_fmt, community_name);
+
+  // grab posts belonging to this community
+  list** posts = query_database_ls(query);
+
+  // load post stub template
+  char* post_stub;
+  if ((post_stub = load_file(HTML_COMMUNITY_POST_STUB)) == NULL)
+  {
+    // failed to load comment stub
+    fprintf(stderr, "fill_user_posts(): failed to load file %s\n", HTML_COMMUNITY_POST_STUB);
+    for (int i = 0; posts[i] != NULL; i++)
+    {
+      list_delete(posts[i]);
+    }
+    free(posts); 
+    free(template);
+    return NULL;
+  }
+
+  int post_stub_len = strlen(post_stub);
+
+  // iterate over each post
+  for (int i = 0; posts[i] != NULL; i++)
+  {
+    // copy stub string instead of read it from disk every loop
+    char* post_stub_copy = malloc((post_stub_len + 1) * sizeof(char));
+    memcpy(post_stub_copy, post_stub, post_stub_len + 1);
+
+    // current post
+    list* p = posts[i];
+    post_stub_copy = replace(post_stub_copy, "{USER_NAME}", list_get(p, SQL_FIELD_POST_AUTHOR_NAME)->cp);
+    post_stub_copy = replace(post_stub_copy, "{USER_NAME}", list_get(p, SQL_FIELD_POST_AUTHOR_NAME)->cp);
+    post_stub_copy = replace(post_stub_copy, "{POST_ID}", list_get(p, SQL_FIELD_POST_ID)->cp);
+    post_stub_copy = replace(post_stub_copy, "{POST_TITLE}", list_get(p, SQL_FIELD_POST_TITLE)->cp);
+    post_stub_copy = replace(post_stub_copy, "{POST_BODY}", list_get(p, SQL_FIELD_POST_BODY)->cp);
+
+    printf("%s\n", post_stub_copy);
+
+    template = replace(template, "{POST_STUB}", post_stub_copy);
+
+    free(post_stub_copy);
+    list_delete(p);
+  }
+
+  free(posts);
+  free(post_stub);
+
+  // remove trailing template string
+  return replace(template, "{POST_STUB}", "");
+}
+
+
+char* get_community(char* community_name, char* token)
+{
+  if (community_name == NULL || strlen(community_name) == 0)
+  {
+    return NULL;
+  }
+
+  // load community template
+  char* community_html;
+  if ((community_html = load_file(HTML_COMMUNITY)) == NULL)
+  {
+    fprintf(stderr, "get_community(): failed to load '%s'\n", HTML_COMMUNITY);
+    return NULL;
+  }
+
+  // fill in community info
+  if ((community_html = fill_community_info(community_html, community_name)) == NULL)
+  {
+    // community not found
+    return NULL;
+  }
+
+  community_html = fill_community_posts(community_html, community_name);
+
+  // load main html
+  char* main_html;
+  if ((main_html = load_file(HTML_MAIN)) == NULL)
+  {
+    fprintf(stderr, "get_community(): failed to load file '%s'\n", HTML_MAIN);
+    free(community_html);
+    return NULL;
+  }
+
+  // insert header info
+  main_html = replace(main_html, "{STYLE}", CSS_COMMUNITY);
+  main_html = replace(main_html, "{SCRIPT}", JS_COMMUNITY);
+
+  // is client logged in?
+  main_html = fill_nav_login(main_html, token);
+
+  // insert community html into main
+  main_html = replace(main_html, "{PAGE_BODY}", community_html);
+  free(community_html);
+
+  return main_html;
+}
