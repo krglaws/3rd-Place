@@ -7,53 +7,90 @@ mysql -uroot <<INIT_SCRIPT
 CREATE DATABASE IF NOT EXISTS $DBNAME;
 
 CREATE TABLE IF NOT EXISTS $DBNAME.users(
-  uuid INT NOT NULL AUTO_INCREMENT,
-  uname VARCHAR(16) NOT NULL,
+  id INT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(16) NOT NULL,
   about VARCHAR(256),
   points INT NOT NULL,
   posts INT NOT NULL,
   comments INT NOT NULL,
-  bday INT NOT NULL,
-  PRIMARY KEY (uuid)
+  date_joined INT NOT NULL,
+  PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS $DBNAME.posts(
-  uuid INT NOT NULL AUTO_INCREMENT,
-  communityid INT NOT NULL,
-  communityname VARCHAR(32) NOT NULL,
-  authid INT NOT NULL,
-  author VARCHAR(16),
+  id INT NOT NULL AUTO_INCREMENT,
+  community_id INT NOT NULL,
+  community_name VARCHAR(32) NOT NULL,
+  author_id INT NOT NULL,
+  author_name VARCHAR(16),
   title VARCHAR(32) NOT NULL,
   body VARCHAR(512),
-  bday INT NOT NULL,
-  PRIMARY KEY (uuid)
+  points INT NOT NULL,
+  date_posted INT NOT NULL,
+  PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS $DBNAME.comments(
-  uuid INT NOT NULL AUTO_INCREMENT,
-  postid INT NOT NULL,
-  posttitle VARCHAR(32) NOT NULL,
-  communityname VARCHAR(32) NOT NULL,
-  authid INT NOT NULL,
-  author VARCHAR(16),
+  id INT NOT NULL AUTO_INCREMENT,
+  post_id INT NOT NULL,
+  post_title VARCHAR(32) NOT NULL,
+  community_name VARCHAR(32) NOT NULL,
+  author_id INT NOT NULL,
+  author_name VARCHAR(16),
   body VARCHAR(512) NOT NULL,
-  bday INT NOT NULL,
-  PRIMARY KEY (uuid)
+  points INT NOT NULL,
+  date_posted INT NOT NULL,
+  PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS $DBNAME.communities(
-  uuid INT NOT NULL AUTO_INCREMENT,
+  id INT NOT NULL AUTO_INCREMENT,
   name VARCHAR(32) NOT NULL,
   about VARCHAR(512) NOT NULL,
-  bday INT NOT NULL,
-  PRIMARY KEY (uuid)
+  members INT NOT NULL,
+  date_created INT NOT NULL,
+  PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS $DBNAME.subs(
-  uuid INT NOT NULL AUTO_INCREMENT,
-  userid INT NOT NULL,
-  communityid INT NOT NULL,
-  PRIMARY KEY (uuid)
+CREATE TABLE IF NOT EXISTS $DBNAME.subscriptions(
+  id INT NOT NULL AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  user_name VARCHAR(16) NOT NULL,
+  community_id INT NOT NULL,
+  community_name VARCHAR(32) NOT NULL,
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS $DBNAME.post_up_votes(
+  id INT NOT NULL AUTO_INCREMENT,
+  post_id INT NOT NULL,
+  user_id INT NOT NULL,
+  user_name VARCHAR(16),
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS $DBNAME.post_down_votes(
+  id INT NOT NULL AUTO_INCREMENT,
+  post_id INT NOT NULL,
+  user_id INT NOT NULL,
+  user_name VARCHAR(16),
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS $DBNAME.comment_up_votes(
+  id INT NOT NULL AUTO_INCREMENT,
+  comment_id INT NOT NULL,
+  user_id INT NOT NULL,
+  user_name VARCHAR(16),
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS $DBNAME.comment_down_votes(
+  id INT NOT NULL AUTO_INCREMENT,
+  comment_id INT NOT NULL,
+  user_id INT NOT NULL,
+  user_name VARCHAR(16),
+  PRIMARY KEY (id)
 );
 
 CREATE USER IF NOT EXISTS $DBUSER@$DBHOST IDENTIFIED BY '$DBPASS';

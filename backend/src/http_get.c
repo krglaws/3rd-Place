@@ -96,7 +96,6 @@ struct response* http_get(struct request* req)
   int len = sprintf(contlenline, "Content-Length: %d\n", content_length);
 
   list_add(resp->header, datacont_new(contlenline, CHARP, len));
-  //list_add(resp->header, datacont_new("Set-Cookie: test-cookie=abcde\n", CHARP, 30));
   resp->content = content;
   resp->content_length = content_length;
 
@@ -190,7 +189,7 @@ char* fill_user_info(char* template, char* uname)
   template = replace(template, "{USER_POINTS}", list_get(user_info, SQL_FIELD_USER_POINTS)->cp);
   template = replace(template, "{USER_POSTS}", list_get(user_info, SQL_FIELD_USER_POSTS)->cp);
   template = replace(template, "{USER_COMMENTS}", list_get(user_info, SQL_FIELD_USER_COMMENTS)->cp);
-  template = replace(template, "{USER_BDAY}", list_get(user_info, SQL_FIELD_USER_BDAY)->cp);
+  template = replace(template, "{USER_BDAY}", list_get(user_info, SQL_FIELD_USER_DATE_JOINED)->cp);
   template = replace(template, "{USER_ABOUT}", list_get(user_info, SQL_FIELD_USER_ABOUT)->cp);
 
   list_delete(user_info);
@@ -654,3 +653,74 @@ char* get_community(char* community_name, char* token)
 
   return main_html;
 }
+
+/*
+char* get_home(char* token)
+{
+  // if user is not logged in, just return popular
+  if (valid_token(token) == NULL)
+  {
+    return get_popular(token);
+  }
+
+  // TODO: load feed template
+
+  // TODO: fill in post stubs using query that selects top ranking
+  // posts from communities that client is subscribed to
+
+  // load main template
+  char* main_html;
+  if ((main_html = load_file(HTML_MAIN)) == NULL)
+  {
+    fprintf(stderr, "get_home(): failed to load file '%s'\n", HTML_MAIN);
+    return NULL;
+  }
+
+  // insert header info
+  main_html = replace(main_html, "{STYLE}", CSS_FEED);
+  main_html = replace(main_html, "{SCRIPT}", "");
+
+  // we know client isn't logged in, so just plug in the 'Signup' link
+  main_html = fill_nav_login(main_html, token);
+
+  // TODO: insert feed html into main
+
+  return main_html;
+}
+
+
+char* fill_popular_posts(char* template)
+{
+  // prepare query string
+  char* query_fmt = 
+}
+
+
+char* get_popular(char* token)
+{
+  // load feed template
+  char* feed_html;
+  if ((feed_html = load_file(HTML_FEED)) == NULL)
+  {
+    fprintf(stderr, "get_popular(): failed to load file '%s'\n", HTML_FEED);
+    return NULL;
+  }
+
+  // TODO: fill in post stubs using query that selects top ranking
+  // posts from all communities
+  feed_html = fill_popular_posts(feed_html)
+
+  // top ranking posts from all communities
+
+  // TODO: load and prep main template
+  char* main_html;
+  if ((main_html = load_file(HTML_MAIN)) == NULL)
+  {
+    fprintf(stderr, "get_popular(): failed to load file: '%s'\n", HTML_MAIN);
+    return NULL;
+  }
+
+  // TODO: insert feed into main html
+
+}
+*/

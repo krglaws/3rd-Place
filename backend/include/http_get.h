@@ -20,18 +20,19 @@
 #define CSS_USER "/templates/user/user.css"
 #define CSS_POST "/templates/post/post.css"
 #define CSS_COMMUNITY "/templates/community/community.css"
+#define CSS_FEED "/templates/feed/feed.css"
 
 /* js paths */
 #define JS_USER "/templates/user/user.js"
 #define JS_COMMUNITY "/templates/community/community.js"
 
 /* query templates */
-#define QUERY_USER_BY_UNAME "SELECT * FROM users WHERE uname = '%s';"
-#define QUERY_POSTS_BY_UNAME "SELECT * FROM posts WHERE author = '%s';"
-#define QUERY_COMMENTS_BY_UNAME "SELECT * FROM comments WHERE author = '%s';"
-#define QUERY_POST_BY_UUID "SELECT * FROM posts WHERE uuid = '%s';"
-#define QUERY_POSTS_BY_COMMUNITY_NAME "SELECT * FROM posts WHERE communityname = '%s';"
-#define QUERY_COMMENTS_BY_POSTID "SELECT * FROM comments WHERE postid = '%s';"
+#define QUERY_USER_BY_UNAME "SELECT * FROM users WHERE name = '%s';"
+#define QUERY_POSTS_BY_UNAME "SELECT * FROM posts WHERE author_name = '%s';"
+#define QUERY_COMMENTS_BY_UNAME "SELECT * FROM comments WHERE author_name = '%s';"
+#define QUERY_POST_BY_UUID "SELECT * FROM posts WHERE id = '%s';"
+#define QUERY_POSTS_BY_COMMUNITY_NAME "SELECT * FROM posts WHERE community_name = '%s';"
+#define QUERY_COMMENTS_BY_POSTID "SELECT * FROM comments WHERE post_id = '%s';"
 #define QUERY_COMMUNITY_BY_NAME "SELECT * FROM communities WHERE name = '%s';"
 
 struct response* http_get(struct request* req);
