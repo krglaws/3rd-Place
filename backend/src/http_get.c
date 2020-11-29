@@ -234,9 +234,10 @@ char* fill_user_posts(char* template, char* uname)
 
     // current post (list of fields)
     list* p = posts[i];
+    post_stub_copy = replace(post_stub_copy, "{DATE_POSTED}", list_get(p, SQL_FIELD_POST_DATE_POSTED)->cp);
     post_stub_copy = replace(post_stub_copy, "{POST_ID}", list_get(p, SQL_FIELD_POST_ID)->cp);
     post_stub_copy = replace(post_stub_copy, "{POST_TITLE}", list_get(p, SQL_FIELD_POST_TITLE)->cp);
-    post_stub_copy = replace(post_stub_copy, "{COMMUNITY_NAME}", list_get(p, SQL_FIELD_POST_COMMUNITY_ID)->cp);
+    post_stub_copy = replace(post_stub_copy, "{COMMUNITY_NAME}", list_get(p, SQL_FIELD_POST_COMMUNITY_NAME)->cp);
     post_stub_copy = replace(post_stub_copy, "{COMMUNITY_NAME}", list_get(p, SQL_FIELD_POST_COMMUNITY_NAME)->cp);
 
     // limit post body to 64 chars in stub
@@ -307,6 +308,7 @@ char* fill_user_comments(char* template, char* uname)
     int end = sprintf(body, "%61s", list_get(c, SQL_FIELD_COMMENT_BODY)->cp);
     memcpy(body + end, "...", 3);
     body[end+3] = '\0';
+    comment_stub_copy = replace(comment_stub_copy, "{DATE_POSTED}", list_get(c, SQL_FIELD_COMMENT_DATE_POSTED)->cp);
     comment_stub_copy = replace(comment_stub_copy, "{COMMENT_BODY}", body);
     comment_stub_copy = replace(comment_stub_copy, "{POST_TITLE}", list_get(c, SQL_FIELD_COMMENT_POST_TITLE)->cp);
     comment_stub_copy = replace(comment_stub_copy, "{POST_ID}", list_get(c, SQL_FIELD_COMMENT_POST_ID)->cp);
@@ -404,6 +406,7 @@ char* fill_post_info(char* template, char* postid)
   free(result);
 
   // fill in post info
+  template = replace(template, "{DATE_POSTED}", list_get(post_info, SQL_FIELD_POST_DATE_POSTED)->cp);
   template = replace(template, "{USER_NAME}", list_get(post_info, SQL_FIELD_POST_AUTHOR_NAME)->cp);
   template = replace(template, "{USER_NAME}", list_get(post_info, SQL_FIELD_POST_AUTHOR_NAME)->cp);
   template = replace(template, "{COMMUNITY_NAME}", list_get(post_info, SQL_FIELD_POST_COMMUNITY_NAME)->cp);
@@ -453,6 +456,7 @@ char* fill_post_comments(char* template, char* postid)
 
     // current comment (list of fields)
     list* c = comments[i];
+    comment_stub_copy = replace(comment_stub_copy, "{DATE_POSTED}", list_get(c, SQL_FIELD_COMMENT_DATE_POSTED)->cp);
     comment_stub_copy = replace(comment_stub_copy, "{USER_NAME}", list_get(c, SQL_FIELD_COMMENT_AUTHOR_NAME)->cp);
     comment_stub_copy = replace(comment_stub_copy, "{USER_NAME}", list_get(c, SQL_FIELD_COMMENT_AUTHOR_NAME)->cp);
     comment_stub_copy = replace(comment_stub_copy, "{COMMENT_BODY}", list_get(c, SQL_FIELD_COMMENT_BODY)->cp);
@@ -546,6 +550,7 @@ char* fill_community_info(char* template, char* community_name)
 
   // fill in community info
   template = replace(template, "{COMMUNITY_NAME}", list_get(community_info, SQL_FIELD_COMMUNITY_NAME)->cp);
+  template = replace(template, "{DATE_CREATED}", list_get(community_info, SQL_FIELD_COMMUNITY_DATE_CREATED)->cp);
   template = replace(template, "{COMMUNITY_ABOUT}", list_get(community_info, SQL_FIELD_COMMUNITY_ABOUT)->cp);
 
   list_delete(community_info);
@@ -590,6 +595,7 @@ char* fill_community_posts(char* template, char* community_name)
 
     // current post
     list* p = posts[i];
+    post_stub_copy = replace(post_stub_copy, "{DATE_POSTED}", list_get(p, SQL_FIELD_POST_DATE_POSTED)->cp);
     post_stub_copy = replace(post_stub_copy, "{USER_NAME}", list_get(p, SQL_FIELD_POST_AUTHOR_NAME)->cp);
     post_stub_copy = replace(post_stub_copy, "{USER_NAME}", list_get(p, SQL_FIELD_POST_AUTHOR_NAME)->cp);
     post_stub_copy = replace(post_stub_copy, "{POST_ID}", list_get(p, SQL_FIELD_POST_ID)->cp);

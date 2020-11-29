@@ -6,21 +6,22 @@ mysql -uroot <<TEST_USERS
 USE $DBNAME;
 
 # test users
-INSERT INTO users (id, name, about, points, posts, comments, date_joined)
-  VALUES (1, 'testuser1', 'this is test user 1.', 0, 0, 0, UNIX_TIMESTAMP());
-INSERT INTO users (id, name, about, points, posts, comments, date_joined)
-  VALUES (2, 'testuser2', 'this is test user 2', 0, 0, 0, UNIX_TIMESTAMP());
-INSERT INTO users (id, name, about, points, posts, comments, date_joined)
-  VALUES (3, 'testuser3', 'this is test user 3', 0, 0, 0, UNIX_TIMESTAMP());
-INSERT INTO users (id, name, about, points, posts, comments, date_joined)
-  VALUES (4, 'testuser4', 'this is test user 4', 0, 0, 0, UNIX_TIMESTAMP());
-INSERT INTO users (id, name, about, points, posts, comments, date_joined)
-  VALUES (5, 'testuser5', 'this is test user 5', 0, 0, 0, UNIX_TIMESTAMP());
+INSERT INTO users (id, name, password_hash, about, points, posts, comments, date_joined)
+  VALUES (1, 'testuser1', 'abcd', 'this is test user 1.', 0, 0, 0, UNIX_TIMESTAMP());
+INSERT INTO users (id, name, password_hash, about, points, posts, comments, date_joined)
+  VALUES (2, 'testuser2', 'abcd', 'this is test user 2', 0, 0, 0, UNIX_TIMESTAMP());
+INSERT INTO users (id, name, password_hash, about, points, posts, comments, date_joined)
+  VALUES (3, 'testuser3', 'abcd', 'this is test user 3', 0, 0, 0, UNIX_TIMESTAMP());
+INSERT INTO users (id, name, password_hash, about, points, posts, comments, date_joined)
+  VALUES (4, 'testuser4', 'abcd', 'this is test user 4', 0, 0, 0, UNIX_TIMESTAMP());
+INSERT INTO users (id, name, password_hash, about, points, posts, comments, date_joined)
+  VALUES (5, 'testuser5', 'abcd', 'this is test user 5', 0, 0, 0, UNIX_TIMESTAMP());
 
 TEST_USERS
 
 if [ $? -eq 1 ]; then
   echo "Error while loading test users"
+  exit;
 fi
 
 mysql -uroot <<TEST_POSTS
@@ -43,6 +44,7 @@ TEST_POSTS
 
 if [ $? -eq 1 ]; then
   echo "Error while loading test posts"
+  exit;
 fi
 
 
@@ -100,6 +102,7 @@ TEST_COMMENTS
 
 if [ $? -eq 1 ]; then
   echo "Error while loading test comments"
+  exit;
 fi
 
 mysql -uroot <<TEST_COMMUNITIES
@@ -122,6 +125,7 @@ TEST_COMMUNITIES
 
 if [ $? -eq 1 ]; then
   echo "Error while loading test communities"
+  exit;
 fi
 
 mysql -uroot <<TEST_SUBSCRIPTIONS
@@ -144,6 +148,7 @@ TEST_SUBSCRIPTIONS
 
 if [ $? -eq 1 ]; then
   echo "Error while loading test subscriptions"
+  exit;
 fi
 
 mysql -uroot <<TEST_VOTES
@@ -157,14 +162,16 @@ INSERT INTO post_up_votes (id, user_id, user_name, post_id)
   VALUES (2, 2, 'testuser2', 2);
 INSERT INTO post_up_votes (id, user_id, user_name, post_id)
   VALUES (3, 3, 'testuser3', 3);
+
 INSERT INTO post_down_votes (id, user_id, user_name, post_id)
-  VALUES (4, 4, 'testuser4', 4);
+  VALUES (1, 4, 'testuser4', 4);
 INSERT INTO post_down_votes (id, user_id, user_name, post_id)
-  VALUES (5, 5, 'testuser5', 5);
+  VALUES (2, 5, 'testuser5', 5);
 
 TEST_VOTES
 
 if [ $? -eq 1 ]; then
   echo "Error while loading test votes"
+  exit;
 fi
 

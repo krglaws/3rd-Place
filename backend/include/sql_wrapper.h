@@ -3,13 +3,14 @@
 #define _SQL_WRAPPER_H_
 
 /* user sql field names */
-#define SQL_FIELD_USER_ID          (0)
-#define SQL_FIELD_USER_NAME        (1)
-#define SQL_FIELD_USER_ABOUT       (2)
-#define SQL_FIELD_USER_POINTS      (3)
-#define SQL_FIELD_USER_POSTS       (4)
-#define SQL_FIELD_USER_COMMENTS    (5)
-#define SQL_FIELD_USER_DATE_JOINED (6)
+#define SQL_FIELD_USER_ID            (0)
+#define SQL_FIELD_USER_NAME          (1)
+#define SQL_FIELD_USER_PASSWORD_HASH (2)
+#define SQL_FIELD_USER_ABOUT         (3)
+#define SQL_FIELD_USER_POINTS        (4)
+#define SQL_FIELD_USER_POSTS         (5)
+#define SQL_FIELD_USER_COMMENTS      (6)
+#define SQL_FIELD_USER_DATE_JOINED   (7)
 
 /* post sql field names */
 #define SQL_FIELD_POST_ID             (0)
