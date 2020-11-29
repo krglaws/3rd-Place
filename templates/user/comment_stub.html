@@ -1,7 +1,9 @@
 <div class="user-tab-content border-box">
-  <a href="/p/{POST_ID}#{COMMENT_ID}">
-    <p>{COMMENT_BODY}</p>
-    <h3>On "{POST_TITLE}" from "{COMMUNITY_NAME}"</h3>
-  </a>
+  <p>
+    <a href="/p/{POST_ID}#{COMMENT_ID}">{COMMENT_BODY}</a>
+  </p>
+  <h3>
+    On <a href="/p/{POST_ID}">"{POST_TITLE}"</a> from <a href="/c/{COMMUNITY_NAME}">"{COMMUNITY_NAME}"</a>
+  </h3>
 </div>
 {COMMENT_STUB}

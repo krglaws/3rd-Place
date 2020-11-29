@@ -236,6 +236,7 @@ char* fill_user_posts(char* template, char* uname)
     list* p = posts[i];
     post_stub_copy = replace(post_stub_copy, "{POST_ID}", list_get(p, SQL_FIELD_POST_ID)->cp);
     post_stub_copy = replace(post_stub_copy, "{POST_TITLE}", list_get(p, SQL_FIELD_POST_TITLE)->cp);
+    post_stub_copy = replace(post_stub_copy, "{COMMUNITY_NAME}", list_get(p, SQL_FIELD_POST_COMMUNITY_ID)->cp);
     post_stub_copy = replace(post_stub_copy, "{COMMUNITY_NAME}", list_get(p, SQL_FIELD_POST_COMMUNITY_NAME)->cp);
 
     // limit post body to 64 chars in stub
@@ -275,7 +276,7 @@ char* fill_user_comments(char* template, char* uname)
   if ((comment_stub = load_file(HTML_USER_COMMENT_STUB)) == NULL)
   {
     // failed to load comment stub file
-    fprintf(stderr, "fill_user_posts(): failed to load file %s\n", HTML_USER_COMMENT_STUB);
+    fprintf(stderr, "fill_user_comments(): failed to load file %s\n", HTML_USER_COMMENT_STUB);
     for (int i = 0; comments[i] != NULL; i++)
     {
       list_delete(comments[i]);
@@ -308,6 +309,8 @@ char* fill_user_comments(char* template, char* uname)
     body[end+3] = '\0';
     comment_stub_copy = replace(comment_stub_copy, "{COMMENT_BODY}", body);
     comment_stub_copy = replace(comment_stub_copy, "{POST_TITLE}", list_get(c, SQL_FIELD_COMMENT_POST_TITLE)->cp);
+    comment_stub_copy = replace(comment_stub_copy, "{POST_ID}", list_get(c, SQL_FIELD_COMMENT_POST_ID)->cp);
+    comment_stub_copy = replace(comment_stub_copy, "{COMMUNITY_NAME}", list_get(c, SQL_FIELD_COMMENT_COMMUNITY_NAME)->cp);
     comment_stub_copy = replace(comment_stub_copy, "{COMMUNITY_NAME}", list_get(c, SQL_FIELD_COMMENT_COMMUNITY_NAME)->cp);
 
     // copy stub into main template
@@ -403,6 +406,8 @@ char* fill_post_info(char* template, char* postid)
   // fill in post info
   template = replace(template, "{USER_NAME}", list_get(post_info, SQL_FIELD_POST_AUTHOR_NAME)->cp);
   template = replace(template, "{USER_NAME}", list_get(post_info, SQL_FIELD_POST_AUTHOR_NAME)->cp);
+  template = replace(template, "{COMMUNITY_NAME}", list_get(post_info, SQL_FIELD_POST_COMMUNITY_NAME)->cp);
+  template = replace(template, "{COMMUNITY_NAME}", list_get(post_info, SQL_FIELD_POST_COMMUNITY_NAME)->cp);
   template = replace(template, "{POST_TITLE}", list_get(post_info, SQL_FIELD_POST_TITLE)->cp);
   template = replace(template, "{POST_BODY}", list_get(post_info, SQL_FIELD_POST_BODY)->cp);
 
@@ -427,7 +432,7 @@ char* fill_post_comments(char* template, char* postid)
   if ((comment_stub = load_file(HTML_POST_COMMENT)) == NULL)
   {
     // failed to load comment stub
-    fprintf(stderr, "fill_user_posts(): failed to load file %s\n", HTML_POST_COMMENT);
+    fprintf(stderr, "fill_post_comments(): failed to load file %s\n", HTML_POST_COMMENT);
     for (int i = 0; comments[i] != NULL; i++)
     {
       list_delete(comments[i]);
@@ -564,7 +569,7 @@ char* fill_community_posts(char* template, char* community_name)
   if ((post_stub = load_file(HTML_COMMUNITY_POST_STUB)) == NULL)
   {
     // failed to load comment stub
-    fprintf(stderr, "fill_user_posts(): failed to load file %s\n", HTML_COMMUNITY_POST_STUB);
+    fprintf(stderr, "fill_community_posts(): failed to load file %s\n", HTML_COMMUNITY_POST_STUB);
     for (int i = 0; posts[i] != NULL; i++)
     {
       list_delete(posts[i]);
