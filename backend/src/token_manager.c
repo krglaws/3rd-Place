@@ -4,6 +4,7 @@
 #include <math.h>
 
 #include <common.h>
+#include <sql_wrapper.h>
 #include <token_manager.h>
 
 /* list of active tokens */
@@ -38,7 +39,7 @@ void remove_token(const int index)
 
 
 /* returns uname belonging to token if present, else NULL */
-const char* valid_token(const char* token)
+const struct token_entry* valid_token(const char* token)
 {
   if (token == NULL)
   {
@@ -51,8 +52,7 @@ const char* valid_token(const char* token)
   {
     if (strcmp(token, iter->token) == 0)
     {
-      
-      return iter->uname;
+      return iter;
     }
     iter = iter->next;
   }

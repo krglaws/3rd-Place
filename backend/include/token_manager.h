@@ -2,13 +2,14 @@
 #ifndef _TOKEN_MANGER_H_
 #define _TOKEN_MANAGER_H_
 
-#define TOKENLEN (17)
+#define TOKENLEN (32)
 #define TOKENLIFESPAN (7)
 
 struct token_entry
 {
-  char token[TOKENLEN];
-  char uname[UNAMELEN];
+  char token[TOKENLEN + 1];
+  int uid;
+  char uname[UNAMELEN + 1];
   int days;
   struct token_entry* next;
 };
@@ -18,8 +19,8 @@ struct token_entry
 void remove_token(const int index);
 
 
-/* returns uname belonging to cookie if present, else NULL */
-const char* valid_token(const char* token);
+/* returns user info associated with cookie if present, else NULL */
+const struct token_entry* valid_token(const char* token);
 
 
 /* iterates over all tokens in list, removes them if days == 0,
