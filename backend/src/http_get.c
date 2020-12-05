@@ -54,7 +54,7 @@ struct response* http_get(struct request* req)
   else if (strstr(req->uri, "./u/"))
   {
     content_type = TEXTHTML;
-    if (content = get_user(req->uri + 4, req->token))
+    if (content = get_user(req->uri + 4, req->client_info))
     {
       content_length = strlen(content);
     }
@@ -62,7 +62,7 @@ struct response* http_get(struct request* req)
   else if (strstr(req->uri, "./c/"))
   {
     content_type = TEXTHTML;
-    if (content = get_community(req->uri + 4, req->token))
+    if (content = get_community(req->uri + 4, req->client_info))
     {
       content_length = strlen(content);
     }
@@ -70,7 +70,7 @@ struct response* http_get(struct request* req)
   else if (strstr(req->uri, "./p/"))
   {
     content_type = TEXTHTML;
-    if (content = get_post(req->uri + 4, req->token))
+    if (content = get_post(req->uri + 4, req->client_info))
     {
       content_length = strlen(content);
     }
@@ -135,17 +135,15 @@ char* replace(char* template, const char* this, const char* withthat)
 }
 
 
-char* fill_nav_login(char* template, char* token)
+char* fill_nav_login(char* template, const struct token_entry* client_info);
 {
   char user_link[64];
 
-  const char* client_uname = valid_token(token);
-
-  if (client_uname != NULL)
+  if (client_info != NULL)
   {
-    sprintf(user_link, "/u/%s", client_uname);
+    sprintf(user_link, "/u/%s", client_info->uname);
     template = replace(template, "{USER_LINK}", user_link);
-    template = replace(template, "{USER_NAME}", client_uname);
+    template = replace(template, "{USER_NAME}", client_info->uname);
   }
 
   else
@@ -198,22 +196,130 @@ char* fill_user_info(char* template, char* uname)
 }
 
 
-char* fill_user_posts(char* template, char* uname)
+char* load_user_post_stub_template()
 {
-  // prepare query string
-  char* query_fmt = QUERY_POSTS_BY_UNAME;
-  char query[strlen(query_fmt) + strlen(uname) + 1];
-  sprintf(query, query_fmt, uname);
+  // load vote wrapper file
+  char* vote_wrapper;
+  if ((vote_wrapper = load_file(HTML_VOTE_WRAPPER)) == NULL)
+  {
+    fprintf(stderr, "load_user_post_stub_template(): failed to load file: %s\n", HTML_VOTE_WRAPPER);
+    return NULL;
+  }
 
-  // grab user post list from database
-  list** posts = query_database_ls(query);
-
-  // load post stub template and do replacements
+  // load post stub file
   char* post_stub;
   if ((post_stub = load_file(HTML_USER_POST_STUB)) == NULL)
   {
-    // failed to load post stub file
-    fprintf(stderr, "fill_user_posts(): failed to load file %s\n", HTML_USER_POST_STUB);
+    fprintf(stderr, "load_user_post_stub_template(): failed to load file: '%s'\n", HTML_USER_POST_STUB);
+    return NULL;
+  }
+
+  post_stub = replace(vote_wrapper, "{CURR_ITEM}", post_stub);
+  free(vote_wrapper);
+
+  post_stub = replace(post_stub, "{ITEM_TYPE}", "post");
+  post_stub = replace(post_stub, "{ITEM_TYPE}", "post");
+
+  return post_stub;
+}
+
+
+char* fill_user_post_stub(char* template, const list* post_info, const struct token_entry* client_info)
+{
+  const char* post_id = list_get(post_info, SQL_FIELD_POST_ID)->cp;
+  const char* post_title = list_get(post_info, SQL_FIELD_POST_TITLE)->cp;
+  const char* post_body = list_get(post_info, SQL_FIELD_POST_BODY)->cp;
+  const char* post_score = list_get(post_info, SQL_FIELD_POST_SCORE)->cp;
+  const char* date_posted = list_get(post_info, SQL_FIELD_POST_DATE_POSTED)->cp;
+  const char* community_name = list_get(post_info, SQL_FIELD_POST_COMMUNITY_NAME)->cp;
+
+  // query database for votes that match client user id and post id
+  char* upvote_query_fmt = QUERY_POST_UPVOTES_BY_POSTID_UNAME;
+  char upvote_query[strlen(upvote_query_fmt) + 64];
+  sprintf(upvote_query, upvote_query_fmt, post_id, client_info->uid, post_id, client_info->uid);
+
+  list** upvote_query_result = query_database_ls(upvote_query);
+
+  // query database for votes that match client user id and post id
+  char* downvote_query_fmt = QUERY_POST_DOWNVOTES_BY_POSTID_UNAME;
+  char downvote_query[strlen(downvote_query_fmt) + 64];
+  sprintf(downvote_query, downvote_query_fmt, post_id, client_info->uid, post_id, client_info->uid);
+
+  list** downvote_query_result = query_database_ls(downvote_query);
+
+#ifdef DEBUG
+  if (upvote_query_result[0] && downvote_query_result[0])
+  {
+    fprintf(stderr, "fill_user_post_stub(): downvote and upvote present for same post_id=%s user_id=%d", post_id, client_info->uid);
+    exit(EXIT_FAILURE);
+  }
+  if (upvote_query_result[0] && upvote_query_result[1] != NULL)
+  {
+    fprintf(stderr, "fill_user_post_stub(): multiple upvotes present for same post_id=%s user_id=%d", post_id, client_info->uid);
+    exit(EXIT_FAILURE);
+  }
+  if (downvote_query_result[0] && downvote_query_result[1] != NULL)
+  {
+    fprintf(stderr, "fill_user_post_stub(): multiple downvotes present for same post_id=%s user_id=%d", post_id, client_info->uid);
+    exit(EXIT_FAILURE);
+  }
+#endif
+
+  char* upvote_css_class = "upvote_notclicked";
+  char* downvote_css_class = "downvote_notclicked";
+
+  if (upvote_query_result[0])
+  {
+    upvote_css_class = "upvote_clicked";
+    free(upvote_query_result[0]);
+    free(upvote_query_result);
+  }
+
+  if (downvote_query_result[0])
+  {
+    downvote_css_class = "downvote_clicked";
+    free(downvote_query_result[0]);
+    free(downvote_query_result);
+  }
+
+  // vote wrapper templating
+  template = replace(template, "{UPVOTE_CLICKED}", upvote_css_class);
+  template = replace(template, "{ITEM_ID}", post_id);
+  template = replace(template, "{ITEM_SCORE}", post_score);
+  template = replace(template, "{DOWNVOTE_CLICKED}", downvote_css_class);
+  template = replace(template, "{ITEM_ID}", post_id);
+
+  // post stub templating
+  template = replace(template, "{DATE_POSTED}", date_posted);
+  template = replace(template, "{POST_ID}", post_id);
+  template = replace(template, "{POST_TITLE}", post_title);
+  template = replace(template, "{COMMUNITY_NAME}", community_name);
+  template = replace(template, "{COMMUNITY_NAME}", community_name);
+
+  // limit post body to 64 chars in stub
+  char body[65];
+  int end = sprintf(body, "%61s", post_body);
+  memcpy(body + end, "...", 3);
+  body[end+3] = '\0';
+  template = replace(template, "{POST_BODY}", body);
+
+  return template;
+}
+
+
+char* fill_user_posts(char* template, char* uname, const struct token_entry* client_info)
+{
+  // query user posts
+  char* post_query_fmt = QUERY_POSTS_BY_UNAME;
+  char post_query[strlen(post_query_fmt) + strlen(uname) + 1];
+  sprintf(post_query, post_query_fmt, uname);
+  list** posts = query_database_ls(post_query);
+
+  // load user post stub template
+  char* post_stub;
+  if ((post_stub = load_user_post_stub_template()) == NULL)
+  {
+    fprintf(stderr, "fill_user_posts(): failed to load post stub template\n");
     for (int i = 0; posts[i] != NULL; i++)
     {
       list_delete(posts[i]);
@@ -228,24 +334,14 @@ char* fill_user_posts(char* template, char* uname)
   // iterate through each post
   for (int i = 0; posts[i] != NULL; i++)
   {
+    list* p = posts[i];
+
     // copy post stub string instead of read it from disk every loop
     char* post_stub_copy = malloc((post_stub_len + 1) * sizeof(char));
     memcpy(post_stub_copy, post_stub, post_stub_len + 1);
 
-    // current post (list of fields)
-    list* p = posts[i];
-    post_stub_copy = replace(post_stub_copy, "{DATE_POSTED}", list_get(p, SQL_FIELD_POST_DATE_POSTED)->cp);
-    post_stub_copy = replace(post_stub_copy, "{POST_ID}", list_get(p, SQL_FIELD_POST_ID)->cp);
-    post_stub_copy = replace(post_stub_copy, "{POST_TITLE}", list_get(p, SQL_FIELD_POST_TITLE)->cp);
-    post_stub_copy = replace(post_stub_copy, "{COMMUNITY_NAME}", list_get(p, SQL_FIELD_POST_COMMUNITY_NAME)->cp);
-    post_stub_copy = replace(post_stub_copy, "{COMMUNITY_NAME}", list_get(p, SQL_FIELD_POST_COMMUNITY_NAME)->cp);
-
-    // limit post body to 64 chars in stub
-    char body[65];
-    int end = sprintf(body, "%61s", list_get(p, SQL_FIELD_POST_BODY)->cp);
-    memcpy(body + end, "...", 3);
-    body[end+3] = '\0';
-    post_stub_copy = replace(post_stub_copy, "{POST_BODY}", body);
+    // fill in post stub
+    post_stub_copy = fill_user_post_stub(post_stub_copy, p, client_info);
 
     // copy stub into main template
     template = replace(template, "{POST_STUB}", post_stub_copy);
@@ -330,7 +426,7 @@ char* fill_user_comments(char* template, char* uname)
 }
 
 
-char* get_user(char* uname, char* token)
+char* get_user(char* uname, const struct token_entry* client_info)
 {
   if (uname == NULL || strlen(uname) == 0)
   {
@@ -352,8 +448,8 @@ char* get_user(char* uname, char* token)
     return NULL;
   }
 
-  user_html = fill_user_posts(user_html, uname);
-  user_html = fill_user_comments(user_html, uname);
+  user_html = fill_user_posts(user_html, uname, client_info);
+  user_html = fill_user_comments(user_html, uname, client_info);
 
   // load main template
   char* main_html;
@@ -369,7 +465,7 @@ char* get_user(char* uname, char* token)
   main_html = replace(main_html, "{SCRIPT}", JS_USER);
 
   // is client logged in?
-  main_html = fill_nav_login(main_html, token);
+  main_html = fill_nav_login(main_html, client_info);
 
   // insert user html into main
   main_html = replace(main_html, "{PAGE_BODY}", user_html);
@@ -456,6 +552,10 @@ char* fill_post_comments(char* template, char* postid)
 
     // current comment (list of fields)
     list* c = comments[i];
+    comment_stub_copy = replace(comment_stub_copy, "{UPVOTE_CLICKED}", "upvote-notclicked");
+    comment_stub_copy = replace(comment_stub_copy, "{COMMENT_ID}", list_get(c, SQL_FIELD_COMMENT_ID)->cp);
+    comment_stub_copy = replace(comment_stub_copy, "{DOWNVOTE_CLICKED}", "downvote-notclicked");
+    comment_stub_copy = replace(comment_stub_copy, "{COMMENT_ID}", list_get(c, SQL_FIELD_COMMENT_ID)->cp);
     comment_stub_copy = replace(comment_stub_copy, "{DATE_POSTED}", list_get(c, SQL_FIELD_COMMENT_DATE_POSTED)->cp);
     comment_stub_copy = replace(comment_stub_copy, "{USER_NAME}", list_get(c, SQL_FIELD_COMMENT_AUTHOR_NAME)->cp);
     comment_stub_copy = replace(comment_stub_copy, "{USER_NAME}", list_get(c, SQL_FIELD_COMMENT_AUTHOR_NAME)->cp);

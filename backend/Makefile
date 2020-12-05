@@ -14,7 +14,7 @@ all: $(DEPS)
 	$(CC) $^ -o server.out $(CFLAGS)
 
 debug: $(DEPS)
-	$(CC) $^ -o serverdebug.out $(CFLAGS) -g
+	$(CC) $^ -o serverdebug.out $(CFLAGS) -g -DDEBUG
 
 clean:
 	if [ -f "server.out" ]; then rm server.out; fi;

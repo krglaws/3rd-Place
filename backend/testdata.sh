@@ -156,17 +156,42 @@ mysql -uroot <<TEST_VOTES
 USE $DBNAME;
 
 # test votes
-INSERT INTO post_up_votes (id, user_id, user_name, post_id)
-  VALUES (1, 1, 'testuser1', 1);
-INSERT INTO post_up_votes (id, user_id, user_name, post_id)
-  VALUES (2, 2, 'testuser2', 2);
-INSERT INTO post_up_votes (id, user_id, user_name, post_id)
-  VALUES (3, 3, 'testuser3', 3);
 
-INSERT INTO post_down_votes (id, user_id, user_name, post_id)
-  VALUES (1, 4, 'testuser4', 4);
-INSERT INTO post_down_votes (id, user_id, user_name, post_id)
-  VALUES (2, 5, 'testuser5', 5);
+# testuser1 upvote TestPost1
+CALL TogglePostUpVote(1, 1);
+
+# testuser2 upvote TestPost1
+CALL TogglePostUpVote(1, 2);
+
+# testuser3 upvote TestPost1
+CALL TogglePostUpVote(1, 3);
+
+# testuser1 downvote TestPost2
+CALL TogglePostDownVote(2, 1);
+
+# testuser2 downvote TestPost2
+CALL TogglePostDownVote(2, 2);
+
+# testuser3 downvote TestPost2
+CALL TogglePostDownVote(2, 3);
+
+# testuser1 upvote comment 1
+CALL ToggleCommentUpVote(1, 1);
+
+# testuser2 upvote comment 1
+CALL ToggleCommentUpvote(1, 2);
+
+# testuser3 upvote comment 1
+CALL ToggleCommentUpVote(1, 3);
+
+# testuser1 downvote comment 2
+CALL ToggleCommentDownVote(2, 1);
+
+# testuser2 downvote comment 2
+CALL ToggleCommentDownVote(2, 2);
+
+# testuser3 downvote comment 2
+CALL ToggleCommentDownVote(2, 3);
 
 TEST_VOTES
 

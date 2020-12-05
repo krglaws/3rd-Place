@@ -3,6 +3,7 @@
 
 /* html template paths */
 #define HTML_MAIN "templates/main/main.html"
+#define HTML_VOTE_WRAPPER "templates/main/vote_wrapper.html"
 #define HTML_USER "templates/user/user.html"
 #define HTML_USER_POST_STUB "templates/user/post_stub.html"
 #define HTML_USER_COMMENT_STUB "templates/user/comment_stub.html"
@@ -26,37 +27,34 @@
 #define JS_USER "/templates/user/user.js"
 #define JS_COMMUNITY "/templates/community/community.js"
 
-/* query templates */
-#define QUERY_USER_BY_UNAME "SELECT * FROM users WHERE name = '%s';"
-#define QUERY_POSTS_BY_UNAME "SELECT * FROM posts WHERE author_name = '%s';"
-#define QUERY_COMMENTS_BY_UNAME "SELECT * FROM comments WHERE author_name = '%s';"
-#define QUERY_POST_BY_UUID "SELECT * FROM posts WHERE id = '%s';"
-#define QUERY_POSTS_BY_COMMUNITY_NAME "SELECT * FROM posts WHERE community_name = '%s';"
-#define QUERY_COMMENTS_BY_POSTID "SELECT * FROM comments WHERE post_id = '%s';"
-#define QUERY_COMMUNITY_BY_NAME "SELECT * FROM communities WHERE name = '%s';"
-
 struct response* http_get(struct request* req);
 
 char* replace(char* template, const char* this, const char* withthat);
 
+char* fill_nav_login(char* template, const struct token_entry* client_info);
+
 char* fill_user_info(char* template, char* uname);
 
-char* fill_user_posts(char* template, char* uname);
+char* load_user_post_stub_template();
 
-char* fill_user_comments(char* template, char* uname);
+char* fill_user_post_stub(char* template, const list* post_info, const struct token_entry* client_info);
 
-char* get_user(char* uname, char* token);
+char* fill_user_posts(char* template, char* uname, const struct token_entry* client_info);
+
+char* fill_user_comments(char* template, char* uname, const struct token_entry* client_info);
+
+char* get_user(char* uname, const struct token_entry* client_info);
 
 char* fill_post_info(char* template, char* postid);
 
 char* fill_post_comments(char* template, char* postid);
 
-char* get_post(char* postid, char* token);
+char* get_post(char* postid, const struct token_entry* client_info);
 
 char* fill_community_info(char* template, char* community_name);
 
 char* fill_community_posts(char* template, char* community_name);
 
-char* get_community(char* community_name, char* token);
+char* get_community(char* community_name, const struct token_entry* client_info);
 
 #endif

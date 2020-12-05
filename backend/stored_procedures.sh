@@ -13,102 +13,142 @@ mysql -uroot <<STORED_PROCEDURES
 DELIMITER $$
 
 
-CREATE PROCEDURE $DBNAME.UpvotePost (IN postid INT, IN user_name VARCHAR(16))
+CREATE PROCEDURE $DBNAME.TogglePostUpVote (IN pid INT, IN uid INT)
 proc_label:BEGIN
 
+  # get post owner id
+  SET @owner_id = (SELECT author_id FROM posts WHERE id = pid);
+
   # check if upvote exists
-  IF EXISTS (SELECT * FROM $DBNAME.post_up_votes WHERE post_id = postid AND name = user_name) THEN
-    DELETE FROM $DBNAME.post_up_votes WHERE post_id = postid AND name = user_name;
-    UPDATE $DBNAME.posts SET points  =  points - 1 WHERE id = postid;
+  IF EXISTS (SELECT * FROM $DBNAME.post_up_votes WHERE post_id = pid AND user_id = uid) THEN
+    DELETE FROM $DBNAME.post_up_votes WHERE post_id = pid AND user_id = uid;
+
+    # update points
+    UPDATE $DBNAME.posts SET points = points - 1 WHERE id = pid;
+    UPDATE $DBNAME.users SET points = points - 1 WHERE id = @owner_id;
     LEAVE proc_label;
   END IF;
 
   # check if downvote exists
-  IF EXISTS (SELECT * FROM $DBNAME.post_down_votes WHERE post_id = postid AND name = user_name) THEN
-    DELETE FROM $DBNAME.post_down_votes WHERE post_id = postid AND name = user_name;
-    UPDATE $DBNAME.posts SET points = points + 1 WHERE id = postid;
+  IF EXISTS (SELECT * FROM $DBNAME.post_down_votes WHERE post_id = pid AND user_id = uid) THEN
+    DELETE FROM $DBNAME.post_down_votes WHERE post_id = pid AND user_id = uid;
+
+    # update points
+    UPDATE $DBNAME.posts SET points = points + 1 WHERE id = pid;
+    UPDATE $DBNAME.users SET points = points + 1 WHERE id = @owner_id;
   END IF;
 
   # create upvote entry
-  INSERT INTO $DBNAME.post_up_votes (post_id, user_id)
-    VALUES (postid, userid);
+  INSERT INTO $DBNAME.post_up_votes (post_id, user_id) VALUES (pid, uid);
 
-  UPDATE $DBNAME.posts SET points = points + 1 WHERE id = postid;
+  # update points
+  UPDATE $DBNAME.posts SET points = points + 1 WHERE id = pid;
+  UPDATE $DBNAME.users SET points = points + 1 WHERE id = @owner_id;
 
 END$$
 
 
-CREATE PROCEDURE $DBNAME.DownvotePost (IN postid INT, IN user_name VARCHAR(16))
+CREATE PROCEDURE $DBNAME.TogglePostDownVote (IN pid INT, IN uid INT)
 proc_label:BEGIN
 
+  # get post owner id
+  SET @owner_id = (SELECT author_id FROM posts WHERE id = pid);
+
   # check if downvote exists
-  IF EXISTS (SELECT * FROM $DBNAME.post_down_votes WHERE post_id = postid AND name = user_name) THEN
+  IF EXISTS (SELECT * FROM $DBNAME.post_down_votes WHERE post_id = pid AND user_id = uid) THEN
     DELETE FROM $DBNAME.post_down_votes WHERE post_id = postid AND name = user_name;
-    UPDATE $DBNAME.posts SET points = points + 1 WHERE id = postid;
+
+    # update points
+    UPDATE $DBNAME.posts SET points = points + 1 WHERE id = pid;
+    UPDATE $DBNAME.users SET points = points + 1 WHERE id = @owner_id;
     LEAVE proc_label;
   END IF;
 
   # check if upvote exists
-  IF EXISTS (SELECT * FROM $DBNAME.post_up_votes WHERE post_id = postid AND name = user_name) THEN
-    DELETE FROM $DBNAME.post_up_votes WHERE post_id = postid AND name = user_name;
-    UPDATE $DBNAME.posts SET points = points - 1 WHERE id = postid;
+  IF EXISTS (SELECT * FROM $DBNAME.post_up_votes WHERE post_id = pid AND user_id = uid) THEN
+    DELETE FROM $DBNAME.post_up_votes WHERE post_id = pid AND user_id = uid;
+
+    # update points
+    UPDATE $DBNAME.posts SET points = points - 1 WHERE id = pid;
+    UPDATE $DBNAME.users SET points = points - 1 WHERE id = @owner_id;
   END IF;
 
   # create downvote entry
-  INSERT INTO $DBNAME.post_down_votes (post_id, user_id)
-    VALUES (postid, userid);
+  INSERT INTO $DBNAME.post_down_votes (post_id, user_id) VALUES (pid, uid);
 
-  UPDATE $DBNAME.posts SET points = points - 1 WHERE id = postid;
+  # update points
+  UPDATE $DBNAME.posts SET points = points - 1 WHERE id = pid;
+  UPDATE $DBNAME.users SET points = points - 1 WHERE id = @owner_id;
 
 END$$
 
 
-CREATE PROCEDURE $DBNAME.UpvoteComment (IN commentid INT, IN user_name VARCHAR(16))
+CREATE PROCEDURE $DBNAME.ToggleCommentUpVote(IN cid INT, IN uid INT)
 proc_label:BEGIN
 
+  # get post owner id
+  SET @owner_id = (SELECT author_id FROM comments WHERE id = cid);
+
   # check if upvote exists
-  IF EXISTS (SELECT * FROM $DBNAME.comment_up_votes WHERE comment_id = commentid AND name = user_name) THEN
-    DELETE FROM $DBNAME.comment_up_votes WHERE comment_id = commentid AND name = user_name;
-    UPDATE $DBNAME.comments SET points = points - 1 WHERE id = commentid;
+  IF EXISTS (SELECT * FROM $DBNAME.comment_up_votes WHERE comment_id = cid AND user_id = uid) THEN
+    DELETE FROM $DBNAME.comment_up_votes WHERE comment_id = cid AND user_id = uid;
+
+    # update points
+    UPDATE $DBNAME.comments SET points = points - 1 WHERE id = cid;
+    UPDATE $DBNAME.users SET points = points - 1 WHERE id = @owner_id;
     LEAVE proc_label;
   END IF;
 
   # check if downvote exists
-  IF EXISTS (SELECT * FROM $DBNAME.comment_down_votes WHERE comment_id = commentid AND name = user_name) THEN
-    DELETE FROM $DBNAME.comment_down_votes WHERE comment_id = commentid AND name = user_name;
-    UPDATE $DBNAME.comments SET points  =  points + 1 WHERE id = commentid;
+  IF EXISTS (SELECT * FROM $DBNAME.comment_down_votes WHERE comment_id = cid AND user_id = uid) THEN
+    DELETE FROM $DBNAME.comment_down_votes WHERE comment_id = cid AND user_id = uid;
+
+    # update points
+    UPDATE $DBNAME.comments SET points = points + 1 WHERE id = cid;
+    UPDATE $DBNAME.users SET points = points + 1 WHERE id = @owner_id;
   END IF;
 
   # create upvote entry
-  INSERT INTO $DBNAME.comment_up_votes (comment_id, user_id)
-    VALUES (commentid, userid);
+  INSERT INTO $DBNAME.comment_up_votes (comment_id, user_id) VALUES (cid, uid);
 
-  UPDATE $DBNAME.comments SET points = points + 1 WHERE id = commentid;
+  # update points
+  UPDATE $DBNAME.comments SET points = points + 1 WHERE id = cid;
+  UPDATE $DBNAME.users SET points = points + 1 WHERE id = @owner_id;
 
 END$$
 
 
-CREATE PROCEDURE $DBNAME.DownvoteComment (IN commentid INT, IN user_name VARCHAR(16))
+CREATE PROCEDURE $DBNAME.ToggleCommentDownVote(IN cid INT, IN uid INT)
 proc_label:BEGIN
 
+  # get post owner id
+  SET @owner_id = (SELECT author_id FROM comments WHERE id = cid);
+
   # check if downvote exists
-  IF EXISTS (SELECT * FROM $DBNAME.comment_down_votes WHERE comment_id = commentid AND name = user_name) THEN
-    DELETE FROM $DBNAME.comment_down_votes WHERE comment_id = commentid AND name = user_name;
-    UPDATE $DBNAME.comments SET points = points + 1 WHERE id = commentid;
+  IF EXISTS (SELECT * FROM $DBNAME.comment_down_votes WHERE comment_id = cid AND user_id = uid) THEN
+    DELETE FROM $DBNAME.comment_down_votes WHERE comment_id = cid AND user_id = uid;
+
+    # update points
+    UPDATE $DBNAME.comments SET points = points + 1 WHERE id = cid;
+    UPDATE $DBNAME.users SET points = points + 1 WHERE id = @owner_id;
     LEAVE proc_label;
   END IF;
 
   # check if upvote exists
-  IF EXISTS (SELECT * FROM $DBNAME.comment_up_votes WHERE comment_id = commentid AND name = user_name) THEN
-    DELETE FROM $DBNAME.comment_up_votes WHERE comment_id = commentid AND name = user_name;
-    UPDATE $DBNAME.comments SET points = points - 1 WHERE id = commentid;
+  IF EXISTS (SELECT * FROM $DBNAME.comment_up_votes WHERE comment_id = cid AND user_id = uid) THEN
+    DELETE FROM $DBNAME.comment_up_votes WHERE comment_id = cid AND user_id = uid;
+
+    # update points
+    UPDATE $DBNAME.comments SET points = points - 1 WHERE id = cid;
+    UPDATE $DBNAME.users SET points = points - 1 WHERE id = @owner_id;
   END IF;
 
   # create downvote entry
-  INSERT INTO $DBNAME.comment_down_votes (comment_id, user_id)
-    VALUES (commentid, userid);
+  INSERT INTO $DBNAME.comment_down_votes (comment_id, user_id) VALUES (cid, uid);
 
-  UPDATE $DBNAME.comments SET points = points - 1 WHERE id = commentid;
+  # update points
+  UPDATE $DBNAME.comments SET points = points - 1 WHERE id = cid;
+  UPDATE $DBNAME.users SET points = points - 1 WHERE id = @owner_id;
 
 END$$
 

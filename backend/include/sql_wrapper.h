@@ -52,25 +52,36 @@
 #define SQL_FIELD_POST_UP_VOTE_ID        (0)
 #define SQL_FIELD_POST_UP_VOTE_POST_ID   (1)
 #define SQL_FIELD_POST_UP_VOTE_USER_ID   (2)
-#define SQL_FIELD_POST_UP_VOTE_USER_NAME (3)
 
 /* post down vote field names */
 #define SQL_FIELD_POST_DOWN_VOTE_ID        (0)
 #define SQL_FIELD_POST_DOWN_VOTE_POST_ID   (1)
 #define SQL_FIELD_POST_DOWN_VOTE_USER_ID   (2)
-#define SQL_FIELD_POST_DOWN_VOTE_USER_NAME (3)
 
 /* comment up vote field names */
 #define SQL_FIELD_COMMENT_UP_VOTE_ID        (0)
 #define SQL_FIELD_COMMENT_UP_VOTE_POST_ID   (1)
 #define SQL_FIELD_COMMENT_UP_VOTE_USER_ID   (2)
-#define SQL_FIELD_COMMENT_UP_VOTE_USER_NAME (3)
 
 /* comment down vote field names */
 #define SQL_FIELD_COMMENT_DOWN_VOTE_ID        (0)
 #define SQL_FIELD_COMMENT_DOWN_VOTE_POST_ID   (1)
 #define SQL_FIELD_COMMENT_DOWN_VOTE_USER_ID   (2)
-#define SQL_FIELD_COMMENT_DOWN_VOTE_USER_NAME (3)
+
+/* query templates */
+#define QUERY_USER_BY_UNAME "SELECT * FROM users WHERE name = '%s';"
+#define QUERY_POSTS_BY_UNAME "SELECT * FROM posts WHERE author_name = '%s';"
+#define QUERY_COMMENTS_BY_UNAME "SELECT * FROM comments WHERE author_name = '%s';"
+#define QUERY_POST_BY_UUID "SELECT * FROM posts WHERE id = '%s';"
+#define QUERY_POSTS_BY_COMMUNITY_NAME "SELECT * FROM posts WHERE community_name = '%s';"
+#define QUERY_COMMENTS_BY_POSTID "SELECT * FROM comments WHERE post_id = '%s';"
+#define QUERY_COMMUNITY_BY_NAME "SELECT * FROM communities WHERE name = '%s';"
+
+#define QUERY_POST_UPVOTES_BY_POSTID_UNAME "SELECT * FROM post_up_votes WHERE post_id = %s AND user_id = %d;"
+#define QUERY_POST_DOWNVOTES_BY_POSTID_UNAME "SELECT * FROM post_down_votes WHERE post_id = %s AND user_id = %d;"
+
+#define QUERY_COMMENT_UPVOTES_BY_COMMENTID_UNAME "SELECT * FROM comment_up_votes WHERE comment_id = %s AND user_id = %d"
+#define QUERY_COMMENT_DOWNVOTES_BY_COMMENTID_UNAME "SELECT * FROM comment_down_votes WHERE comment_id = %s AND user_id = %d;"
 
 list** query_database_ls(char* query);
 

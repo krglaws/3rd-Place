@@ -45,7 +45,7 @@ struct request
 {
   enum request_method method;
   char* uri;
-  char* token; // NULL token means client is not logged in
+  const token_entry* client_info; // NULL token means client is not logged in
   char* content;
 };
 

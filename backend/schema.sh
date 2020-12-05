@@ -69,33 +69,29 @@ CREATE TABLE IF NOT EXISTS $DBNAME.subscriptions(
 
 CREATE TABLE IF NOT EXISTS $DBNAME.post_up_votes(
   id INT NOT NULL AUTO_INCREMENT,
-  post_id INT NOT NULL,
   user_id INT NOT NULL,
-  user_name VARCHAR(16) NOT NULL,
+  post_id INT NOT NULL,
   PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS $DBNAME.post_down_votes(
   id INT NOT NULL AUTO_INCREMENT,
-  post_id INT NOT NULL,
   user_id INT NOT NULL,
-  user_name VARCHAR(16) NOT NULL,
+  post_id INT NOT NULL,
   PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS $DBNAME.comment_up_votes(
   id INT NOT NULL AUTO_INCREMENT,
-  comment_id INT NOT NULL,
   user_id INT NOT NULL,
-  user_name VARCHAR(16) NOT NULL,
+  comment_id INT NOT NULL,
   PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS $DBNAME.comment_down_votes(
   id INT NOT NULL AUTO_INCREMENT,
-  comment_id INT NOT NULL,
   user_id INT NOT NULL,
-  user_name VARCHAR(16) NOT NULL,
+  comment_id INT NOT NULL,
   PRIMARY KEY (id)
 );
 
