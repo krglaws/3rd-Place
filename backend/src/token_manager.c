@@ -52,6 +52,8 @@ const struct token_entry* valid_token(const char* token)
   {
     if (strcmp(token, iter->token) == 0)
     {
+      // user has visited site, so restore token lifespan
+      iter->days = TOKENLIFESPAN;
       return iter;
     }
     iter = iter->next;

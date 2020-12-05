@@ -326,7 +326,7 @@ static char* get_uri(enum request_method method, char* request)
 }
 
 
-static char* get_login_token(char* req_str)
+static const struct token_entry* get_login_token(char* req_str)
 {
   if (req_str == NULL)
   {
@@ -345,15 +345,17 @@ static char* get_login_token(char* req_str)
   char* newline = strstr(token_loc, "\n");
   int len = newline - token_loc;
 
-  if (len == 0)
+  if (len != TOKENLEN)
   {
     return NULL;
   }
 
   /* copy token */
-  char* token = malloc(len + 1);
-  memcpy(token, token_loc, len);
-  token[len] = '\0';
+  char tokenstr[TOKENLEN + 1];
+  memcpy(tokenstr, token_loc, TOKENLEN);
+  tokenstr[TOKENLEN] = '\0';
+
+  const struct token_entry* token = valid_token(tokenstr);
 
   return token;
 }
@@ -400,7 +402,7 @@ static struct response* process_request(char* req_str)
   req.method = get_request_method(req_str);
 
   req.uri = get_uri(req.method, req_str);
-  req.token = get_login_token(req_str);
+  req.client_info = get_login_token(req_str);
   req.content = get_request_content(req_str);
 
   free(req_str);
@@ -431,14 +433,12 @@ static struct response* process_request(char* req_str)
   default:
 
     free(req.uri);
-    free(req.token);
     free(req.content);
    
     return senderr(BAD_REQUEST);
   }
 
   free(req.uri);
-  free(req.token);
   free(req.content);
 
   return resp;
