@@ -12,6 +12,12 @@
 
   --inner-bg-color: #FFFFFF;
   --outer-bg-color: #CACBCC;
+
+  --upvote-clicked-color: orange;
+  --upvote-notclicked-color: black;
+
+  --downvote-clicked-color: blue;
+  --downvote-notclicked-color: black;
 }
 
 * {box-sizing: border-box}
@@ -25,6 +31,62 @@ html, body {
   border-color: var(--border-color);
   border-style: var(--border-style);
   border-width: var(--border-width); 
+}
+
+.vote-content-wrapper {
+  display: flex;
+}
+
+.vote-wrapper {
+  height: 100%;
+  padding: 1%;
+  flex: 2%;
+}
+
+.arrow-wrapper {
+  padding: 3%;
+}
+
+.upvote-clicked {
+  border-color: var(--upvote-clicked-color) !important;
+}
+
+.upvote-notclicked {
+  border-color: var(--upvote-notclicked-color) !important;
+}
+
+.downvote-clicked {
+  border-color: var(--downvote-clicked-color) !important;
+}
+
+.downvote-notclicked {
+  border-color: var(--downvote-notclicked-color) !important;
+}
+
+.arrow {
+  border-style: solid;
+  border-color: black;
+  border-width: 0 3px 3px 0;
+  display: inline-block;
+  padding: 3px;
+}
+
+.arrow:hover {
+  cursor: pointer;
+}
+
+.up {
+  transform: rotate(-135deg);
+}
+
+.down {
+  transform: rotate(45deg);
+}
+
+.score-wrapper {
+}
+
+.score {
 }
 /* end gp */
 /**********/

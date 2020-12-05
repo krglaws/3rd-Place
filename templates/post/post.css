@@ -60,9 +60,10 @@
 }
 
 .comment {
-  margin: 2%;
+  margin: 1%;
   padding: 1%;
   font-size: var(--body-font-size);
+  flex: 98%;
 }
 
 .comment-author {

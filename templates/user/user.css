@@ -62,8 +62,9 @@
 }
 
 .user-tab-content {
-  margin: 3% 1% 1% 1%;
+  margin: 1%;
   padding: 1%;
+  flex: 98%;
 }
 
 .user-tab-content h3 {
