@@ -156,6 +156,35 @@ char* fill_nav_login(char* template, const struct token_entry* client_info);
 }
 
 
+char* load_vote_wrapper_stub(const char* type, const char* inner_html_path)
+{
+  // load vote wrapper file
+  char* vote_wrapper;
+  if ((vote_wrapper = load_file(HTML_VOTE_WRAPPER)) == NULL)
+  {
+    fprintf(stderr, "load_vote_wrapper_stub(): failed to load file: %s\n", HTML_VOTE_WRAPPER);
+    return NULL;
+  }
+
+  // load post stub file
+  char* post_stub;
+  if ((post_stub = load_file(inner_html_path)) == NULL)
+  {
+    fprintf(stderr, "load_vote_wrapper_stub(): failed to load file: '%s'\n", inner_html_path);
+    free(vote_wrapper);
+    return NULL;
+  }
+
+  post_stub = replace(vote_wrapper, "{CURR_ITEM}", post_stub);
+  post_stub = replace(post_stub, "{ITEM_TYPE}", type);
+  post_stub = replace(post_stub, "{ITEM_TYPE}", type);
+
+  free(vote_wrapper);
+
+  return post_stub;
+}
+
+
 char* fill_user_info(char* template, char* uname)
 {
   // prepare query string
@@ -193,34 +222,6 @@ char* fill_user_info(char* template, char* uname)
   list_delete(user_info);
 
   return template;
-}
-
-
-char* load_user_post_stub_template()
-{
-  // load vote wrapper file
-  char* vote_wrapper;
-  if ((vote_wrapper = load_file(HTML_VOTE_WRAPPER)) == NULL)
-  {
-    fprintf(stderr, "load_user_post_stub_template(): failed to load file: %s\n", HTML_VOTE_WRAPPER);
-    return NULL;
-  }
-
-  // load post stub file
-  char* post_stub;
-  if ((post_stub = load_file(HTML_USER_POST_STUB)) == NULL)
-  {
-    fprintf(stderr, "load_user_post_stub_template(): failed to load file: '%s'\n", HTML_USER_POST_STUB);
-    return NULL;
-  }
-
-  post_stub = replace(vote_wrapper, "{CURR_ITEM}", post_stub);
-  free(vote_wrapper);
-
-  post_stub = replace(post_stub, "{ITEM_TYPE}", "post");
-  post_stub = replace(post_stub, "{ITEM_TYPE}", "post");
-
-  return post_stub;
 }
 
 
@@ -317,7 +318,7 @@ char* fill_user_posts(char* template, char* uname, const struct token_entry* cli
 
   // load user post stub template
   char* post_stub;
-  if ((post_stub = load_user_post_stub_template()) == NULL)
+  if ((post_stub = load_vote_wrapper_stub(HTML_USER_POST_STUB)) == NULL)
   {
     fprintf(stderr, "fill_user_posts(): failed to load post stub template\n");
     for (int i = 0; posts[i] != NULL; i++)
@@ -344,7 +345,7 @@ char* fill_user_posts(char* template, char* uname, const struct token_entry* cli
     post_stub_copy = fill_user_post_stub(post_stub_copy, p, client_info);
 
     // copy stub into main template
-    template = replace(template, "{POST_STUB}", post_stub_copy);
+    template = replace(template, "{NEXT_ITEM}", post_stub_copy);
 
     free(post_stub_copy);
     list_delete(p);
@@ -354,26 +355,110 @@ char* fill_user_posts(char* template, char* uname, const struct token_entry* cli
   free(post_stub);
 
   // remove trailing template string
-  return replace(template, "{POST_STUB}", "");
+  return replace(template, "{NEXT_ITEM}", "");
+}
+
+
+char* fill_user_comment_stub(char* template, const list* comment_info, const struct token_entry* client_info)
+{
+  const char* comment_id = list_get(comment_info, SQL_FIELD_COMMENT_ID)->cp;
+  const char* comment_body = list_get(comment_info, SQL_FIELD_COMMENT_BODY)->cp;
+  const char* comment_score = list_get(comment_info, SQL_FIELD_COMMENT_SCORE)->cp;
+  const char* date_posted = list_get(comment_info, SQL_FIELD_COMMENT_DATE_POSTED)->cp;
+  const char* post_id = list_get(comment_info, SQL_FIELD_COMMENT_POST_ID)->cp;
+  const char* post_title = list_get(comment_info, SQL_FIELD_COMMENT_POST_TITLE)->cp;
+  const char* community_name = list_get(community_info, SQL_FIELD_COMMENT_COMMUNITY_NAME)->cp;
+
+  // query database for votes that match client user id and comment id
+  char* upvote_query_fmt = QUERY_POST_UPVOTES_BY_COMMENTID_UNAME;
+  char upvote_query[strlen(upvote_query_fmt) + 64];
+  sprintf(upvote_query, upvote_query_fmt, comment_id, client_info->uid, comment_id, client_info->uid);
+
+  list** upvote_query_result = query_database_ls(upvote_query);
+
+  // query database for votes that match client user id and post id
+  char* downvote_query_fmt = QUERY_POST_DOWNVOTES_BY_POSTID_UNAME;
+  char downvote_query[strlen(downvote_query_fmt) + 64];
+  sprintf(downvote_query, downvote_query_fmt, comment_id, client_info->uid, comment_id, client_info->uid);
+
+  list** downvote_query_result = query_database_ls(downvote_query);
+
+#ifdef DEBUG
+  if (upvote_query_result[0] && downvote_query_result[0])
+  {
+    fprintf(stderr, "fill_user_comment_stub(): downvote and upvote present for same comment_id=%s user_id=%d", comment_id, client_info->uid);
+    exit(EXIT_FAILURE);
+  }
+  if (upvote_query_result[0] && upvote_query_result[1] != NULL)
+  {
+    fprintf(stderr, "fill_user_comment_stub(): multiple upvotes present for same comment_id=%s user_id=%d", comment_id, client_info->uid);
+    exit(EXIT_FAILURE);
+  }
+  if (downvote_query_result[0] && downvote_query_result[1] != NULL)
+  {
+    fprintf(stderr, "fill_user_comment_stub(): multiple downvotes present for same comment_id=%s user_id=%d", comment_id, client_info->uid);
+    exit(EXIT_FAILURE);
+  }
+#endif
+
+  char* upvote_css_class = "upvote_notclicked";
+  char* downvote_css_class = "downvote_notclicked";
+
+  if (upvote_query_result[0])
+  {
+    upvote_css_class = "upvote_clicked";
+    free(upvote_query_result[0]);
+    free(upvote_query_result);
+  }
+
+  if (downvote_query_result[0])
+  {
+    downvote_css_class = "downvote_clicked";
+    free(downvote_query_result[0]);
+    free(downvote_query_result);
+  }
+
+  // vote wrapper templating
+  template = replace(template, "{UPVOTE_CLICKED}", upvote_css_class);
+  template = replace(template, "{ITEM_ID}", comment_id);
+  template = replace(template, "{ITEM_SCORE}", comment_score);
+  template = replace(template, "{DOWNVOTE_CLICKED}", downvote_css_class);
+  template = replace(template, "{ITEM_ID}", comment_id);
+
+  // load comment_stub template and do replacements
+  template = replace(template, "{DATE_POSTED}", date_posted);
+  template = replace(template, "{POST_ID}", post_id);
+  template = replace(template, "{COMMENT_ID}", comment_id);
+
+  // limit comment body to 64 chars in stub
+  char body[65];
+  int end = sprintf(body, "%61s", comment_body);
+  memcpy(body + end, "...", 3);
+  body[end+3] = '\0';
+  template = replace(template, "{COMMENT_BODY}", body);
+
+  template = replace(template, "{POST_ID}", post_id);
+  template = replace(template, "{POST_TITLE}", post_title);
+  template = replace(template, "{COMMUNITY_NAME}", community_name);
+  template = replace(template, "{COMMUNITY_NAME}", community_name);
+
+  return template; 
 }
 
 
 char* fill_user_comments(char* template, char* uname)
 {
-  // prepare query string
+  // query user comments
   char* query_fmt = QUERY_COMMENTS_BY_UNAME;
   char query[strlen(query_fmt) + strlen(uname) + 1];
   sprintf(query, query_fmt, uname);
-
-  // grab user comment list from database
   list** comments = query_database_ls(query);
 
-  // load comment stub template and do replacements
+  // load comment stub template
   char* comment_stub;
-  if ((comment_stub = load_file(HTML_USER_COMMENT_STUB)) == NULL)
+  if ((comment_stub = load_vote_wrapper_stub(HTML_USER_COMMENT_STUB)) == NULL)
   {
-    // failed to load comment stub file
-    fprintf(stderr, "fill_user_comments(): failed to load file %s\n", HTML_USER_COMMENT_STUB);
+    fprintf(stderr, "fill_user_comments(): failed to load comment stub template\n");
     for (int i = 0; comments[i] != NULL; i++)
     {
       list_delete(comments[i]);
@@ -395,24 +480,11 @@ char* fill_user_comments(char* template, char* uname)
     char* comment_stub_copy = malloc((comment_stub_len + 1) * sizeof(char));
     memcpy(comment_stub_copy, comment_stub, comment_stub_len + 1);
 
-    // load comment_stub template and do replacements
-    comment_stub_copy = replace(comment_stub_copy, "{POST_ID}", list_get(c, SQL_FIELD_COMMENT_POST_ID)->cp);
-    comment_stub_copy = replace(comment_stub_copy, "{COMMENT_ID}", list_get(c, SQL_FIELD_COMMENT_ID)->cp);
-
-    // limit comment body to 64 chars in stub
-    char body[65];
-    int end = sprintf(body, "%61s", list_get(c, SQL_FIELD_COMMENT_BODY)->cp);
-    memcpy(body + end, "...", 3);
-    body[end+3] = '\0';
-    comment_stub_copy = replace(comment_stub_copy, "{DATE_POSTED}", list_get(c, SQL_FIELD_COMMENT_DATE_POSTED)->cp);
-    comment_stub_copy = replace(comment_stub_copy, "{COMMENT_BODY}", body);
-    comment_stub_copy = replace(comment_stub_copy, "{POST_TITLE}", list_get(c, SQL_FIELD_COMMENT_POST_TITLE)->cp);
-    comment_stub_copy = replace(comment_stub_copy, "{POST_ID}", list_get(c, SQL_FIELD_COMMENT_POST_ID)->cp);
-    comment_stub_copy = replace(comment_stub_copy, "{COMMUNITY_NAME}", list_get(c, SQL_FIELD_COMMENT_COMMUNITY_NAME)->cp);
-    comment_stub_copy = replace(comment_stub_copy, "{COMMUNITY_NAME}", list_get(c, SQL_FIELD_COMMENT_COMMUNITY_NAME)->cp);
+    // fill in comment stub
+    comment_stub_copy = fill_user_comment_stub(comment_stub_copy, c, client_info);
 
     // copy stub into main template
-    template = replace(template, "{COMMENT_STUB}", comment_stub_copy);
+    template = replace(template, "{NEXT_ITEM}", comment_stub_copy);
 
     free(comment_stub_copy);
     list_delete(c);
@@ -422,7 +494,7 @@ char* fill_user_comments(char* template, char* uname)
   free(comment_stub);
 
   // remove trailing template string
-  return replace(template, "{COMMENT_STUB}", "");
+  return replace(template, "{NEXT_ITEM}", "");
 }
 
 
@@ -475,13 +547,12 @@ char* get_user(char* uname, const struct token_entry* client_info)
 }
 
 
-char* fill_post_info(char* template, char* postid)
+char* fill_post_info(char* template, char* postid, const struct token_entry* client_entry)
 {
-  // prepare query string
-  char* query_fmt = QUERY_POST_BY_UUID;
+  // query post info
+  char* query_fmt = QUERY_POST_BY_ID;
   char query[strlen(query_fmt) + strlen(postid) + 1];
   sprintf(query, query_fmt, postid);
-
   list** result = query_database_ls(query);
 
   // make sure we got exactly ONE entry
@@ -513,6 +584,13 @@ char* fill_post_info(char* template, char* postid)
   list_delete(post_info);
 
   return template;
+}
+
+
+char* fill_post_comment_stub(char* template, list* comment_info, const struct token_entry* client_info)
+{
+  const char* post_id = list_get(comment_info, SQL_FIELD_COMMENT_ID)->cp;
+  const char* 
 }
 
 
@@ -575,7 +653,7 @@ char* fill_post_comments(char* template, char* postid)
 }
 
 
-char* get_post(char* postid, char* token)
+char* get_post(char* postid, const struct token_entry* client_info)
 {
   if (postid == NULL || strlen(postid) == 0)
   {
@@ -591,7 +669,7 @@ char* get_post(char* postid, char* token)
   }
 
   // fill in post info
-  if ((post_html = fill_post_info(post_html, postid)) == NULL)
+  if ((post_html = fill_post_info(post_html, postid, client_info)) == NULL)
   {
     // post does not exist
     return NULL;

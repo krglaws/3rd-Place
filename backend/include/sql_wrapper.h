@@ -72,7 +72,7 @@
 #define QUERY_USER_BY_UNAME "SELECT * FROM users WHERE name = '%s';"
 #define QUERY_POSTS_BY_UNAME "SELECT * FROM posts WHERE author_name = '%s';"
 #define QUERY_COMMENTS_BY_UNAME "SELECT * FROM comments WHERE author_name = '%s';"
-#define QUERY_POST_BY_UUID "SELECT * FROM posts WHERE id = '%s';"
+#define QUERY_POST_BY_ID "SELECT * FROM posts WHERE id = '%s';"
 #define QUERY_POSTS_BY_COMMUNITY_NAME "SELECT * FROM posts WHERE community_name = '%s';"
 #define QUERY_COMMENTS_BY_POSTID "SELECT * FROM comments WHERE post_id = '%s';"
 #define QUERY_COMMUNITY_BY_NAME "SELECT * FROM communities WHERE name = '%s';"

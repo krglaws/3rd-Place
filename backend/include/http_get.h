@@ -29,27 +29,35 @@
 
 struct response* http_get(struct request* req);
 
+
 char* replace(char* template, const char* this, const char* withthat);
 
 char* fill_nav_login(char* template, const struct token_entry* client_info);
 
+char* load_vote_wrapper_stub(const char* type, const char* inner_html_path);
+
+
 char* fill_user_info(char* template, char* uname);
 
-char* load_user_post_stub_template();
+char* fill_user_comment_stub(char* template, const list* comment_info, const struct token_entry* client_info);
+
+char* fill_user_comments(char* template, char* uname, const struct token_entry* client_info);
 
 char* fill_user_post_stub(char* template, const list* post_info, const struct token_entry* client_info);
 
 char* fill_user_posts(char* template, char* uname, const struct token_entry* client_info);
 
-char* fill_user_comments(char* template, char* uname, const struct token_entry* client_info);
-
 char* get_user(char* uname, const struct token_entry* client_info);
 
-char* fill_post_info(char* template, char* postid);
 
-char* fill_post_comments(char* template, char* postid);
+char* fill_post_info(char* template, char* postid, const struct token_entry* client_info);
+
+char* fill_post_comment_stub(char* template, list* comment_info, const struct token_entry* client_info);
+
+char* fill_post_comments(char* template, char* postid, const struct token_entry* client_info);
 
 char* get_post(char* postid, const struct token_entry* client_info);
+
 
 char* fill_community_info(char* template, char* community_name);
 
