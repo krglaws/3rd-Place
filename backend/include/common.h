@@ -2,8 +2,6 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
-#include <kylestructs.h>
-
 #define HTTPVERSION "HTTP/1.1"
 
 /* content types */
@@ -28,6 +26,17 @@
 #define STAT505 HTTPVERSION " 505 HTTP Version Not Supported\n"
 
 #define UNAMELEN (16)
+#define TOKENLEN (32)
+#define TOKENLIFESPAN (7)
+
+struct token_entry
+{
+  char token[TOKENLEN + 1];
+  char user_id[32];
+  char user_name[UNAMELEN + 1];
+  int days;
+  struct token_entry* next;
+};
 
 /* request methods */
 enum request_method
@@ -45,7 +54,7 @@ struct request
 {
   enum request_method method;
   char* uri;
-  const token_entry* client_info; // NULL token means client is not logged in
+  const struct token_entry* client_info; // NULL token means client is not logged in
   char* content;
 };
 

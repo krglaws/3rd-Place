@@ -1,10 +1,10 @@
-
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <kylestructs.h>
 
-#include <common.h>
 #include <sql_wrapper.h>
+#include <common.h>
 #include <token_manager.h>
 
 /* list of active tokens */
@@ -38,7 +38,7 @@ void remove_token(const int index)
 }
 
 
-/* returns uname belonging to token if present, else NULL */
+/* returns token_entry struct that contains token if present, else NULL */
 const struct token_entry* valid_token(const char* token)
 {
   if (token == NULL)
@@ -97,12 +97,14 @@ static void random_token(char* token_buff)
 }
 
 
-/* creates and returns a new token belonging to uname */
-const char* new_token(char* uname)
+/* creates and returns a new token belonging to user_name */
+const char* new_token(const char* user_name, const char* user_id)
 {
   struct token_entry* new_entry = calloc(1, sizeof(struct token_entry));
+
+  memcpy(new_entry->user_id, user_id, strlen(user_id));
+  memcpy(new_entry->user_name, user_name, strlen(user_name));
   new_entry->days = TOKENLIFESPAN;
-  memcpy(new_entry->uname, uname, strlen(uname));
 
   do
   {

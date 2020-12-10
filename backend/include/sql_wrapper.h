@@ -77,11 +77,11 @@
 #define QUERY_COMMENTS_BY_POSTID "SELECT * FROM comments WHERE post_id = '%s';"
 #define QUERY_COMMUNITY_BY_NAME "SELECT * FROM communities WHERE name = '%s';"
 
-#define QUERY_POST_UPVOTES_BY_POSTID_UNAME "SELECT * FROM post_up_votes WHERE post_id = %s AND user_id = %d;"
-#define QUERY_POST_DOWNVOTES_BY_POSTID_UNAME "SELECT * FROM post_down_votes WHERE post_id = %s AND user_id = %d;"
+#define QUERY_POST_UPVOTE_BY_POSTID_USERID "SELECT * FROM post_up_votes WHERE post_id = %s AND user_id = %d;"
+#define QUERY_POST_DOWNVOTE_BY_POSTID_USERID "SELECT * FROM post_down_votes WHERE post_id = %s AND user_id = %d;"
 
-#define QUERY_COMMENT_UPVOTES_BY_COMMENTID_UNAME "SELECT * FROM comment_up_votes WHERE comment_id = %s AND user_id = %d"
-#define QUERY_COMMENT_DOWNVOTES_BY_COMMENTID_UNAME "SELECT * FROM comment_down_votes WHERE comment_id = %s AND user_id = %d;"
+#define QUERY_COMMENT_UPVOTE_BY_COMMENTID_USERID "SELECT * FROM comment_up_votes WHERE comment_id = %s AND user_id = %d"
+#define QUERY_COMMENT_DOWNVOTE_BY_COMMENTID_USERID "SELECT * FROM comment_down_votes WHERE comment_id = %s AND user_id = %d;"
 
 list** query_database_ls(char* query);
 

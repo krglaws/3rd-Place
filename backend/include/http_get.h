@@ -29,40 +29,57 @@
 
 struct response* http_get(struct request* req);
 
-
 char* replace(char* template, const char* this, const char* withthat);
 
 char* fill_nav_login(char* template, const struct token_entry* client_info);
 
-char* load_vote_wrapper_stub(const char* type, const char* inner_html_path);
+char* load_vote_wrapper(const char* type, const char* inner_html_path);
+
+enum vote_type {
+  UPVOTE,
+  DOWNVOTE,
+  NOVOTE
+};
+
+enum vote_item_type {
+  POST_VOTE,
+  COMMENT_VOTE
+};
+
+enum vote_type check_for_post_vote(const enum vote_item_type item_type, const char* vote_id, const char* user_id);
 
 
-char* fill_user_info(char* template, char* uname);
+/* used by get_user() */
+char* fill_user_info(char* template, const char* user_name);
 
 char* fill_user_comment_stub(char* template, const list* comment_info, const struct token_entry* client_info);
 
-char* fill_user_comments(char* template, char* uname, const struct token_entry* client_info);
+char* fill_user_comments(char* template, const char* user_name, const struct token_entry* client_info);
 
 char* fill_user_post_stub(char* template, const list* post_info, const struct token_entry* client_info);
 
-char* fill_user_posts(char* template, char* uname, const struct token_entry* client_info);
+char* fill_user_posts(char* template, char* user_name, const struct token_entry* client_info);
 
-char* get_user(char* uname, const struct token_entry* client_info);
-
-
-char* fill_post_info(char* template, char* postid, const struct token_entry* client_info);
-
-char* fill_post_comment_stub(char* template, list* comment_info, const struct token_entry* client_info);
-
-char* fill_post_comments(char* template, char* postid, const struct token_entry* client_info);
-
-char* get_post(char* postid, const struct token_entry* client_info);
+char* get_user(char* user_name, const struct token_entry* client_info);
 
 
-char* fill_community_info(char* template, char* community_name);
+/* used by get_post() */
+char* fill_post_info(char* template, const char* post_id, const struct token_entry* client_info);
 
-char* fill_community_posts(char* template, char* community_name);
+char* fill_post_comment_stub(char* template, const list* comment_info, const struct token_entry* client_info);
 
-char* get_community(char* community_name, const struct token_entry* client_info);
+char* fill_post_comments(char* template, const char* post_id, const struct token_entry* client_info);
+
+char* get_post(const char* post_id, const struct token_entry* client_info);
+
+
+/* used by fill_community_info() */
+char* fill_community_info(char* template, const char* community_name);
+
+char* fill_community_post_stub(char* template, const list* post_info, const struct token_entry* client_info);
+
+char* fill_community_posts(char* template, const char* community_name, const struct token_entry* client_info);
+
+char* get_community(const char* community_name, const struct token_entry* client_info);
 
 #endif
