@@ -1,11 +1,9 @@
-
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
 #define HTTPVERSION "HTTP/1.1"
 
 /* content types */
-
 #define TEXTHTML "Content-Type: text/html\n"
 #define TEXTCSS "Content-Type: text/css\n"
 #define APPJS "Content-Type: application/javascript\n"
@@ -25,6 +23,7 @@
 #define STAT501 HTTPVERSION " 501 Not Implemented\n"
 #define STAT505 HTTPVERSION " 505 HTTP Version Not Supported\n"
 
+/* token struct definition */
 #define UNAMELEN (16)
 #define TOKENLEN (32)
 #define TOKENLIFESPAN (7)
@@ -68,4 +67,3 @@ struct response
 };
 
 #endif
-

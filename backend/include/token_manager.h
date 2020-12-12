@@ -1,4 +1,3 @@
-
 #ifndef _TOKEN_MANGER_H_
 #define _TOKEN_MANAGER_H_
 
@@ -21,4 +20,3 @@ const char* new_token(const char* user_name, const char* user_id);
 
 
 #endif
-

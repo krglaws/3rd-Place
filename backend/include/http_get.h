@@ -1,6 +1,8 @@
 #ifndef _HTTP_GET_H_
 #define _HTTP_GET_H_
 
+#include <common.h>
+
 /* html template paths */
 #define HTML_MAIN "templates/main/main.html"
 #define HTML_VOTE_WRAPPER "templates/main/vote_wrapper.html"

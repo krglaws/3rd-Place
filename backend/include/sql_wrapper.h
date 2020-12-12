@@ -2,6 +2,8 @@
 #ifndef _SQL_WRAPPER_H_
 #define _SQL_WRAPPER_H_
 
+#include <kylestructs.h>
+
 /* user sql field names */
 #define SQL_FIELD_USER_ID            (0)
 #define SQL_FIELD_USER_NAME          (1)

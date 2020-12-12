@@ -1,6 +1,7 @@
-
 #ifndef _CONN_MGR_H_
 #define _CONN_MGR_H_
+
+#include <sys/select.h>
 
 void init_client_manager();
 
@@ -15,4 +16,3 @@ int initialize_fdset(fd_set* fds);
 int get_active_client(fd_set* fds);
 
 #endif
-

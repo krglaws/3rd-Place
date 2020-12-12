@@ -2,6 +2,8 @@
 #ifndef _SENDERR_H_
 #define _SENDERR_H_
 
+#include <common.h>
+
 enum http_errno {
   BAD_REQUEST,
   NOT_FOUND,

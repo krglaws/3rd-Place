@@ -1,7 +1,7 @@
-
 #ifndef _SERVER_H_
 #define _SERVER_H_
 
+#include <common.h>
 
 /* server settings */
 
@@ -70,4 +70,3 @@ static void send_response(struct response* resp, const int client_fd);
 
 
 #endif
-
