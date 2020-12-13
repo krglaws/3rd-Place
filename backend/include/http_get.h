@@ -7,12 +7,12 @@
 #define HTML_MAIN "templates/main/main.html"
 #define HTML_VOTE_WRAPPER "templates/main/vote_wrapper.html"
 #define HTML_USER "templates/user/user.html"
-#define HTML_USER_POST_STUB "templates/user/post_stub.html"
-#define HTML_USER_COMMENT_STUB "templates/user/comment_stub.html"
+#define HTML_USER_POST "templates/user/post.html"
+#define HTML_USER_COMMENT "templates/user/comment.html"
 #define HTML_POST "templates/post/post.html"
 #define HTML_POST_COMMENT "templates/post/comment.html"
 #define HTML_COMMUNITY "templates/community/community.html"
-#define HTML_COMMUNITY_POST_STUB "templates/community/post_stub.html"
+#define HTML_COMMUNITY_POST "templates/community/post.html"
 
 /* paths hereafter need the leading '/' since
    they will be requested by the client browser
@@ -48,40 +48,6 @@ enum vote_item_type {
   COMMENT_VOTE
 };
 
-enum vote_type check_for_post_vote(const enum vote_item_type item_type, const char* vote_id, const char* user_id);
-
-
-/* used by get_user() */
-char* fill_user_info(char* template, const char* user_name);
-
-char* fill_user_comment_stub(char* template, const list* comment_info, const struct token_entry* client_info);
-
-char* fill_user_comments(char* template, const char* user_name, const struct token_entry* client_info);
-
-char* fill_user_post_stub(char* template, const list* post_info, const struct token_entry* client_info);
-
-char* fill_user_posts(char* template, char* user_name, const struct token_entry* client_info);
-
-char* get_user(char* user_name, const struct token_entry* client_info);
-
-
-/* used by get_post() */
-char* fill_post_info(char* template, const char* post_id, const struct token_entry* client_info);
-
-char* fill_post_comment_stub(char* template, const list* comment_info, const struct token_entry* client_info);
-
-char* fill_post_comments(char* template, const char* post_id, const struct token_entry* client_info);
-
-char* get_post(const char* post_id, const struct token_entry* client_info);
-
-
-/* used by fill_community_info() */
-char* fill_community_info(char* template, const char* community_name);
-
-char* fill_community_post_stub(char* template, const list* post_info, const struct token_entry* client_info);
-
-char* fill_community_posts(char* template, const char* community_name, const struct token_entry* client_info);
-
-char* get_community(const char* community_name, const struct token_entry* client_info);
+enum vote_type check_for_vote(const enum vote_item_type item_type, const char* vote_id, const char* user_id);
 
 #endif
