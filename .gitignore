@@ -1,3 +1,6 @@
+# server executable name
+server
+
 # Prerequisites
 *.d
 
