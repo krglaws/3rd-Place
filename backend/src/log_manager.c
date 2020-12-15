@@ -16,7 +16,7 @@ static FILE* logfile = NULL;
 static char logbuff[MAXLOGLEN + 1];
 
 
-void init_logger(const char* path)
+void init_log_manager(const char* path)
 {
   if (path == NULL)
   {
@@ -32,7 +32,7 @@ void init_logger(const char* path)
 }
 
 
-void terminate_logger()
+void terminate_log_manager()
 {
   fclose(logfile);
 }

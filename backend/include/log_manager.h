@@ -14,11 +14,11 @@
 /* Initializes the logger output file
     to 'path'. STDOUT is used if 'path'
     is NULL */
-void init_logger(const char* path);
+void init_log_manager(const char* path);
 
 
 /* Closes the output file */
-void terminate_logger();
+void terminate_log_manager();
 
 
 /* Used for logging basic server info */
