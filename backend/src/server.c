@@ -1,19 +1,17 @@
-
-#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
 #include <errno.h>
 #include <string.h>
 #include <arpa/inet.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <unistd.h>
 #include <inttypes.h>
 #include <kylestructs.h>
 
 #include <common.h>
 #include <senderr.h>
-#include <client_manager.h>
+#include <log_manager.h>
+#include <socket_manager.h>
 #include <sql_manager.h>
 #include <token_manager.h>
 #include <http_post.h>
@@ -25,35 +23,38 @@
 
 int main(int argc, char** argv)
 {
-  init_client_manager();
-  init_sql_manager();
-  
-  struct options opts;
-  memset(&opts, 0, sizeof(opts));
+  // process CLI args
+  struct options* opts = calloc(1, sizeof(struct options));
+  get_options(argc, argv, opts);
 
-  get_options(argc, argv, &opts);
+  // set things up
+  init_server(opts);
 
-  serve(&opts);
+  // enter server loop
+  serve();
 
-  return 0;
+  return -1;
 }
 
 
-void usage(char* name)
+void usage(const char* name)
 {
   fprintf(stderr, "usage: %s [-a <server address>] [-c <max clients] [-p <port>]\n", name);
-} 
+}
+ 
 
 static void get_options(const int argc, char* const* argv, struct options* opts)
 {
   // defaults
-  opts->server_port = htons(80);
-  opts->max_clients = 10;
-  // default ip is already set to 0.0.0.0
+  opts->server_addr = DEFAULT_ADDR;
+  opts->server_port = htons(DEFAULT_PORT);
+  opts->max_clients = DEFAULT_MAX_CLIENTS;
+  // default logpath is already set to NULL (stdout)
 
   int c, port;
-  struct sockaddr_in sa;
-  while ((c = getopt(argc, argv, "a:c:p:")) != -1)
+  int logpathlen;
+  struct in6_addr ipv6addr;
+  while ((c = getopt(argc, argv, "a:c:p:f:")) != -1)
   {
     switch(c)
     {
@@ -61,25 +62,34 @@ static void get_options(const int argc, char* const* argv, struct options* opts)
       port = strtol(optarg, NULL, 10);
       if (port < 1 || port > 65535)
       {
-        usage(argv[0]);
-        abort();
+        fprintf(stderr, "Invalid port: %d", port);
+        delete_options(opts);
+        exit(EXIT_FAILURE);
       }
       opts->server_port = htons(port);
       break;
+    case 'f':
+      logpathlen = strlen(optarg);
+      opts->logpath = malloc((logpathlen * sizeof(char)) + 1);
+      memcpy(opts->logpath, optarg, logpathlen + 1);
+      break;
     case 'c':
       opts->max_clients = strtol(optarg, NULL, 10);
+      break;
     case 'a':
-      if (inet_pton(AF_INET, optarg, &(sa.sin_addr)) == 0) 
+      if (inet_pton(AF_INET6, optarg, &ipv6addr) != 1) 
       {
-        fprintf(stderr, "Invalid server IP address: %s\n", optarg);
-        abort();
+        fprintf(stderr, "Invalid server IPv6 address: %s\n", optarg);
+        delete_options(opts);
+        exit(EXIT_FAILURE);
       }
-      opts->server_ip = sa.sin_addr.s_addr;
+      opts->server_addr = ipv6addr;
       break;
     case '?':
     default:
       usage(argv[0]);
-      abort();
+      delete_options(opts);
+      exit(EXIT_FAILURE);
     }
   }
 
@@ -87,122 +97,79 @@ static void get_options(const int argc, char* const* argv, struct options* opts)
   {
     fprintf(stderr, "%s: unknown argument -- '%s'\n", argv[0], argv[optind]);
     usage(argv[0]);
-    abort();
+    delete_options(opts);
+    exit(EXIT_FAILURE);
   }
 }
 
 
-static void serve(const struct options* opts)
+void delete_options(struct options* opts)
 {
-  int server_fd, client_fd, active_fd, max_fd; 
-  struct sockaddr_in server_addr, client_addr;
-  int addr_len = sizeof(struct sockaddr_in);
-  char ip_str[20] = {0};
-  fd_set readfds;
-
-  memset(&server_addr, 0, addr_len);
-  memset(&client_addr, 0, addr_len);
-  
-  server_addr.sin_family = AF_INET;
-  server_addr.sin_port = opts->server_port;
-  server_addr.sin_addr.s_addr = opts->server_ip;
-
-  if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+  if (opts->logpath != NULL)
   {
-    perror("serve(): Failed to create socket");
-    exit(EXIT_FAILURE);
+    free(opts->logpath);
   }
 
-  if (bind(server_fd, (struct sockaddr*) &server_addr, addr_len) < 0)
+  free(opts);
+}
+
+
+static void init_server(struct options* opts)
+{
+  // first init logger (since others use the logger)
+  init_log_manager(opts->logpath);
+
+  // set signal handler
+  struct sigaction sa;
+  memset(&sa, 0, sizeof(sa));
+  sa.sa_handler = terminate_server;
+
+  sigaction(SIGTERM, &sa, NULL);
+  sigaction(SIGINT, &sa, NULL);
+
+  // init remaining services
+  init_sql_manager();
+
+  init_socket_manager(&(opts->server_addr), opts->server_port, opts->max_clients);
+
+  delete_options(opts);
+}
+
+
+void terminate_server(const int signum)
+{
+  // terminate services
+  terminate_socket_manager();
+
+  terminate_sql_manager();
+
+  terminate_log_manager();
+
+  if (signum == SIGINT)
   {
-    perror("serve(): Failed to bind socket to address");
-    exit(EXIT_FAILURE);
+    // assuming we received SIGINT (Ctrl-C) from terminal
+    exit(EXIT_SUCCESS);
   }
 
-  if (listen(server_fd, opts->max_clients) < 0)
-  {
-    perror("serve(): Failed to designate server socket");
-    exit(EXIT_FAILURE);
-  }
+  // any other signal, assume the worst
+  exit(EXIT_FAILURE);
+}
 
-  /* server socket is first in client socket list */
-  add_client(server_fd);
 
-  printf("Listening on port %d...\n", ntohs(opts->server_port));
+static void serve()
+{
   while (1)
   {
-    
-    max_fd = initialize_fdset(&readfds);
+    int active_socket = await_active_socket();
 
-    if (select(max_fd+1, &readfds, NULL, NULL, NULL) <= 0)
-    {
-      perror("server(): failed to wait for socket activity");
-      exit(EXIT_FAILURE);
-    }
-
-    if ((active_fd = get_active_client(&readfds)) == -1)
-    {
-      fprintf(stderr, "serve(): no active fds\n");
-      exit(EXIT_FAILURE); 
-    }
-
-    if (active_fd == server_fd)
-    {
-      if ((client_fd = accept(server_fd, (struct sockaddr*) &client_addr, &addr_len)) < 0)
-      {
-        perror("serve(): Failed to accept connection");
-        exit(EXIT_FAILURE);
-      }
-      if (inet_ntop(client_addr.sin_family, &(client_addr.sin_addr), ip_str, sizeof(ip_str)) == NULL)
-      {
-        perror("serve(): Failed to read client address");
-        exit(EXIT_FAILURE);
-      }
-
-      /* set recv() timeout to 1s for all client sockets */
-      struct timeval tv;
-      tv.tv_sec = 1;
-      tv.tv_usec = 0;
-
-      if (setsockopt(client_fd, SOL_SOCKET, SO_RCVTIMEO, (const void*)&tv, sizeof(tv))) {
-        perror("serve(): Failed on call to setsockopt()");
-        exit(EXIT_FAILURE);
-      }
-      printf("Connected to %s (socket no. %d).\n", ip_str, client_fd);
-      add_client(client_fd);
-      active_fd = client_fd;
-    }
-    
-    else
-    {
-      if (getpeername(active_fd, &client_addr, &addr_len) == -1)
-      {
-        perror("serve(): getpeername() failed");
-        exit(EXIT_FAILURE);
-      }
-      if (inet_ntop(client_addr.sin_family, &(client_addr.sin_addr), ip_str, sizeof(ip_str)) == NULL)
-      {
-        perror("serve(): Failed to read client address");
-        exit(EXIT_FAILURE);
-      }
-    }
-
-    send_response(
-      process_request(
-        receive_request(active_fd, ip_str)), active_fd);
-
-    memset(&client_addr, 0, sizeof(client_addr));
-    memset(ip_str, 0, sizeof(ip_str));
-
-    //terminate_client_manager();
-    //terminate_sql_manager();
-
-    //return;
+    send_response(active_socket,
+      process_request(active_socket,
+        receive_request(active_socket)));
   }
 }
 
 
-static char* receive_request(int client_fd, char* ip)
+static char* receive_request(const int sock)
 {
   char* message_buffer = calloc(1, BUFFERLEN);
   char* curr_buff_ptr = message_buffer;
@@ -211,35 +178,40 @@ static char* receive_request(int client_fd, char* ip)
 
   while (multiplier++ < MAXBUFFERMUL+1)
   {
+    // check if message is too big
     if (multiplier >= MAXBUFFERMUL)
     {
-      fprintf(stderr, "receive_request(): Request exceeds %d byte limit\n", MAXBUFFERMUL * BUFFERLEN);
+      log_err("receive_request(): Request exceeds %d byte limit", (MAXBUFFERMUL * BUFFERLEN));
       free(message_buffer);
       return NULL;
     }
-    if ((bytes = recv(client_fd, curr_buff_ptr, BUFFERLEN - 1, 0)) == -1)
+
+    // read in bytes from socket
+    if ((bytes = recv(sock, curr_buff_ptr, BUFFERLEN - 1, 0)) == -1)
     {
-      if (errno == EAGAIN)
-      {
-        break;
-      }
-
-      perror("receive_request(): error while reading message from client");
-      exit(EXIT_FAILURE);
+      log_err("receive_request(): recv(): %s ", strerror(errno));
+      free(message_buffer);
+      return NULL;
     }
-    total_bytes += bytes;
-    if (bytes == 0 || bytes < BUFFERLEN - 1) break;
 
+    // increment total bytes read
+    total_bytes += bytes;
+    if (bytes == 0 || bytes < BUFFERLEN - 1)
+    {
+      break;
+    }
+
+    // adjust message buffer
     message_buffer = realloc(message_buffer, BUFFERLEN * multiplier);
     curr_buff_ptr = message_buffer + strlen(message_buffer);
     memset(curr_buff_ptr, 0, BUFFERLEN);
   }
 
+  // 0 bytes read means client disconnected
   if (total_bytes == 0)
   {
-    remove_client(client_fd);
+    remove_socket(sock);
     free(message_buffer);
-    printf("Connection to %s closed (socket no. %d).\n", ip, client_fd);
     return NULL;
   }
 
@@ -247,7 +219,7 @@ static char* receive_request(int client_fd, char* ip)
 }
 
 
-static enum request_method get_request_method(char* req_str)
+static enum request_method get_request_method(const char* req_str)
 {
   if (req_str == NULL)
   {
@@ -290,7 +262,7 @@ static enum request_method get_request_method(char* req_str)
 }
 
 
-static char* get_uri(enum request_method method, char* request)
+static char* get_uri(const enum request_method method, const char* request)
 {
   char* uri = calloc(1, MAXURILEN);
   uri[0] = '.';
@@ -316,7 +288,7 @@ static char* get_uri(enum request_method method, char* request)
     getloc = strstr(request, "POST");
     sscanf(getloc + 5, "%s", uri + 1);
   }
-  else /* DELETE_REQ */
+  else
   {
     getloc = strstr(request, "DELETE");
     sscanf(getloc + 6, "%s", uri + 1);
@@ -326,14 +298,14 @@ static char* get_uri(enum request_method method, char* request)
 }
 
 
-static const struct token_entry* get_login_token(char* req_str)
+static const struct token_entry* get_login_token(const char* req_str)
 {
   if (req_str == NULL)
   {
     return NULL;
   }
 
-  /* locate token location within request string */
+  // locate token location within request string
   char* find = "Cookie: logintoken=";
   char* token_loc = strstr(req_str, find);
   if (token_loc == NULL)
@@ -350,7 +322,7 @@ static const struct token_entry* get_login_token(char* req_str)
     return NULL;
   }
 
-  /* copy token */
+  // copy token
   char tokenstr[TOKENLEN + 1];
   memcpy(tokenstr, token_loc, TOKENLEN);
   tokenstr[TOKENLEN] = '\0';
@@ -361,14 +333,14 @@ static const struct token_entry* get_login_token(char* req_str)
 }
 
 
-static char* get_request_content(char* req_str) 
+static char* get_request_content(const char* req_str) 
 {
   if (req_str == NULL)
   {
     return NULL;
   }
 
-  /* find end of request header */
+  // find end of request header
   char* contstart = strstr(req_str, "\r\n\r\n");
 
   if (contstart == NULL)
@@ -376,14 +348,14 @@ static char* get_request_content(char* req_str)
     return NULL;
   }
 
-  contstart += 4; // skip over "\r\n\r\n"
+  contstart += 4; // skip over '\r\n\r\n'
   if (*contstart == '\0')
   {
     return NULL;
   }
 
-  int len = ((long int)req_str) - (contstart - req_str);
-  char* content = malloc( len + 1);
+  int len = (long int)req_str - (contstart - req_str);
+  char* content = malloc(sizeof(char) * (len + 1));
   memcpy(content, contstart, len);
   content[len] = '\0';
 
@@ -391,21 +363,26 @@ static char* get_request_content(char* req_str)
 }
 
 
-static struct response* process_request(char* req_str) 
+static struct response* process_request(const int sock, char* req_str) 
 { 
-  if (req_str == NULL) return NULL; 
-  printf("\n%s\n", req_str);
-
+  if (req_str == NULL)
+  {
+    // if request is NULL, client must have disconnected
+    return NULL; 
+  }
 
   /* fill in request struct */
   struct request req;
   req.method = get_request_method(req_str);
-
   req.uri = get_uri(req.method, req_str);
   req.client_info = get_login_token(req_str);
   req.content = get_request_content(req_str);
 
   free(req_str);
+
+  // get socket info
+  char ipstr[64];
+  get_socket_ip(sock, ipstr, sizeof(ipstr));
 
   struct response* resp;
 
@@ -413,28 +390,37 @@ static struct response* process_request(char* req_str)
   switch (req.method)
   {
   case GET_REQ:
+    log_info("Request from %s: GET %s", ipstr, req.uri);
+    resp = http_get(&req);
+    break;
+
   case HEAD_REQ:
+    log_info("Request from %s: HEAD %s", ipstr, req.uri);
     resp = http_get(&req);
     break;
 
   case PUT_REQ:
+    log_info("Request from %s: PUT %s", ipstr, req.uri);
     resp = http_put(&req);
     break;
 
   case POST_REQ:
+    log_info("Request from %s: POST %s", ipstr, req.uri);
     resp = http_post(&req);
     break;
 
   case DELETE_REQ:
+    log_info("Request from %s: DELETE %s", ipstr, req.uri);
     resp = http_delete(&req);
     break;
 
   case NO_REQUEST_METHOD:
   default:
+    log_info("Bad request from %s", ipstr);
 
     free(req.uri);
     free(req.content);
-   
+
     return senderr(BAD_REQUEST);
   }
 
@@ -450,46 +436,47 @@ static void send_msg(int fd, char* buffer, int msg_len)
   if (buffer == NULL) return;
   int total = 0, bytes = 0;
 
-  int ct = 0;
-
   while (total < msg_len)
   {
     if ((bytes = send(fd, buffer + total, msg_len - total, 0)) == -1)
     {
-      perror("send_msg(): error while sending response to client");
-      exit(EXIT_FAILURE);
+      log_err("send_msg(): %s", strerror(errno));
+      return;
     }
     total += bytes; 
-    ct ++;
   }
-
-  //printf("Message sent in %d passes\n", ct);
 }
 
 
-static void send_response(struct response* resp, int client_fd)
+static void send_response(const int sock, struct response* resp)
 {
   if (resp == NULL)
-    return;
+  {
+    log_crit("send_response(): NULL response");
+  }
 
+  // log first line of resp header
+  log_info("Response: %s", list_get(resp->header, 0)->cp);
+
+  // send each line of header
   int total, bytes, msg_len;
   int head_lines = list_length(resp->header);
-
-  printf("Sending response:\n\n"); 
   for (int i = 0; i < head_lines; i++)
   {
     datacont* line = list_get(resp->header, i);
-    printf("%s", line->cp);
-    send_msg(client_fd, line->cp, line->size);
+    send_msg(sock, line->cp, line->size);
   }
-  printf("\n");
 
-  send_msg(client_fd, "\n", 1);
+  // end header
+  send_msg(sock, "\n", 1);
+
+  // send resp body
   if (resp->content)
-    send_msg(client_fd, resp->content, resp->content_length);
+  {
+    send_msg(sock, resp->content, resp->content_length);
+  }
 
   list_delete(resp->header);
   free(resp->content);
   free(resp);
 }
-
