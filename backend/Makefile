@@ -9,10 +9,10 @@ BIN := ./bin
 
 default: all
 
-CLIMGRDEP := $(SRC)/client_manager.c
-CLIMGRTARG := $(BIN)/client_manager.o
+SOCKMGRDEP := $(SRC)/socket_manager.c
+SOCKMGRTARG := $(BIN)/socket_manager.o
 
-$(CLIMGRTARG): $(CLIMGRDEP)
+$(SOCKMGRTARG): $(SOCKMGRDEP)
 	$(CC) -c $< -o $@ $(CFLAGS) $(DEBUG)
 
 
@@ -108,13 +108,13 @@ $(UTILTARG): $(UTILDEP)
 
 
 LOGMGRDEP := $(SRC)/log_manager.c
-LOGMGRTARG := $(BIN)/log_manager.h
+LOGMGRTARG := $(BIN)/log_manager.o
 
 $(LOGMGRTARG): $(LOGMGRDEP)
 	$(CC) -c $< -o $@ $(CFLAGS) $(DEBUG)
 
 
-ALLDEPS := $(UTILTARG) $(LOGMGRTARG) $(SQLMGRTARG) $(SQLWPRTARG) $(TKNMGRTARG) $(CLIMGRTARG) \
+ALLDEPS := $(UTILTARG) $(LOGMGRTARG) $(SQLMGRTARG) $(SQLWPRTARG) $(TKNMGRTARG) $(SOCKMGRTARG) \
 	$(SNDERRTARG) $(HTPDELTARG) $(HTPGETTARG) $(GETUSRTARG) $(GETPSTTARG) $(GETCMTYTARG) \
 	$(HTPPSTTARG) $(HTPPUTTARG) $(SVRTARG)
 
@@ -126,9 +126,9 @@ server: $(ALLDEPS)
 
 .PHONY: clean
 clean:
-	if [ -f "server.out" ]; then rm server.out; fi;
+	if [ -f "server" ]; then rm server; fi;
 	rm -r ./bin/*.o
 
 
 .PHONY: all
-all: server.out
+all: server
