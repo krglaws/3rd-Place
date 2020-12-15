@@ -1,13 +1,13 @@
 
 CC := gcc
 CFLAGS := -Iinclude -lkylestructs -lmysqlclient `mysql_config --cflags --libs`
-DEBUG := -g
+DEBUG := -g -DDEBUG
 
 SRC := ./src
 INC := ./include
 BIN := ./bin
 
-default: server.out
+default: all
 
 CLIMGRDEP := $(SRC)/client_manager.c
 CLIMGRTARG := $(BIN)/client_manager.o
@@ -27,6 +27,27 @@ HTPGETDEP := $(SRC)/http_get.c
 HTPGETTARG := $(BIN)/http_get.o
 
 $(HTPGETTARG): $(HTPGETDEP)
+	$(CC) -c $< -o $@ $(CFLAGS) $(DEBUG)
+
+
+GETUSRDEP := $(SRC)/get_user.c
+GETUSRTARG := $(BIN)/get_user.o
+
+$(GETUSRTARG): $(GETUSRDEP)
+	$(CC) -c $< -o $@ $(CFLAGS) $(DEBUG)
+
+
+GETPSTDEP := $(SRC)/get_post.c
+GETPSTTARG := $(BIN)/get_post.o
+
+$(GETPSTTARG): $(GETPSTDEP)
+	$(CC) -c $< -o $@ $(CFLAGS) $(DEBUG)
+
+
+GETCMTYDEP := $(SRC)/get_community.c
+GETCMTYTARG := $(BIN)/get_community.o
+
+$(GETCMTYTARG): $(GETCMTYDEP)
 	$(CC) -c $< -o $@ $(CFLAGS) $(DEBUG)
 
 
@@ -86,11 +107,20 @@ $(UTILTARG): $(UTILDEP)
 	$(CC) -c $< -o $@ $(CFLAGS) $(DEBUG)
 
 
-ALLDEPS := $(UTILTARG) $(SQLMGRTARG) $(SQLWPRTARG) $(TKNMGRTARG) $(CLIMGRTARG) \
-	$(SNDERRTARG) $(HTPDELTARG) $(HTPGETTARG) $(HTPPSTTARG) $(HTPPUTTARG) $(SVRTARG)
+LOGMGRDEP := $(SRC)/log_manager.c
+LOGMGRTARG := $(BIN)/log_manager.h
 
-.PHONY: server.out
-server.out: $(ALLDEPS)
+$(LOGMGRTARG): $(LOGMGRDEP)
+	$(CC) -c $< -o $@ $(CFLAGS) $(DEBUG)
+
+
+ALLDEPS := $(UTILTARG) $(LOGMGRTARG) $(SQLMGRTARG) $(SQLWPRTARG) $(TKNMGRTARG) $(CLIMGRTARG) \
+	$(SNDERRTARG) $(HTPDELTARG) $(HTPGETTARG) $(GETUSRTARG) $(GETPSTTARG) $(GETCMTYTARG) \
+	$(HTPPSTTARG) $(HTPPUTTARG) $(SVRTARG)
+
+
+.PHONY: server
+server: $(ALLDEPS)
 	$(CC) $^ -o $@ $(CFLAGS) $(DEBUG)
 
 
