@@ -174,6 +174,8 @@ char* get_community(const char* community_name, const struct token_entry* client
   char* community_html;
   if ((community_html = load_file(HTML_COMMUNITY)) == NULL)
   {
+    // set internal error flag
+    set_internal_error();
     return NULL;
   }
 
@@ -188,6 +190,8 @@ char* get_community(const char* community_name, const struct token_entry* client
   char* main_html;
   if ((main_html = load_file(HTML_MAIN)) == NULL)
   {
+    // set internal error flag
+    set_internal_error();
     free(community_html);
     return NULL;
   }

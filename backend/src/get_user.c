@@ -291,6 +291,8 @@ char* get_user(char* user_name, const struct token_entry* client_info)
   char* user_html;
   if ((user_html = load_file(HTML_USER)) == NULL)
   {
+    // set internal error flag
+    set_internal_error();
     return NULL;
   } 
 
@@ -306,6 +308,8 @@ char* get_user(char* user_name, const struct token_entry* client_info)
   char* main_html;
   if ((main_html = load_file(HTML_MAIN)) == NULL)
   {
+    // set internal error flag
+    set_internal_error();
     free(user_html);
     return NULL;
   }

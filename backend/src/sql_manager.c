@@ -51,6 +51,7 @@ static int get_config_value(const char* config, const char* key, char* outbuf, i
 
 void init_sql_manager()
 {
+  log_info("Initializing SQL Manager...");
 
   // load db.config
   char* config;
@@ -92,6 +93,8 @@ void init_sql_manager()
 
 void terminate_sql_manager()
 {
+  log_info("Terminating SQL Manager...");
+
   mysql_close(sqlcon);
   mysql_server_end();
 }

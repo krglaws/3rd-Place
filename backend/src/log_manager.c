@@ -21,6 +21,7 @@ void init_log_manager(const char* path)
   if (path == NULL)
   {
     logfile = stdout;
+    log_info("Log Manager Initialized.");
     return;
   }
 
@@ -29,11 +30,14 @@ void init_log_manager(const char* path)
     fprintf(stderr, "init_logger(): failed to open log file '%s'\n", path);
     exit(EXIT_FAILURE);
   }
+
+  log_info("Log Manager Initialized.");
 }
 
 
 void terminate_log_manager()
 {
+  log_info("Terminating Log Manager...");
   fclose(logfile);
 }
 

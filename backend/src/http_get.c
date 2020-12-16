@@ -16,6 +16,10 @@
 #include <http_get.h>
 
 
+// used to signal a 500 error
+static int internal_error = 0;
+
+
 struct response* http_get(struct request* req)
 {
   if (req == NULL) return NULL;
@@ -76,17 +80,25 @@ struct response* http_get(struct request* req)
     }
   }
 
-  /* do we have it? */
+  // do we have it?
   if (content_type == NULL || content == NULL)
   {
     if (content != NULL)
     {
       free(content);
     }
+
+    // check for 500 error
+    if (get_internal_error() == 1)
+    {
+      return senderr(ERR_INTERNAL);
+    }
+
+    // default to 404
     return senderr(ERR_NOT_FOUND);
   }
 
-  /* prepare response object */
+  // prepare response object
   struct response* resp = calloc(1, sizeof(struct response));
   resp->header = list_new();
   list_add(resp->header, datacont_new(STAT200, CHARP, strlen(STAT200)));
@@ -110,9 +122,8 @@ char* replace(char* template, const char* this, const char* withthat)
   // check if 'this' is in template
   if ((location = strstr(template, this)) == NULL)
   {
-    // NOTE:
-    // an error like this should return a 500 type error.
-    // right now, NULL returns just default to 404.
+    // set internal error flag
+    set_internal_error();
     log_err("replace(): no match for '%s' found in template", this);
     free(template);
     return NULL;
@@ -252,3 +263,17 @@ enum vote_type check_for_vote(const enum vote_item_type item_type, const char* i
 
   return result;
 } // end check_for_vote()
+
+
+void set_internal_error()
+{
+  internal_error = 1;
+}
+
+
+static int get_internal_error()
+{
+  int e = internal_error;
+  internal_error = 0;
+  return e;
+}
