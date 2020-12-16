@@ -87,5 +87,7 @@
 
 list** query_database_ls(char* query);
 
+void delete_query_result(list** result);
+
 #endif
 

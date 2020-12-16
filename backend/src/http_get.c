@@ -1,10 +1,10 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <kylestructs.h>
 
+#include <log_manager.h>
 #include <common.h>
 #include <util.h>
 #include <senderr.h>
@@ -110,7 +110,10 @@ char* replace(char* template, const char* this, const char* withthat)
   // check if 'this' is in template
   if ((location = strstr(template, this)) == NULL)
   {
-    fprintf(stderr, "replace(): no match for '%s' found in template\n", this);
+    // NOTE:
+    // an error like this should return a 500 type error.
+    // right now, NULL returns just default to 404.
+    log_err("replace(): no match for '%s' found in template", this);
     free(template);
     return NULL;
   }
@@ -210,8 +213,7 @@ enum vote_type check_for_vote(const enum vote_item_type item_type, const char* i
     downvote_query_fmt = QUERY_COMMENT_DOWNVOTE_BY_COMMENTID_USERID;
   }
   else {
-    fprintf(stderr, "check_for_vote(): invalid item_type argument\n");
-    exit(EXIT_FAILURE);
+    log_crit("check_for_vote(): invalid item_type argument");
   }
 
   // query database for up votes
@@ -224,23 +226,20 @@ enum vote_type check_for_vote(const enum vote_item_type item_type, const char* i
   sprintf(downvote_query, downvote_query_fmt, item_id, user_id, item_id, user_id);
   list** downvote_query_result = query_database_ls(downvote_query);
 
-#ifdef DEBUG
+  // NOTE:
+  // might remove these check
   if (upvote_query_result[0] && downvote_query_result[0])
   {
-    fprintf(stderr, "check_for_vote(): downvote and upvote present for same %s_id=%s user_id=%s", item_type==POST_VOTE?"post":"comment", item_id, user_id);
-    exit(EXIT_FAILURE);
+    log_crit("check_for_vote(): downvote and upvote present for same %s_id=%s user_id=%s", item_type==POST_VOTE?"post":"comment", item_id, user_id);
   }
   if (upvote_query_result[0] && upvote_query_result[1] != NULL)
   {
-    fprintf(stderr, "check_for_vote(): multiple upvotes present for same %s_id=%s user_id=%s", item_type==POST_VOTE?"post":"comment", item_id, user_id);
-    exit(EXIT_FAILURE);
+    log_crit("check_for_vote(): multiple upvotes present for same %s_id=%s user_id=%s", item_type==POST_VOTE?"post":"comment", item_id, user_id);
   }
   if (downvote_query_result[0] && downvote_query_result[1] != NULL)
   {
-    fprintf(stderr, "check_for_vote(): multiple downvotes present for same %s_id=%s user_id=%s", item_type==POST_VOTE?"post":"comment", item_id, user_id);
-    exit(EXIT_FAILURE);
+    log_crit("check_for_vote(): multiple downvotes present for same %s_id=%s user_id=%s", item_type==POST_VOTE?"post":"comment", item_id, user_id);
   }
-#endif
 
   // determine vote type
   enum vote_type result = upvote_query_result[0] ? UPVOTE : (downvote_query_result[0] ? DOWNVOTE : NOVOTE);
@@ -253,75 +252,3 @@ enum vote_type check_for_vote(const enum vote_item_type item_type, const char* i
 
   return result;
 } // end check_for_vote()
-
-
-/*
-char* get_home(char* token)
-{
-  // if user is not logged in, just return popular
-  if (valid_token(token) == NULL)
-  {
-    return get_popular(token);
-  }
-
-  // TODO: load feed template
-
-  // TODO: fill in post stubs using query that selects top ranking
-  // posts from communities that client is subscribed to
-
-  // load main template
-  char* main_html;
-  if ((main_html = load_file(HTML_MAIN)) == NULL)
-  {
-    fprintf(stderr, "get_home(): failed to load file '%s'\n", HTML_MAIN);
-    return NULL;
-  }
-
-  // insert header info
-  main_html = replace(main_html, "{STYLE}", CSS_FEED);
-  main_html = replace(main_html, "{SCRIPT}", "");
-
-  // we know client isn't logged in, so just plug in the 'Signup' link
-  main_html = fill_nav_login(main_html, token);
-
-  // TODO: insert feed html into main
-
-  return main_html;
-}
-
-
-char* fill_popular_posts(char* template)
-{
-  // prepare query string
-  char* query_fmt = 
-}
-
-
-char* get_popular(char* token)
-{
-  // load feed template
-  char* feed_html;
-  if ((feed_html = load_file(HTML_FEED)) == NULL)
-  {
-    fprintf(stderr, "get_popular(): failed to load file '%s'\n", HTML_FEED);
-    return NULL;
-  }
-
-  // TODO: fill in post stubs using query that selects top ranking
-  // posts from all communities
-  feed_html = fill_popular_posts(feed_html)
-
-  // top ranking posts from all communities
-
-  // TODO: load and prep main template
-  char* main_html;
-  if ((main_html = load_file(HTML_MAIN)) == NULL)
-  {
-    fprintf(stderr, "get_popular(): failed to load file: '%s'\n", HTML_MAIN);
-    return NULL;
-  }
-
-  // TODO: insert feed into main html
-
-}
-*/

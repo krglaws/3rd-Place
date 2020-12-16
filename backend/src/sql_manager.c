@@ -4,6 +4,7 @@
 #include <string.h>
 #include <mysql.h>
 
+#include <log_manager.h>
 #include <util.h>
 #include <sql_manager.h>
 
@@ -19,7 +20,7 @@ static int get_config_value(const char* config, const char* key, char* outbuf, i
   // check if key is present in config file
   if (keyloc == NULL)
   {
-    fprintf(stderr, "get_config_value(): failed to find key '%s'\n", key);
+    log_err("get_config_value(): failed to find key '%s'", key);
     return -1;
   }
 
@@ -31,12 +32,12 @@ static int get_config_value(const char* config, const char* key, char* outbuf, i
   // check for value length problems
   if (vallen == 0)
   {
-    fprintf(stderr, "get_config_value(): empty value for key '%s'\n", key);
+    log_err("get_config_value(): empty value for key '%s'", key);
     return -1;
   }
   if (vallen > outlen)
   {
-    fprintf(stderr, "get_config_value(): value for key '%s' too long\n", key);
+    log_err("get_config_value(): value for key '%s' too long", key);
     return -1;
   }
 
@@ -55,8 +56,7 @@ void init_sql_manager()
   char* config;
   if ((config = load_file("backend/db.config")) == NULL)
   {
-    fprintf(stderr, "init_sql_manager(): failed to load db.config\n");
-    exit(EXIT_FAILURE);
+    log_crit("init_sql_manager(): failed to load db.config");
   }
 
   char dbhost[32];
@@ -70,27 +70,22 @@ void init_sql_manager()
       get_config_value(config, "DBUSER", dbuser, 32) ||
       get_config_value(config, "DBPASS", dbpass, 32))
   {
-    fprintf(stderr, "init_sql_manager(): failed to parse db.config\n");
-    exit(EXIT_FAILURE);
+    free(config);
+    log_crit("init_sql_manager(): failed to parse db.config");
   }
   free(config);
 
   // initialize sql connection object
   if ((sqlcon = mysql_init(NULL)) == NULL)
   {
-    fprintf(stderr, "%s\n", mysql_error(NULL));
-    exit(EXIT_FAILURE);
+    log_crit("init_sql_manager(): mysql_init(): %s", mysql_error(NULL));
   }
 
   // connect to mysql database
   if (mysql_real_connect(sqlcon, dbhost, dbuser, dbpass,
       dbname, 0, NULL, 0) == NULL)
   {
-    // this doesnt print anything for some reason
-    //fprintf(stderr, "%s\n", mysql_error(NULL));
-    fprintf(stderr, "Failed to connect to database\n");
-    mysql_close(sqlcon);
-    exit(EXIT_FAILURE);
+    log_crit("init_sql_manager(): mysql_real_connect(): %s", mysql_error(sqlcon));
   }
 }
 
@@ -110,23 +105,20 @@ char*** query_database(char* query)
   /* check for null query string */
   if (query == NULL)
   {
-    fprintf(stderr, "query_database(): null query\n");
-    return NULL;
+    log_crit("query_database(): NULL query");
   }
 
   /* submit query */
   if (mysql_query(sqlcon, query))
   {
-    fprintf(stderr, "%s\n", mysql_error(sqlcon));
-    return NULL;
+    log_crit("query_database(): mysql_query(): %s", mysql_error(sqlcon));
   }
 
   /* store result */
   result = mysql_store_result(sqlcon);
   if (result == NULL)
   {
-    fprintf(stderr, "%s\n", mysql_error(sqlcon));
-    return NULL;
+    log_crit("query_database(): mysql_store_result(): %s", mysql_error(sqlcon));
   }
 
   int num_rows = mysql_num_rows(result);

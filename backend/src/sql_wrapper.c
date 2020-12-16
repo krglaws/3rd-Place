@@ -4,6 +4,7 @@
 #include <sql_manager.h>
 #include <kylestructs.h>
 
+#include <log_manager.h>
 #include <sql_wrapper.h>
 
 
@@ -13,8 +14,12 @@ list** query_database_ls(char* query)
   char*** result;
   if ((result = query_database(query)) == NULL)
   {
-    fprintf(stderr, "query_database_ls(): query failed: \"%s\"\n", query);
-    return NULL;
+    log_err("query_database_ls(): query failed: '%s'", query);
+
+    // NOTE: 
+    // the functions that call this don't check for NULL returns,
+    // too lazy to fix. Will change at some point though
+    return calloc(1, sizeof(list*));
   }
 
   // get number of rows
@@ -53,3 +58,12 @@ list** query_database_ls(char* query)
   return result_ls;
 }
 
+
+void delete_query_result(list** result)
+{
+  for (int i = 0; result[i] != NULL; i++)
+  {
+    list_delete(result[i]);
+  }
+  free(result); 
+}

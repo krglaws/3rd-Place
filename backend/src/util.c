@@ -1,7 +1,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 
+#include <log_manager.h>
 #include <util.h>
 
 
@@ -13,7 +16,7 @@ char* load_file(const char* path)
 
   if ((fd = fopen(path, "r")) == NULL)
   {
-    perror("load_file(): failed to open file");
+    log_err("load_file(): failed to open '%s': %s", path, strerror(errno));
     return NULL;
   }
 
@@ -45,7 +48,7 @@ struct file_str* load_file_str(const char* path)
 
   if ((fd = fopen(path, "r")) == NULL)
   {
-    perror("load_file_str(): failed to open file");
+    log_err("load_file_str(): failed to open '%s': %s", path, strerror(errno));
     return NULL;
   }
 

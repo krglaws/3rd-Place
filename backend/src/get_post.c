@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <log_manager.h>
 #include <util.h>
 #include <sql_wrapper.h>
 #include <http_get.h>
@@ -15,37 +16,39 @@ char* fill_post_info(char* template, const char* post_id, const struct token_ent
   sprintf(query, query_fmt, post_id);
   list** result = query_database_ls(query);
 
-  // make sure we got exactly ONE entry
   if (result[0] == NULL)
   {
-    fprintf(stderr, "post %s not found\n", post_id);
+    // post not found
     free(template);
-    free(result);
+    delete_query_result(result);
     return NULL;
   }
 
-#ifdef DEBUG
+  // NOTE:
+  // might remove this check
   if (result[1] != NULL)
   {
-    fprintf(stderr, "fill_post_info(): multiple posts with id %s\n", post_id);
-    exit(EXIT_FAILURE);
+    free(template);
+    delete_query_result(result);
+    log_crit("fill_post_info(): multiple posts with id %s", post_id);
   }
-#endif
 
   list* post_info = result[0];
-  free(result);
 
   // fill in post info
-  template = replace(template, "{DATE_POSTED}", list_get(post_info, SQL_FIELD_POST_DATE_POSTED)->cp);
-  template = replace(template, "{USER_NAME}", list_get(post_info, SQL_FIELD_POST_AUTHOR_NAME)->cp);
-  template = replace(template, "{USER_NAME}", list_get(post_info, SQL_FIELD_POST_AUTHOR_NAME)->cp);
-  template = replace(template, "{COMMUNITY_NAME}", list_get(post_info, SQL_FIELD_POST_COMMUNITY_NAME)->cp);
-  template = replace(template, "{COMMUNITY_NAME}", list_get(post_info, SQL_FIELD_POST_COMMUNITY_NAME)->cp);
-  template = replace(template, "{POST_TITLE}", list_get(post_info, SQL_FIELD_POST_TITLE)->cp);
-  template = replace(template, "{POST_BODY}", list_get(post_info, SQL_FIELD_POST_BODY)->cp);
+  if ((template = replace(template, "{DATE_POSTED}", list_get(post_info, SQL_FIELD_POST_DATE_POSTED)->cp)) == NULL ||
+      (template = replace(template, "{USER_NAME}", list_get(post_info, SQL_FIELD_POST_AUTHOR_NAME)->cp)) == NULL ||
+      (template = replace(template, "{USER_NAME}", list_get(post_info, SQL_FIELD_POST_AUTHOR_NAME)->cp)) == NULL ||
+      (template = replace(template, "{COMMUNITY_NAME}", list_get(post_info, SQL_FIELD_POST_COMMUNITY_NAME)->cp)) == NULL ||
+      (template = replace(template, "{COMMUNITY_NAME}", list_get(post_info, SQL_FIELD_POST_COMMUNITY_NAME)->cp)) == NULL ||
+      (template = replace(template, "{POST_TITLE}", list_get(post_info, SQL_FIELD_POST_TITLE)->cp)) == NULL ||
+      (template = replace(template, "{POST_BODY}", list_get(post_info, SQL_FIELD_POST_BODY)->cp)) == NULL)
+  {
+    delete_query_result(result);
+    return NULL;
+  }
 
-  list_delete(post_info);
-
+  delete_query_result(result);
   return template;
 } // end fill_post_info()
 
@@ -100,16 +103,12 @@ char* fill_post_comments(char* template, const char* post_id, const struct token
   // grab user comment list from database
   list** comments = query_database_ls(query);
 
-  // load comment template
+  // load post comment template
   char* comment_template;
   if ((comment_template = load_vote_wrapper("comment", HTML_POST_COMMENT)) == NULL)
   {
-    // failed to load comment
-    for (int i = 0; comments[i] != NULL; i++)
-    {
-      list_delete(comments[i]);
-    }
-    free(comments); 
+    // failed to load template
+    delete_query_result(comments);
     free(template);
     return NULL;
   }
@@ -123,9 +122,10 @@ char* fill_post_comments(char* template, const char* post_id, const struct token
     char* comment_template_copy = malloc((comment_template_len + 1) * sizeof(char));
     memcpy(comment_template_copy, comment_template, comment_template_len + 1);
 
-    // current comment (list of fields)
+    // current comment (field list)
     list* c = comments[i];
 
+    // fill in comment template
     if ((comment_template_copy = fill_post_comment_template(comment_template_copy, c, client_info)) == NULL ||
         (template = replace(template, "{NEXT_ITEM}", comment_template_copy)) == NULL)
     {
@@ -138,6 +138,7 @@ char* fill_post_comments(char* template, const char* post_id, const struct token
         free(template);
         template = NULL;
       }
+      break;
     }
 
     free(comment_template_copy);
@@ -150,11 +151,7 @@ char* fill_post_comments(char* template, const char* post_id, const struct token
   }
 
   // cleanup
-  for (int i = 0; comments[i] != NULL; i++)
-  {
-    list_delete(comments[i]);
-  }
-  free(comments);
+  delete_query_result(comments);
   free(comment_template);
 
   return template;

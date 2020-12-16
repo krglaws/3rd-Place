@@ -380,9 +380,15 @@ static struct response* process_request(const int sock, char* req_str)
   /* fill in request struct */
   struct request req;
   req.content = get_request_content(req_str);
-  req.method = req.content ? get_request_method(req_str) : BAD_REQ;
+  req.method = get_request_method(req_str);
   req.uri = get_uri(req.method, req_str);
   req.client_info = get_login_token(req_str);
+
+  // check if method could be found, but URI was bad
+  if (req.method != BAD_REQ && req.uri == NULL)
+  {
+    req.method = BAD_REQ;
+  }
 
   free(req_str);
 
@@ -401,27 +407,27 @@ static struct response* process_request(const int sock, char* req_str)
   switch (req.method)
   {
   case GET_REQ:
-    log_info("Request from %s: GET %s", ipstr, req.uri);
+    log_info("Request from %s: GET %s", ipstr, (req.uri + 1));
     resp = http_get(&req);
     break;
 
   case HEAD_REQ:
-    log_info("Request from %s: HEAD %s", ipstr, req.uri);
+    log_info("Request from %s: HEAD %s", ipstr, (req.uri + 1));
     resp = http_get(&req);
     break;
 
   case PUT_REQ:
-    log_info("Request from %s: PUT %s", ipstr, req.uri);
+    log_info("Request from %s: PUT %s", ipstr, (req.uri + 1));
     resp = http_put(&req);
     break;
 
   case POST_REQ:
-    log_info("Request from %s: POST %s", ipstr, req.uri);
+    log_info("Request from %s: POST %s", ipstr, (req.uri + 1));
     resp = http_post(&req);
     break;
 
   case DELETE_REQ:
-    log_info("Request from %s: DELETE %s", ipstr, req.uri);
+    log_info("Request from %s: DELETE %s", ipstr, (req.uri + 1));
     resp = http_delete(&req);
     break;
 

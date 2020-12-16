@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <log_manager.h>
 #include <util.h>
 #include <sql_wrapper.h>
 #include <http_get.h>
@@ -18,22 +19,22 @@ char* fill_community_info(char* template, const char* community_name)
 
   if (result[0] == NULL)
   {
-    fprintf(stderr, "community '%s' not found\n", community_name);
+    // community not found
     free(template);
-    free(result);
+    delete_query_result(result);
     return NULL;
   }
 
-#ifdef DEBUG
+  // NOTE:
+  // might remove this check at some point
   if (result[1] != NULL)
   {
-    fprintf(stderr, "fill_community_info(): multiple communities with name '%s'\n", community_name);
-    exit(EXIT_FAILURE);
+    free(template);
+    delete_query_result(result);
+    log_crit("fill_community_info(): multiple communities with name '%s'", community_name);
   }
-#endif
 
   list* community_info = result[0];
-  free(result);
 
   const char* community_date_created = list_get(community_info, SQL_FIELD_COMMUNITY_DATE_CREATED)->cp;
   const char* community_about = list_get(community_info, SQL_FIELD_COMMUNITY_ABOUT)->cp;
@@ -43,11 +44,11 @@ char* fill_community_info(char* template, const char* community_name)
       (template = replace(template, "{DATE_CREATED}", community_date_created)) == NULL ||
       (template = replace(template, "{COMMUNITY_ABOUT}", community_about)) == NULL)
   {
-    list_delete(community_info);
+    delete_query_result(result);
     return NULL;
   }
 
-  list_delete(community_info);
+  delete_query_result(result);
   return template;
 } // end fill_community_info
 
@@ -112,12 +113,7 @@ char* fill_community_posts(char* template, const char* community_name, const str
   char* post_template;
   if ((post_template = load_vote_wrapper("post", HTML_COMMUNITY_POST)) == NULL)
   {
-    // failed to load post template
-    for (int i = 0; posts[i] != NULL; i++)
-    {
-      list_delete(posts[i]);
-    }
-    free(posts); 
+    delete_query_result(posts);
     free(template);
     return NULL;
   }
@@ -159,11 +155,7 @@ char* fill_community_posts(char* template, const char* community_name, const str
   }
 
   // cleanup
-  for (int i = 0; posts[i] != NULL; i++)
-  {
-    list_delete(posts[i]);
-  }
-  free(posts);
+  delete_query_result(posts);
   free(post_template);
 
   // remove trailing template string

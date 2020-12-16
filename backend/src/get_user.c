@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <log_manager.h>
 #include <util.h>
 #include <http_get.h>
 #include <sql_wrapper.h>
@@ -19,23 +20,22 @@ char* fill_user_info(char* template, const char* user_name)
 
   if (result[0] == NULL)
   {
-    fprintf(stderr, "user %s not found\n", user_name);
+    // user not found
     free(template);
-    free(result);
+    delete_query_result(result);
     return NULL;
   }
 
-#ifdef DEBUG
-  // make sure we got exactly ONE entry
+  // NOTE:
+  // might remove this check
   if (result[1] != NULL)
   {
-    fprintf(stderr, "fill_user_info(): multiple users with name %s\n", user_name);
-    exit(EXIT_FAILURE);
+    free(template);
+    delete_query_result(result);
+    log_crit("fill_user_info(): multiple users with name '%s'", user_name);
   }
-#endif
 
   list* user_info = result[0];
-  free(result);
 
   const char* user_points = list_get(user_info, SQL_FIELD_USER_POINTS)->cp;
   const char* user_posts = list_get(user_info, SQL_FIELD_USER_POSTS)->cp;
@@ -51,11 +51,11 @@ char* fill_user_info(char* template, const char* user_name)
       (template = replace(template, "{USER_BDAY}", user_date_joined)) == NULL ||
       (template = replace(template, "{USER_ABOUT}", user_about)) == NULL)
   {
-    list_delete(user_info);
+    delete_query_result(result);
     return NULL;
   }
 
-  list_delete(user_info);
+  delete_query_result(result);
   return template;
 } // end fill_user_info()
 
@@ -118,11 +118,8 @@ char* fill_user_posts(char* template, char* user_name, const struct token_entry*
   char* post_template;
   if ((post_template = load_vote_wrapper("post", HTML_USER_POST)) == NULL)
   {
-    for (int i = 0; posts[i] != NULL; i++)
-    {
-      list_delete(posts[i]);
-    }
-    free(posts);
+    // failed to load template
+    delete_query_result(posts);
     free(template);
     return NULL;
   }
@@ -132,11 +129,12 @@ char* fill_user_posts(char* template, char* user_name, const struct token_entry*
   // iterate through each post
   for (int i = 0; posts[i] != NULL; i++)
   {
-    list* p = posts[i];
-
     // copy post template string instead of read it from disk every loop
     char* post_template_copy = malloc((post_template_len + 1) * sizeof(char));
     memcpy(post_template_copy, post_template, post_template_len + 1);
+
+    // current post (field list)
+    list* p = posts[i];
 
     // fill in post template
     if ((post_template_copy = fill_user_post_template(post_template_copy, p, client_info)) == NULL ||
@@ -164,11 +162,7 @@ char* fill_user_posts(char* template, char* user_name, const struct token_entry*
   }
 
   // cleanup
-  for (int i = 0; posts[i] != NULL; i++)
-  {
-    list_delete(posts[i]);
-  }
-  free(posts);
+  delete_query_result(posts);
   free(post_template);
 
   return template;
@@ -236,11 +230,7 @@ char* fill_user_comments(char* template, const char* user_name, const struct tok
   char* comment_template;
   if ((comment_template = load_vote_wrapper("comment", HTML_USER_COMMENT)) == NULL)
   {
-    for (int i = 0; comments[i] != NULL; i++)
-    {
-      list_delete(comments[i]);
-    }
-    free(comments);
+    delete_query_result(comments);
     free(template);
     return NULL;
   }
@@ -283,11 +273,7 @@ char* fill_user_comments(char* template, const char* user_name, const struct tok
   }
 
   // cleanup
-  for (int i = 0; comments[i] != NULL; i++)
-  {
-    list_delete(comments[i]);
-  }
-  free(comments);
+  delete_query_result(comments);
   free(comment_template);
 
   return template;
