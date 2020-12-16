@@ -190,6 +190,7 @@ static char* receive_request(const int sock)
     if ((bytes = recv(sock, curr_buff_ptr, BUFFERLEN - 1, 0)) == -1)
     {
       log_err("receive_request(): recv(): %s ", strerror(errno));
+      remove_socket(sock);
       free(message_buffer);
       return NULL;
     }
@@ -223,7 +224,7 @@ static enum request_method get_request_method(const char* req_str)
 {
   if (req_str == NULL)
   {
-    return NO_REQUEST_METHOD;
+    return BAD_REQ;
   }
 
   char* endofline = strstr(req_str, "\n");
@@ -258,12 +259,17 @@ static enum request_method get_request_method(const char* req_str)
     return DELETE_REQ;
   }
 
-  return NO_REQUEST_METHOD;
+  return BAD_REQ;
 }
 
 
 static char* get_uri(const enum request_method method, const char* request)
 {
+  if (strstr(request, "..") || method == BAD_REQ)
+  {
+    return NULL;
+  }
+
   char* uri = calloc(1, MAXURILEN);
   uri[0] = '.';
 
@@ -288,7 +294,7 @@ static char* get_uri(const enum request_method method, const char* request)
     getloc = strstr(request, "POST");
     sscanf(getloc + 5, "%s", uri + 1);
   }
-  else
+  else //if (method == DELETE_REQ)
   {
     getloc = strstr(request, "DELETE");
     sscanf(getloc + 6, "%s", uri + 1);
@@ -305,8 +311,8 @@ static const struct token_entry* get_login_token(const char* req_str)
     return NULL;
   }
 
-  // locate token location within request string
-  char* find = "Cookie: logintoken=";
+  // locate cookie location within request string
+  char* find = "Cookie: login=";
   char* token_loc = strstr(req_str, find);
   if (token_loc == NULL)
   {
@@ -367,22 +373,27 @@ static struct response* process_request(const int sock, char* req_str)
 { 
   if (req_str == NULL)
   {
-    // if request is NULL, client must have disconnected
+    // client disconnected
     return NULL; 
   }
 
   /* fill in request struct */
   struct request req;
-  req.method = get_request_method(req_str);
+  req.content = get_request_content(req_str);
+  req.method = req.content ? get_request_method(req_str) : BAD_REQ;
   req.uri = get_uri(req.method, req_str);
   req.client_info = get_login_token(req_str);
-  req.content = get_request_content(req_str);
 
   free(req_str);
 
   // get socket info
   char ipstr[64];
-  get_socket_ip(sock, ipstr, sizeof(ipstr));
+  if (get_socket_ip(sock, ipstr, sizeof(ipstr)) == -1)
+  {
+    log_err("process_request(): failed on call to get_socket_ip()");
+    remove_socket(sock);
+    return NULL;
+  }
 
   struct response* resp;
 
@@ -414,14 +425,14 @@ static struct response* process_request(const int sock, char* req_str)
     resp = http_delete(&req);
     break;
 
-  case NO_REQUEST_METHOD:
+  case BAD_REQ:
   default:
     log_info("Bad request from %s", ipstr);
 
     free(req.uri);
     free(req.content);
 
-    return senderr(BAD_REQUEST);
+    return senderr(ERR_BAD_REQ);
   }
 
   free(req.uri);
@@ -431,20 +442,35 @@ static struct response* process_request(const int sock, char* req_str)
 }
 
 
-static void send_msg(int fd, char* buffer, int msg_len)
+static int send_msg(const int sock, char* buffer, int msg_len)
 {
-  if (buffer == NULL) return;
+  if (buffer == NULL)
+  {
+    return -1;
+  }
+
   int total = 0, bytes = 0;
 
   while (total < msg_len)
   {
-    if ((bytes = send(fd, buffer + total, msg_len - total, 0)) == -1)
+    if ((bytes = send(sock, buffer + total, msg_len - total, 0)) == -1)
     {
-      log_err("send_msg(): %s", strerror(errno));
-      return;
+      log_err("send_msg(): send(): %s", strerror(errno));
+      remove_socket(sock);
+      return -1;
     }
     total += bytes; 
   }
+
+  return 0;
+}
+
+
+static void delete_response(struct response* resp)
+{
+  list_delete(resp->header);
+  free(resp->content);
+  free(resp);
 }
 
 
@@ -452,7 +478,8 @@ static void send_response(const int sock, struct response* resp)
 {
   if (resp == NULL)
   {
-    log_crit("send_response(): NULL response");
+    // client disconnected
+    return;
   }
 
   // log first line of resp header
@@ -464,7 +491,11 @@ static void send_response(const int sock, struct response* resp)
   for (int i = 0; i < head_lines; i++)
   {
     datacont* line = list_get(resp->header, i);
-    send_msg(sock, line->cp, line->size);
+    if (send_msg(sock, line->cp, line->size) == -1)
+    {
+      delete_response(resp);
+      return;
+    }
   }
 
   // end header
@@ -476,7 +507,5 @@ static void send_response(const int sock, struct response* resp)
     send_msg(sock, resp->content, resp->content_length);
   }
 
-  list_delete(resp->header);
-  free(resp->content);
-  free(resp);
+  delete_response(resp);
 }

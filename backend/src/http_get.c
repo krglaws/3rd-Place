@@ -83,7 +83,7 @@ struct response* http_get(struct request* req)
     {
       free(content);
     }
-    return senderr(NOT_FOUND);
+    return senderr(ERR_NOT_FOUND);
   }
 
   /* prepare response object */

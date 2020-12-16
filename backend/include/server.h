@@ -79,7 +79,11 @@ static struct response* process_request(const int sock, char* req_str);
 
 
 /* Sends the contents of a buffer to a specified socket */
-static void send_msg(int fd, char* buffer, int msg_len);
+static int send_msg(const int sock, char* buffer, int msg_len);
+
+
+/* Delete response object */
+static void delete_response(struct response* resp);
 
 
 /* Uses send_msg() to send the response in pieces */

@@ -7,6 +7,16 @@
 #include <socket_manager.h>
 
 
+/* NOTES:
+ * The sockets are currently stored in kylestructs list,
+ * but they should really be stored in custom linked list
+ * with a struct that holds both socket number and the
+ * address associated with that socket. It will make it
+ * much less annoying to retrieve the addresses of each
+ * socket (i.e. I wont have to use get_socket_ip()).
+ */
+
+
 static int server_socket = 0;
 
 static list* socket_list = NULL;
@@ -78,7 +88,7 @@ void terminate_socket_manager()
 }
 
 
-void get_socket_ip(const int sock, char* ipstr, const int iplen)
+int get_socket_ip(const int sock, char* ipstr, const int iplen)
 {
   struct sockaddr_in6 addr;
   int addrlen = sizeof(addr);
@@ -86,54 +96,77 @@ void get_socket_ip(const int sock, char* ipstr, const int iplen)
   // find out socket address
   if (getpeername(sock, (struct sockaddr*) &addr, &addrlen) == -1)
   {
-    log_crit("get_socket_ip(): getpeername(): %s", strerror(errno));
+    log_err("get_socket_ip(): getpeername(): %s", strerror(errno));
+    return -1;
   }
 
   if (inet_ntop(addr.sin6_family, &(addr.sin6_addr), ipstr, iplen) == NULL)
   {
-    log_crit("get_socket_ip(): inet_ntop(): %s", strerror(errno));
+    log_err("get_socket_ip(): inet_ntop(): %s", strerror(errno));
+    return -1;
   }
+
+  return 0;
 }
 
 
 void add_socket(int sock)
 {
   char ipstr[64];
-  get_socket_ip(sock, ipstr, sizeof(ipstr));
-
-  list_add(socket_list, datacont_new(&sock, INT, 1));
+  if (get_socket_ip(sock, ipstr, sizeof(ipstr)) == -1)
+  {
+    log_err("add_socket(): failed on call to get_socket_ip()" \
+              "\nFailed to add new socket: %d", sock);
+    close(sock);
+    return;
+  }
 
   log_info("Connected to %s (socket no. %d)", ipstr, sock);
+
+  list_add(socket_list, datacont_new(&sock, INT, 1));
 }
 
 
 void remove_socket(int sock)
 {
-  char ipstr[64];
-  get_socket_ip(sock, ipstr, sizeof(ipstr));
-
   datacont* dc = datacont_new(&sock, INT, 1);
-  list_remove_by(socket_list, dc);
+  if (list_remove_by(socket_list, dc) == -1)
+  {
+    log_err("remove_socket(): socket no. %d does not exist", sock);
+    return;
+  }
   datacont_delete(dc);
 
-  close(sock);
+  char ipstr[64];
+  if (get_socket_ip(sock, ipstr, sizeof(ipstr)) == -1)
+  {
+    log_err("remove_socket(): failed on call to get_socket_ip()");
+    log_info("Connection to [UNKNOWN] closed (socket no. %d)", sock);
+    close(sock);
+    return;
+  }
 
+  close(sock);
   log_info("Connection to %s closed (socket no. %d)", ipstr, sock);
 }
 
 
 static const int reload_socket_set()
 {
+  // clear socket set, add server socket
   FD_ZERO(&socket_set);
+  FD_SET(server_socket, &socket_set);
 
-  int max = 0;
+  int max = server_socket;
   int num_sockets = list_length(socket_list);
 
+  // add sockets in socket list to socket set
   for (int i = 0; i < num_sockets; i++)
   {
     datacont* dc = list_get(socket_list, i);
     FD_SET(dc->i, &socket_set);
 
+    // find maximum socket no.
     if (max < dc->i) 
     {
       max = dc->i;
@@ -148,6 +181,13 @@ static const int get_active_socket()
 {
   int num_sockets = list_length(socket_list);
 
+  // check if server socket is active
+  if (FD_ISSET(server_socket, &socket_set))
+  {
+    return server_socket;
+  }
+
+  // look for active socket in list
   for (int i = 0; i < num_sockets; i++)
   {
     datacont* dc = list_get(socket_list, i);

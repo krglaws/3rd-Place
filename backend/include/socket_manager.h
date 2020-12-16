@@ -13,7 +13,7 @@ void terminate_socket_manager();
 
 
 /* Fills ipstr with the ip address belonging to sock */
-void get_socket_ip(const int sock, char* ipstr, const int iplen);
+int get_socket_ip(const int sock, char* ipstr, const int iplen);
 
 
 /* Adds a new socket to socket list. */

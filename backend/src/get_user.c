@@ -279,7 +279,7 @@ char* fill_user_comments(char* template, const char* user_name, const struct tok
   // remove last template string
   if (template != NULL)
   {
-    replace(template, "{NEXT_ITEM}", "");
+    template = replace(template, "{NEXT_ITEM}", "");
   }
 
   // cleanup
