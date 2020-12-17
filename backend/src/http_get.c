@@ -17,7 +17,7 @@
 
 
 // used to signal a 500 error
-static int internal_error = 0;
+static enum get_err gerr = 0;
 
 
 struct response* http_get(struct request* req)
@@ -88,8 +88,17 @@ struct response* http_get(struct request* req)
       free(content);
     }
 
+    // get error type
+    enum get_err err = get_error();
+
+    // redirect
+    if (err == REDIRECT)
+    {
+      return signup_redirect();
+    }
+
     // check for 500 error
-    if (get_internal_error() == 1)
+    if (get_error() == 1)
     {
       return senderr(ERR_INTERNAL);
     }
@@ -122,8 +131,8 @@ char* replace(char* template, const char* this, const char* withthat)
   // check if 'this' is in template
   if ((location = strstr(template, this)) == NULL)
   {
-    // set internal error flag
-    set_internal_error();
+    // set error flag
+    set_error(INTERNAL);
     log_err("replace(): no match for '%s' found in template", this);
     free(template);
     return NULL;
@@ -265,15 +274,15 @@ enum vote_type check_for_vote(const enum vote_item_type item_type, const char* i
 } // end check_for_vote()
 
 
-void set_internal_error()
+void set__error(enum get_err err)
 {
-  internal_error = 1;
+  gerr = err;
 }
 
 
-static int get_internal_error()
+static int get_error()
 {
-  int e = internal_error;
-  internal_error = 0;
-  return e;
+  enum get_err err = gerr;
+  gerr = NO_GET_ERR;
+  return err;
 }
