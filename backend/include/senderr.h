@@ -1,4 +1,3 @@
-
 #ifndef _SENDERR_H_
 #define _SENDERR_H_
 
@@ -31,7 +30,10 @@ enum http_errno {
   ERR_HTTP_VERS_NOT_SUPP
 };
 
+/* sends error response based on eno arg */
 struct response* senderr(enum http_errno eno);
 
-#endif
+/* sends a redirect to /signup */
+struct response* signup_redirect();
 
+#endif
