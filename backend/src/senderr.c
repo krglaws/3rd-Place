@@ -7,7 +7,7 @@
 #include <senderr.h>
 
 
-static char* contlenhdr = "Connection: close\nContent-Length: 3\n";
+static const char* contlenhdr = "Connection: close\nContent-Length: 3\n";
 
 struct response* senderr(enum http_errno eno)
 {
@@ -54,3 +54,15 @@ struct response* senderr(enum http_errno eno)
   return resp;
 }
 
+
+static const char* redir_str = "HTTP/1.1 301 Moved Permanently\nLocation: /signup\n"
+
+struct response* signup_redirect(const char* uri)
+{
+  // create response object
+  struct response* resp = calloc(1, sizeof(struct response));
+  resp->header = list_new();
+  list_add(resp->header, datacont_new(redir_str, CHARP, strlen(redir_str)));
+
+  return resp;
+}

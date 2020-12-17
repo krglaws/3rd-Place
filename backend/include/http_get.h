@@ -51,13 +51,20 @@ enum vote_item_type {
 enum vote_type check_for_vote(const enum vote_item_type item_type, const char* vote_id, const char* user_id);
 
 
+enum get_err {
+  NO_GET_ERR,
+  REDIRECT, // redirect to /signup
+  INTERNAL // send 500 err
+};
+
+
 /* Called by the get_* files in the event of an internal
     server error to notify http_get to send a 500 instead
     404. */
-void set_internal_error();
+void set_error(enum get_err err);
 
 
 /* Retrieves value of static int internal_error and sets it to 0 */
-static int get_internal_error();
+static enum get_err get_error();
 
 #endif

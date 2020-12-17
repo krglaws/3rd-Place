@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 
 #include <log_manager.h>
@@ -174,8 +173,8 @@ char* get_community(const char* community_name, const struct token_entry* client
   char* community_html;
   if ((community_html = load_file(HTML_COMMUNITY)) == NULL)
   {
-    // set internal error flag
-    set_internal_error();
+    // set error flag
+    set_error(INTERNAL);
     return NULL;
   }
 
@@ -190,8 +189,8 @@ char* get_community(const char* community_name, const struct token_entry* client
   char* main_html;
   if ((main_html = load_file(HTML_MAIN)) == NULL)
   {
-    // set internal error flag
-    set_internal_error();
+    // set error flag
+    set_error(INTERNAL);
     free(community_html);
     return NULL;
   }

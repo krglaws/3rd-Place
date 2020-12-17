@@ -169,8 +169,8 @@ char* get_post(const char* post_id, const struct token_entry* client_info)
   char* post_html;
   if ((post_html = load_file(HTML_POST)) == NULL)
   {
-    // set internal error flag
-    set_internal_error();
+    // set error flag
+    set_error(INTERNAL);
     return NULL;
   }
   
@@ -186,7 +186,7 @@ char* get_post(const char* post_id, const struct token_entry* client_info)
   if ((main_html = load_file(HTML_MAIN)) == NULL)
   {
     // set internal error flag
-    set_internal_error();
+    set_error(INTERNAL);
     free(post_html);
     return NULL;
   }
