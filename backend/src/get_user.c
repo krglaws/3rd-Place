@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include <log_manager.h>
+#include <auth_manager.h>
 #include <util.h>
 #include <http_get.h>
 #include <sql_wrapper.h>
@@ -60,7 +61,7 @@ char* fill_user_info(char* template, const char* user_name)
 } // end fill_user_info()
 
 
-char* fill_user_post_template(char* template, const list* post_info, const struct token_entry* client_info)
+char* fill_user_post_template(char* template, const list* post_info, const struct auth_token* client_info)
 {
   const char* post_id = list_get(post_info, SQL_FIELD_POST_ID)->cp;
   const char* post_title = list_get(post_info, SQL_FIELD_POST_TITLE)->cp;
@@ -106,7 +107,7 @@ char* fill_user_post_template(char* template, const list* post_info, const struc
 } // end fill_user_post_template
 
 
-char* fill_user_posts(char* template, char* user_name, const struct token_entry* client_info)
+char* fill_user_posts(char* template, char* user_name, const struct auth_token* client_info)
 {
   // query user posts
   char* post_query_fmt = QUERY_POSTS_BY_UNAME;
@@ -169,7 +170,7 @@ char* fill_user_posts(char* template, char* user_name, const struct token_entry*
 } // end fill_user_posts()
 
 
-char* fill_user_comment_template(char* template, const list* comment_info, const struct token_entry* client_info)
+char* fill_user_comment_template(char* template, const list* comment_info, const struct auth_token* client_info)
 {
   const char* comment_id = list_get(comment_info, SQL_FIELD_COMMENT_ID)->cp;
   const char* comment_body = list_get(comment_info, SQL_FIELD_COMMENT_BODY)->cp;
@@ -218,7 +219,7 @@ char* fill_user_comment_template(char* template, const list* comment_info, const
 } // end fill_user_comment_template()
 
 
-char* fill_user_comments(char* template, const char* user_name, const struct token_entry* client_info)
+char* fill_user_comments(char* template, const char* user_name, const struct auth_token* client_info)
 {
   // query user comments
   char* query_fmt = QUERY_COMMENTS_BY_UNAME;
@@ -280,7 +281,7 @@ char* fill_user_comments(char* template, const char* user_name, const struct tok
 } // end fill_user_comments()
 
 
-char* get_user(char* user_name, const struct token_entry* client_info)
+char* get_user(char* user_name, const struct auth_token* client_info)
 {
   if (user_name == NULL || strlen(user_name) == 0)
   {

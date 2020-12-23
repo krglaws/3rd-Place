@@ -1,6 +1,6 @@
 
 CC := gcc
-CFLAGS := -Iinclude -lkylestructs -lmysqlclient `mysql_config --cflags --libs`
+CFLAGS := -Iinclude -lkylestructs -lmysqlclient `mysql_config --cflags --libs` -lcrypt
 DEBUG := -g -DDEBUG
 
 SRC := ./src

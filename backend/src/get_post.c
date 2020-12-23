@@ -3,12 +3,13 @@
 
 #include <log_manager.h>
 #include <util.h>
+#include <auth_manager.h>
 #include <sql_wrapper.h>
 #include <http_get.h>
 #include <get_post.h>
 
 
-char* fill_post_info(char* template, const char* post_id, const struct token_entry* client_entry)
+char* fill_post_info(char* template, const char* post_id, const struct auth_token* client_entry)
 {
   // query post info
   char* query_fmt = QUERY_POST_BY_ID;
@@ -53,7 +54,7 @@ char* fill_post_info(char* template, const char* post_id, const struct token_ent
 } // end fill_post_info()
 
 
-char* fill_post_comment_template(char* template, const list* comment_info, const struct token_entry* client_info)
+char* fill_post_comment_template(char* template, const list* comment_info, const struct auth_token* client_info)
 {
   const char* comment_id = list_get(comment_info, SQL_FIELD_COMMENT_ID)->cp;
   const char* comment_author = list_get(comment_info, SQL_FIELD_COMMENT_AUTHOR_NAME)->cp;
@@ -93,7 +94,7 @@ char* fill_post_comment_template(char* template, const list* comment_info, const
 } // end fill_post_comment_template()
 
 
-char* fill_post_comments(char* template, const char* post_id, const struct token_entry* client_info)
+char* fill_post_comments(char* template, const char* post_id, const struct auth_token* client_info)
 {
   // prepare query string
   char* query_fmt = QUERY_COMMENTS_BY_POSTID;
@@ -158,7 +159,7 @@ char* fill_post_comments(char* template, const char* post_id, const struct token
 } // end fill_post_comments()
 
 
-char* get_post(const char* post_id, const struct token_entry* client_info)
+char* get_post(const char* post_id, const struct auth_token* client_info)
 {
   if (post_id == NULL || strlen(post_id) == 0)
   {

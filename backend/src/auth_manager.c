@@ -269,35 +269,43 @@ static const char* get_token(const char* uname)
 }
 
 
-/* remove token by index */
-void remove_token(const int index)
+// called by http_post() for logout
+void remove_token(const char* token)
 {
-  struct token_entry* deletethis;
-  if (index == 0)
+  if (token == NULL)
   {
-    deletethis = head;
-    head = head->next;
-    free(deletethis->token);
-    free(deletethis);
+    log_err("remove_token(): null token argument");
     return;
   }
 
-  int i = 0;
-  struct token_entry* temp = head;
+  struct token_entry* iter;
 
-  while (i < index-1)
+  // check head
+  if (strcmp(head->token->token, token) == 0)
   {
-    if (temp == NULL)
-    {
-      log_crit("remove_token(): attempted to remove token at out of bounds index: %d", index);
-    }
-    i++;
-    temp = temp->next;
+    iter = head->next;
+    delete_token_entry(head);
+    head = iter;
+    return;
   }
 
-  deletethis = temp->next;
-  temp->next = temp->next->next;
-  free(deletethis);
+  iter = head;
+
+  // check the rest of the list
+  while (iter->next != NULL)
+  {
+    if (strcmp(iter->next->token->token, token) == 0)
+    {
+      struct token_entry* temp = iter->next->next;
+      delete_token_entry(iter->next);
+      iter->next = temp;
+      return;
+    }
+
+    iter = iter->next;
+  }
+
+  log_err("remove_token(): failed to find matching token string");
 }
 
 
@@ -331,18 +339,60 @@ const struct auth_token* valid_token(const char* token)
    removes if days < 1 */
 void check_tokens()
 {
-  int index = 0;
-  struct token_entry* iter = head;
-  while (iter != NULL)
+  if (head == NULL)
   {
-    iter->days--;
-
-    if (iter->days == 0)
-    {
-      remove_token(index);
-    }
-
-    index++;
-    iter = iter->next;
+    return;
   }
+
+  struct token_entry* iter;
+
+  // check if head node is toast
+  int done = 1;
+  do
+  {
+    head->days--;
+
+    if (head->days < 1)
+    {
+      done = 0;
+      iter = head->next;
+      delete_token_entry(head);
+      head = iter;
+    }
+    else
+    {
+      done = 1;
+    }
+  } while (!done);
+
+  iter = head;
+
+  // now iterate over list with iterator behind one
+  while (iter->next != NULL)
+  {
+    iter->next->days--;
+
+    if (iter->next->days == 0)
+    {
+      struct token_entry* temp = iter->next->next;
+      delete_token_entry(iter->next);
+      iter->next = temp;
+    }
+    else
+    {
+      iter = iter->next;
+    }
+  }
+}
+
+
+void delete_token_entry(struct token_entry* t)
+{
+  if (t == NULL)
+  {
+    return;
+  }
+
+  free(t->token);
+  free(t);
 }

@@ -1,4 +1,3 @@
-
 #ifndef _SQL_WRAPPER_H_
 #define _SQL_WRAPPER_H_
 
@@ -85,9 +84,14 @@
 #define QUERY_COMMENT_UPVOTE_BY_COMMENTID_USERID "SELECT * FROM comment_up_votes WHERE comment_id = %s AND user_id = %d"
 #define QUERY_COMMENT_DOWNVOTE_BY_COMMENTID_USERID "SELECT * FROM comment_down_votes WHERE comment_id = %s AND user_id = %d;"
 
+#define INSERT_NEW_USER "INSERT INTO users VALUES (name, password_hash, date_joined) " \
+                        "VALUES (%s, %s, UNIX_TIMESTAMP())"
+#define INSERT_NEW_COMMENT "";
+#define INSERT_NEW_POST "";
+#define INSERT_NEW_COMMUNITY "";
+
 list** query_database_ls(char* query);
 
 void delete_query_result(list** result);
 
 #endif
-

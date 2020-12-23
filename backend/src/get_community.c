@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 
 #include <log_manager.h>
@@ -52,7 +53,7 @@ char* fill_community_info(char* template, const char* community_name)
 } // end fill_community_info
 
 
-char* fill_community_post_template(char* template, const list* post_info, const struct token_entry* client_info)
+char* fill_community_post_template(char* template, const list* post_info, const struct auth_token* client_info)
 {
   const char* post_id = list_get(post_info, SQL_FIELD_POST_ID)->cp;
   const char* post_author = list_get(post_info, SQL_FIELD_POST_AUTHOR_NAME)->cp;
@@ -98,7 +99,7 @@ char* fill_community_post_template(char* template, const list* post_info, const 
 } // end fill_community_post_template()
 
 
-char* fill_community_posts(char* template, const char* community_name, const struct token_entry* client_info)
+char* fill_community_posts(char* template, const char* community_name, const struct auth_token* client_info)
 {
   // prepare query string
   char* query_fmt = QUERY_POSTS_BY_COMMUNITY_NAME;
@@ -162,7 +163,7 @@ char* fill_community_posts(char* template, const char* community_name, const str
 } // end fill_community_posts()
 
 
-char* get_community(const char* community_name, const struct token_entry* client_info)
+char* get_community(const char* community_name, const struct auth_token* client_info)
 {
   if (community_name == NULL || strlen(community_name) == 0)
   {

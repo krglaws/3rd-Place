@@ -8,6 +8,9 @@
 /* success reponses */
 #define STAT200 HTTPVERSION " 200 OK\n"
 
+/* redirect responses */
+#define STAT302 HTTPVERSION " 302 Found\n"
+
 /* client errors */
 #define STAT400 HTTPVERSION " 400 Bad Request\n"
 #define STAT404 HTTPVERSION " 404 Not Found\n"
@@ -33,7 +36,7 @@ enum http_errno {
 /* sends error response based on eno arg */
 struct response* senderr(enum http_errno eno);
 
-/* sends a redirect to /signup */
-struct response* signup_redirect();
+/* sends a redirect to /login */
+struct response* login_redirect();
 
 #endif

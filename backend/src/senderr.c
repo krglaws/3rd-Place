@@ -1,9 +1,8 @@
-
 #include <stdlib.h>
 #include <kylestructs.h>
 
 #include <common.h>
-#include <token_manager.h>
+#include <auth_manager.h>
 #include <senderr.h>
 
 
@@ -55,9 +54,9 @@ struct response* senderr(enum http_errno eno)
 }
 
 
-static const char* redir_str = "HTTP/1.1 301 Moved Permanently\nLocation: /signup\n"
+static const char* redir_str = HTTPVERSION "Location: /login\n";
 
-struct response* signup_redirect(const char* uri)
+struct response* login_redirect()
 {
   // create response object
   struct response* resp = calloc(1, sizeof(struct response));

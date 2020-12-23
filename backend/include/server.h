@@ -65,7 +65,7 @@ static char* get_uri(const enum request_method method, const char* request);
 
 
 /* Gets login token from request */
-static const struct token_entry* get_login_token(const char* req_str);
+static const struct auth_token* get_login_token(const char* req_str);
 
 
 /* Gets request content from request string */

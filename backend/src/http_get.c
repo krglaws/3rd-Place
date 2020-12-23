@@ -8,7 +8,7 @@
 #include <common.h>
 #include <util.h>
 #include <senderr.h>
-#include <token_manager.h>
+#include <auth_manager.h>
 #include <sql_wrapper.h>
 #include <get_user.h>
 #include <get_post.h>
@@ -16,15 +16,17 @@
 #include <http_get.h>
 
 
-// used to signal a 500 error
+// used to signal errors while getting 
 static enum get_err gerr = 0;
 
 
 struct response* http_get(struct request* req)
 {
-  if (req == NULL) return NULL;
+  if (req == NULL) {
+    return NULL;
+  }
 
-  /* what are we getting? */
+  // what are we getting?
   char* content_type = NULL;
   char* content = NULL;
   int content_length = 0;
@@ -79,6 +81,14 @@ struct response* http_get(struct request* req)
       content_length = strlen(content);
     }
   }
+  else if (strcmp(req->uri, "./login") == 0)
+  {
+    content_type = TEXTHTML;
+    if (content = get_login(req->client_info, LOGINERR_NONE))
+    {
+      content_length = strlen(content);
+    }
+  }
 
   // do we have it?
   if (content_type == NULL || content == NULL)
@@ -94,7 +104,7 @@ struct response* http_get(struct request* req)
     // redirect
     if (err == REDIRECT)
     {
-      return signup_redirect();
+      return login_redirect();
     }
 
     // check for 500 error
@@ -134,6 +144,7 @@ char* replace(char* template, const char* this, const char* withthat)
     // set error flag
     set_error(INTERNAL);
     log_err("replace(): no match for '%s' found in template", this);
+    log_err(template);
     free(template);
     return NULL;
   }
@@ -160,7 +171,7 @@ char* replace(char* template, const char* this, const char* withthat)
 } // end replace()
 
 
-char* fill_nav_login(char* template, const struct token_entry* client_info)
+char* fill_nav_login(char* template, const struct auth_token* client_info)
 {
   char user_link[64];
 
@@ -176,8 +187,8 @@ char* fill_nav_login(char* template, const struct token_entry* client_info)
 
   else
   {
-    if ((template = replace(template, "{USER_LINK}", "/signup")) == NULL ||
-        (template = replace(template, "{USER_NAME}", "Sign Up")) == NULL)
+    if ((template = replace(template, "{USER_LINK}", "/login")) == NULL ||
+        (template = replace(template, "{USER_NAME}", "Login")) == NULL)
     {
       return NULL;
     }
@@ -247,7 +258,7 @@ enum vote_type check_for_vote(const enum vote_item_type item_type, const char* i
   list** downvote_query_result = query_database_ls(downvote_query);
 
   // NOTE:
-  // might remove these check
+  // might remove these checks
   if (upvote_query_result[0] && downvote_query_result[0])
   {
     log_crit("check_for_vote(): downvote and upvote present for same %s_id=%s user_id=%s", item_type==POST_VOTE?"post":"comment", item_id, user_id);
@@ -274,13 +285,93 @@ enum vote_type check_for_vote(const enum vote_item_type item_type, const char* i
 } // end check_for_vote()
 
 
-void set__error(enum get_err err)
+char* get_login(const struct auth_token* client_info, enum login_error err)
+{
+  // only get actual login html if user is not logged in yet
+  char* login_html;
+  if (client_info == NULL)
+  {
+    if ((login_html = load_file(HTML_LOGIN)) == NULL)
+    {
+      set_error(INTERNAL);
+      return NULL;
+    }
+
+    // check for login/signup error
+    if (err == LOGINERR_BAD_LOGIN)
+    {
+      if ((login_html = replace(login_html, "{SIGNUP_ERROR}", "")) == NULL ||
+          (login_html = replace(login_html, "{LOGIN_ERROR}", BAD_LOGIN_MSG)) == NULL)
+      {
+        return NULL;
+      }
+    }
+    else if (err == LOGINERR_UNAME_TAKEN)
+    {
+      if ((login_html = replace(login_html, "{SIGNUP_ERROR}", UNAME_TAKEN_MSG)) == NULL ||
+          (login_html = replace(login_html, "{LOGIN_ERROR}", "")) == NULL)
+      {
+        return NULL;
+      }
+    }
+    else if (err == LOGINERR_EMPTY)
+    {
+      if ((login_html = replace(login_html, "{SIGNUP_ERROR}", EMPTY_INPUT_MSG)) == NULL ||
+          (login_html = replace(login_html, "{LOGIN_ERROR}", "")) == NULL)
+      {
+        return NULL;
+      }
+    }
+    else if (err == LOGINERR_NONE)
+    {
+      if ((login_html = replace(login_html, "{SIGNUP_ERROR}", "")) == NULL ||
+          (login_html = replace(login_html, "{LOGIN_ERROR}", "")) == NULL)
+      {
+        return NULL;
+      }
+    }
+    else
+    {
+      log_crit("get_login(): invalid login error no.");
+    }
+  }
+
+  else if (client_info != NULL && (login_html = load_file(HTML_ALREADY_LOGGED_IN)) == NULL)
+  {
+    set_error(INTERNAL);
+    return NULL;
+  }
+
+  char* main_html;
+  if ((main_html = load_file(HTML_MAIN)) == NULL)
+  {
+    free(login_html);
+    set_error(INTERNAL);
+    return NULL;
+  }
+
+  if ((main_html = replace(main_html, "{STYLE}", CSS_LOGIN)) == NULL ||
+      (main_html = replace(main_html, "{SCRIPT}", "")) == NULL ||
+      (main_html = fill_nav_login(main_html, client_info)) == NULL ||
+      (main_html = replace(main_html, "{PAGE_BODY}", login_html)) == NULL)
+  {
+    set_error(INTERNAL);
+    free(login_html);
+    return NULL;
+  }
+
+  free(login_html);
+  return main_html;
+}
+
+
+void set_error(enum get_err err)
 {
   gerr = err;
 }
 
 
-static int get_error()
+static enum get_err get_error()
 {
   enum get_err err = gerr;
   gerr = NO_GET_ERR;

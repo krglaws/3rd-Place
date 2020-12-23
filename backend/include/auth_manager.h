@@ -50,10 +50,12 @@ static const char* new_token(const char* uname);
 
 static const char* get_token(const char* uname);
 
-static void remove_token(const int index);
+void remove_token(const char* token);
 
 const struct auth_token* valid_token(const char* token);
 
 const char* login_user(const char* uname, const char* passwd);
+
+void delete_token_entry(struct token_entry* t);
 
 #endif

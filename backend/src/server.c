@@ -13,7 +13,7 @@
 #include <log_manager.h>
 #include <socket_manager.h>
 #include <sql_manager.h>
-#include <token_manager.h>
+#include <auth_manager.h>
 #include <http_post.h>
 #include <http_get.h>
 #include <http_put.h>
@@ -128,6 +128,8 @@ static void init_server(struct options* opts)
   sigaction(SIGINT, &sa, NULL);
 
   // init remaining services
+  init_auth_manager();
+
   init_sql_manager();
 
   init_socket_manager(&(opts->server_addr), opts->server_port, opts->max_clients);
@@ -142,6 +144,8 @@ void terminate_server(const int signum)
   terminate_socket_manager();
 
   terminate_sql_manager();
+
+  terminate_auth_manager();
 
   terminate_log_manager();
 
@@ -304,7 +308,7 @@ static char* get_uri(const enum request_method method, const char* request)
 }
 
 
-static const struct token_entry* get_login_token(const char* req_str)
+static const struct auth_token* get_login_token(const char* req_str)
 {
   if (req_str == NULL)
   {
@@ -333,7 +337,7 @@ static const struct token_entry* get_login_token(const char* req_str)
   memcpy(tokenstr, token_loc, TOKENLEN);
   tokenstr[TOKENLEN] = '\0';
 
-  const struct token_entry* token = valid_token(tokenstr);
+  const struct auth_token* token = valid_token(tokenstr);
 
   return token;
 }
@@ -360,7 +364,7 @@ static char* get_request_content(const char* req_str)
     return NULL;
   }
 
-  int len = (long int)req_str - (contstart - req_str);
+  int len = strlen(contstart);
   char* content = malloc(sizeof(char) * (len + 1));
   memcpy(content, contstart, len);
   content[len] = '\0';
@@ -377,7 +381,7 @@ static struct response* process_request(const int sock, char* req_str)
     return NULL; 
   }
 
-  /* fill in request struct */
+  // fill in request struct
   struct request req;
   req.content = get_request_content(req_str);
   req.method = get_request_method(req_str);
@@ -403,7 +407,7 @@ static struct response* process_request(const int sock, char* req_str)
 
   struct response* resp;
 
-  /* determine correct request handler */ 
+  // determine correct request handler
   switch (req.method)
   {
   case GET_REQ:

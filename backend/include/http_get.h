@@ -5,6 +5,8 @@
 
 /* html template paths */
 #define HTML_MAIN "templates/main/main.html"
+#define HTML_LOGIN "templates/login/login.html"
+#define HTML_ALREADY_LOGGED_IN "templates/login/already_logged_in.html"
 #define HTML_VOTE_WRAPPER "templates/main/vote_wrapper.html"
 #define HTML_USER "templates/user/user.html"
 #define HTML_USER_POST "templates/user/post.html"
@@ -20,6 +22,7 @@
 
 /* css paths */
 #define CSS_MAIN "/templates/main/main.css"
+#define CSS_LOGIN "/templates/login/login.css"
 #define CSS_USER "/templates/user/user.css"
 #define CSS_POST "/templates/post/post.css"
 #define CSS_COMMUNITY "/templates/community/community.css"
@@ -33,9 +36,22 @@ struct response* http_get(struct request* req);
 
 char* replace(char* template, const char* this, const char* withthat);
 
-char* fill_nav_login(char* template, const struct token_entry* client_info);
+char* fill_nav_login(char* template, const struct auth_token* client_info);
 
 char* load_vote_wrapper(const char* type, const char* inner_html_path);
+
+enum login_error {
+  LOGINERR_NONE,
+  LOGINERR_BAD_LOGIN,
+  LOGINERR_EMPTY,
+  LOGINERR_UNAME_TAKEN
+};
+
+#define BAD_LOGIN_MSG "<p>Bad Login</p>"
+#define UNAME_TAKEN_MSG "<p>Username Already Exists</p>"
+#define EMPTY_INPUT_MSG "<p>Empty username or password</p>"
+
+char* get_login(const struct auth_token* client_info, enum login_error err);
 
 enum vote_type {
   UPVOTE,
@@ -53,7 +69,7 @@ enum vote_type check_for_vote(const enum vote_item_type item_type, const char* v
 
 enum get_err {
   NO_GET_ERR,
-  REDIRECT, // redirect to /signup
+  REDIRECT, // redirect to /login
   INTERNAL // send 500 err
 };
 
