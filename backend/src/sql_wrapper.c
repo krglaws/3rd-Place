@@ -14,8 +14,6 @@ list** query_database_ls(char* query)
   char*** result;
   if ((result = query_database(query)) == NULL)
   {
-    log_err("query_database_ls(): query failed: '%s'", query);
-
     // NOTE: 
     // the functions that call this don't check for NULL returns,
     // too lazy to fix. Will change at some point though

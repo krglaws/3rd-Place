@@ -9,10 +9,6 @@
 #define TOKENLIFESPAN (7)
 
 
-/* list of active tokens */
-static struct token_entry* head = NULL;
-
-
 /* just a linked list to contain the
     auth tokens */
 struct token_entry

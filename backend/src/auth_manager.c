@@ -1,5 +1,6 @@
 #define _XOPEN_SOURCE
 #include <unistd.h>
+#include <crypt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -8,6 +9,10 @@
 #include <log_manager.h>
 #include <sql_wrapper.h>
 #include <auth_manager.h>
+
+
+/* list of login tokens */
+static struct token_entry* head = NULL;
 
 
 // file for reading from /dev/urandom for secure
@@ -40,6 +45,17 @@ void init_auth_manager()
 }
 
 
+static void delete_all_tokens(struct token_entry* t)
+{
+  if (t != NULL)
+  {
+    delete_all_tokens(t->next);
+  }
+
+  delete_token_entry(t);
+}
+
+
 void terminate_auth_manager()
 {
   log_info("Terminating Auth Manager...");
@@ -48,6 +64,8 @@ void terminate_auth_manager()
   {
     fclose(urandom);
   }
+
+  delete_all_tokens(head);
 }
 
 
@@ -105,7 +123,12 @@ const char* login_user(const char* uname, const char* passwd)
     return NULL;
   }
 
-  list* user_info = get_user_info(uname);
+  list* user_info;
+  if ((user_info = get_user_info(uname)) == NULL)
+  {
+    // user does not exist
+    return NULL;
+  }
 
   // grab user hash from query
   const char* hash1 = list_get(user_info, SQL_FIELD_USER_PASSWORD_HASH)->cp;
@@ -119,7 +142,6 @@ const char* login_user(const char* uname, const char* passwd)
   char* hash2;
   if ((hash2 = crypt(passwd, salt)) == NULL)
   {
-    list_delete(user_info);
     return NULL;
   }
 
@@ -181,6 +203,7 @@ const char* new_user(const char* uname, const char* passwd)
   list** result = query_database_ls(query);
   if (result != NULL)
   {
+    // should always be null, but just in case
     delete_query_result(result);
   }
 

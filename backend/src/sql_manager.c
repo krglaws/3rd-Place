@@ -102,9 +102,6 @@ void terminate_sql_manager()
 
 char*** query_database(char* query)
 {
-  MYSQL_RES* result;
-  MYSQL_ROW sqlrow;
-
   /* check for null query string */
   if (query == NULL)
   {
@@ -118,15 +115,23 @@ char*** query_database(char* query)
   }
 
   /* store result */
-  result = mysql_store_result(sqlcon);
-  if (result == NULL)
+  MYSQL_RES* result = mysql_store_result(sqlcon);
+
+  if (mysql_errno(sqlcon) != 0)
   {
     log_crit("query_database(): mysql_store_result(): %s", mysql_error(sqlcon));
+  }
+
+  if (result == NULL)
+  {
+    mysql_free_result(result);
+    return NULL;
   }
 
   int num_rows = mysql_num_rows(result);
   char*** rows = calloc(num_rows + 1, sizeof(char**));
 
+  MYSQL_ROW sqlrow;
   for (int i = 0; i < num_rows; i++)
   {
     sqlrow = mysql_fetch_row(result);
@@ -142,7 +147,9 @@ char*** query_database(char* query)
       }
       else
       {
-        rows[i][j] = NULL;
+        char* nullstr = "NULL";
+        rows[i][j] = calloc(5, sizeof(char));
+        memcpy(rows[i][j], nullstr, 5);
       }
     }
   }

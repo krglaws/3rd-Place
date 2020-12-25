@@ -105,30 +105,32 @@ static int add_key_val(treemap* map, char* token)
 static treemap* parse_args(char* str)
 {
   treemap* map = treemap_new();
+  list* ls = list_new();
 
-  char* delim = "&";
-  char* token = strtok(str, delim);
-  int len = strlen(str);
-  int currlen = 0;
+  char* delim1 = "&";
+  char* token;
 
-  while (token != NULL)
+  if ((token = strtok(str, delim1)) == NULL)
   {
-    currlen += strlen(token) + 1;
-
-    // end of args reached
-    if (currlen >= len)
-    {
-      currlen -= 1;
-    }
-
-    if (add_key_val(map, token) == -1)
-    {
-      treemap_delete(map);
-      return NULL;
-    }
-
-    token = strtok(str + len, delim);
+    list_delete(ls);
+    return map;
   }
+
+  list_add(ls, datacont_new(token, CHARP, strlen(token)));
+
+  while ((token = strtok(NULL, delim1)) != NULL)
+  {
+    list_add(ls, datacont_new(token, CHARP, strlen(token)));
+  }
+
+  int len = list_length(ls);
+
+  for (int i = 0; i < len; i++)
+  {
+    add_key_val(map, list_get(ls, i)->cp);
+  }
+
+  list_delete(ls);
 
   return map;
 }
@@ -190,9 +192,11 @@ static struct response* post_login(const char* uname, const char* passwd)
   struct response* resp = redirect("/home");
 
   // add token to response
+  char* contlenhdr = "Content-Length: 0\n";
   char token_hdr[128];
   sprintf(token_hdr, COOKIE_TEMPLATE, token);
   list_add(resp->header, datacont_new(token_hdr, CHARP, strlen(token_hdr)));
+  list_add(resp->header, datacont_new(contlenhdr, CHARP, strlen(contlenhdr)));
 
   return resp;
 }
@@ -203,11 +207,13 @@ static struct response* post_signup(const char* uname, const char* passwd)
   const char* token;
   if (uname == NULL || passwd == NULL)
   {
+    log_info("Signup failed: null username or password");
     return bad_login_signup(LOGINERR_EMPTY);
   }
 
   if ((token = new_user(uname, passwd)) == NULL)
   {
+    log_info("Signup failed: username already exists");
     return bad_login_signup(LOGINERR_UNAME_TAKEN);
   }
 
@@ -221,5 +227,3 @@ static struct response* post_signup(const char* uname, const char* passwd)
 
   return resp;
 }
-
-
