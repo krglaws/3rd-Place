@@ -316,7 +316,7 @@ static const struct auth_token* get_login_token(const char* req_str)
   }
 
   // locate cookie location within request string
-  char* find = "Cookie: login=";
+  char* find = "Cookie: logintoken=";
   char* token_loc = strstr(req_str, find);
   if (token_loc == NULL)
   {
@@ -324,7 +324,7 @@ static const struct auth_token* get_login_token(const char* req_str)
   }
   token_loc += strlen(find);
 
-  char* newline = strstr(token_loc, "\n");
+  char* newline = strstr(token_loc, "\r\n");
   int len = newline - token_loc;
 
   if (len != TOKENLEN)
