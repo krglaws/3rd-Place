@@ -9,6 +9,7 @@
 #include <auth_manager.h>
 #include <senderr.h>
 #include <common.h>
+#include <string_map.h>
 #include <http_get.h>
 #include <http_post.h>
 
@@ -23,20 +24,20 @@ struct response* http_post(struct request* req)
   struct response* resp = NULL;
 
   // parse post arguments
-  ks_treemap* args = parse_args(req->content);
+  ks_hashmap* args = string_to_map(req->content, "&", "=");
 
   // figure out which endpoint
   if (strcmp(req->uri, "./signup") == 0)
   {
-    const char* uname = get_arg(args, "uname");
-    const char* passwd = get_arg(args, "passwd");
+    const char* uname = get_map_val(args, "uname");
+    const char* passwd = get_map_val(args, "passwd");
     resp = post_signup(uname, passwd);
   }
 
   else if (strcmp(req->uri, "./login") == 0)
   {
-    const char* uname = get_arg(args, "uname");
-    const char* passwd = get_arg(args, "passwd");
+    const char* uname = get_map_val(args, "uname");
+    const char* passwd = get_map_val(args, "passwd");
     resp = post_login(uname, passwd);
   }
 
@@ -51,7 +52,7 @@ struct response* http_post(struct request* req)
     resp = redirect("/home");
   }
 
-  ks_treemap_delete(args);
+  ks_hashmap_delete(args);
 
   if (resp == NULL)
   {
@@ -59,88 +60,6 @@ struct response* http_post(struct request* req)
   }
 
   return resp;
-}
-
-
-static const char* get_arg(const ks_treemap* args, const char* argname)
-{
-  ks_datacont* key = ks_datacont_new(argname, KS_CHARP, strlen(argname));
-  ks_datacont* val = ks_treemap_get(args, key);
-
-  const char* val_str = val ? val->cp : NULL;
-
-  ks_datacont_delete(key);
-
-  return val_str;
-}
-
-
-static int add_key_val(ks_treemap* map, char* token)
-{
-  char* delim = "=";
-  ks_datacont *key, *val;
-
-  if ((token = strtok(token, delim)) == NULL ||
-      (key = ks_datacont_new(token, KS_CHARP, strlen(token))) == NULL)
-  {
-    return -1;
-  }
-
-  if ((token = strtok(NULL, delim)) == NULL ||
-      (val = ks_datacont_new(token, KS_CHARP, strlen(token))) == NULL)
-  {
-    ks_datacont_delete(key);
-    return -1;
-  }
-
-  if ((ks_treemap_add(map, key, val)) == -1)
-  {
-    ks_datacont_delete(key);
-    ks_datacont_delete(val);
-    return -1;
-  }
-
-  return 0;
-}
-
-
-static ks_treemap* parse_args(char* str)
-{
-  ks_treemap* map = ks_treemap_new();
-
-  if (str == NULL)
-  {
-    return map;
-  }
-
-  ks_list* ls = ks_list_new();
-
-  char* delim1 = "&";
-  char* token;
-
-  if ((token = strtok(str, delim1)) == NULL)
-  {
-    ks_list_delete(ls);
-    return map;
-  }
-
-  ks_list_add(ls, ks_datacont_new(token, KS_CHARP, strlen(token)));
-
-  while ((token = strtok(NULL, delim1)) != NULL)
-  {
-    ks_list_add(ls, ks_datacont_new(token, KS_CHARP, strlen(token)));
-  }
-
-  int len = ks_list_length(ls);
-
-  for (int i = 0; i < len; i++)
-  {
-    add_key_val(map, ks_list_get(ls, i)->cp);
-  }
-
-  ks_list_delete(ls);
-
-  return map;
 }
 
 

@@ -6,47 +6,11 @@
 
 #include <log_manager.h>
 #include <util.h>
+#include <string_map.h>
 #include <sql_manager.h>
 
 
 static MYSQL* sqlcon;
-
-
-static int get_config_value(const char* config, const char* key, char* outbuf, int outlen)
-{
-  int keylen = strlen(key);
-  char* keyloc = strstr(config, key);
-
-  // check if key is present in config file
-  if (keyloc == NULL)
-  {
-    log_err("get_config_value(): failed to find key '%s'", key);
-    return -1;
-  }
-
-  // get length of value
-  char* valbegin = keyloc + keylen + 1;
-  int vallen = 0;
-  while (*(valbegin + vallen) != '\n' && *(valbegin + vallen) != '\0') vallen++;
-
-  // check for value length problems
-  if (vallen == 0)
-  {
-    log_err("get_config_value(): empty value for key '%s'", key);
-    return -1;
-  }
-  if (vallen > outlen)
-  {
-    log_err("get_config_value(): value for key '%s' too long", key);
-    return -1;
-  }
-
-  // copy value into output buffer
-  memcpy(outbuf, (keyloc + keylen + 1), vallen);
-  outbuf[vallen] = '\0';
-
-  return 0;
-}
 
 
 void init_sql_manager()
@@ -60,25 +24,18 @@ void init_sql_manager()
     log_crit("init_sql_manager(): failed to load db.config");
   }
 
-  char dbhost[32];
-  char dbname[32];
-  char dbuser[32];
-  char dbpass[32];
-
-  // load configuration values into buffers
-  if (get_config_value(config, "DBHOST", dbhost, 32) ||
-      get_config_value(config, "DBNAME", dbname, 32) ||
-      get_config_value(config, "DBUSER", dbuser, 32) ||
-      get_config_value(config, "DBPASS", dbpass, 32))
-  {
-    free(config);
-    log_crit("init_sql_manager(): failed to parse db.config");
-  }
+  ks_hashmap* args = string_to_map(config, "\n", "=");
   free(config);
+
+  const char* dbhost = get_map_val(args, "DBHOST");
+  const char* dbname = get_map_val(args, "DBNAME");
+  const char* dbuser = get_map_val(args, "DBUSER");
+  const char* dbpass = get_map_val(args, "DBPASS");
 
   // initialize sql connection object
   if ((sqlcon = mysql_init(NULL)) == NULL)
   {
+    ks_hashmap_delete(args);
     log_crit("init_sql_manager(): mysql_init(): %s", mysql_error(NULL));
   }
 
@@ -86,8 +43,11 @@ void init_sql_manager()
   if (mysql_real_connect(sqlcon, dbhost, dbuser, dbpass,
       dbname, 0, NULL, 0) == NULL)
   {
+    ks_hashmap_delete(args);
     log_crit("init_sql_manager(): mysql_real_connect(): %s", mysql_error(sqlcon));
   }
+
+  ks_hashmap_delete(args);
 }
 
 
