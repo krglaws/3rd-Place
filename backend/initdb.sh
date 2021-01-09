@@ -1,3 +1,11 @@
+#!/bin/bash
+
+eval $(cat ./db.config)
+
+mysql -uroot <<WIPE_DB
+DROP DATABASE $DBNAME;
+WIPE_DB
+
 # install database schema
 ./schema.sh
 

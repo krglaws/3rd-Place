@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 
 #include <log_manager.h>
@@ -15,7 +16,7 @@ char* fill_post_info(char* template, const char* post_id, const struct auth_toke
   char* query_fmt = QUERY_POST_BY_ID;
   char query[strlen(query_fmt) + strlen(post_id) + 1];
   sprintf(query, query_fmt, post_id);
-  list** result = query_database_ls(query);
+  ks_list** result = query_database_ls(query);
 
   if (result[0] == NULL)
   {
@@ -34,16 +35,16 @@ char* fill_post_info(char* template, const char* post_id, const struct auth_toke
     log_crit("fill_post_info(): multiple posts with id %s", post_id);
   }
 
-  list* post_info = result[0];
+  ks_list* post_info = result[0];
 
   // fill in post info
-  if ((template = replace(template, "{DATE_POSTED}", list_get(post_info, SQL_FIELD_POST_DATE_POSTED)->cp)) == NULL ||
-      (template = replace(template, "{USER_NAME}", list_get(post_info, SQL_FIELD_POST_AUTHOR_NAME)->cp)) == NULL ||
-      (template = replace(template, "{USER_NAME}", list_get(post_info, SQL_FIELD_POST_AUTHOR_NAME)->cp)) == NULL ||
-      (template = replace(template, "{COMMUNITY_NAME}", list_get(post_info, SQL_FIELD_POST_COMMUNITY_NAME)->cp)) == NULL ||
-      (template = replace(template, "{COMMUNITY_NAME}", list_get(post_info, SQL_FIELD_POST_COMMUNITY_NAME)->cp)) == NULL ||
-      (template = replace(template, "{POST_TITLE}", list_get(post_info, SQL_FIELD_POST_TITLE)->cp)) == NULL ||
-      (template = replace(template, "{POST_BODY}", list_get(post_info, SQL_FIELD_POST_BODY)->cp)) == NULL)
+  if ((template = replace(template, "{DATE_POSTED}", ks_list_get(post_info, SQL_FIELD_POST_DATE_POSTED)->cp)) == NULL ||
+      (template = replace(template, "{USER_NAME}", ks_list_get(post_info, SQL_FIELD_POST_AUTHOR_NAME)->cp)) == NULL ||
+      (template = replace(template, "{USER_NAME}", ks_list_get(post_info, SQL_FIELD_POST_AUTHOR_NAME)->cp)) == NULL ||
+      (template = replace(template, "{COMMUNITY_NAME}", ks_list_get(post_info, SQL_FIELD_POST_COMMUNITY_NAME)->cp)) == NULL ||
+      (template = replace(template, "{COMMUNITY_NAME}", ks_list_get(post_info, SQL_FIELD_POST_COMMUNITY_NAME)->cp)) == NULL ||
+      (template = replace(template, "{POST_TITLE}", ks_list_get(post_info, SQL_FIELD_POST_TITLE)->cp)) == NULL ||
+      (template = replace(template, "{POST_BODY}", ks_list_get(post_info, SQL_FIELD_POST_BODY)->cp)) == NULL)
   {
     delete_query_result(result);
     return NULL;
@@ -54,16 +55,16 @@ char* fill_post_info(char* template, const char* post_id, const struct auth_toke
 } // end fill_post_info()
 
 
-char* fill_post_comment_template(char* template, const list* comment_info, const struct auth_token* client_info)
+char* fill_post_comment_template(char* template, const ks_list* comment_info, const struct auth_token* client_info)
 {
-  const char* comment_id = list_get(comment_info, SQL_FIELD_COMMENT_ID)->cp;
-  const char* comment_author = list_get(comment_info, SQL_FIELD_COMMENT_AUTHOR_NAME)->cp;
-  const char* comment_body = list_get(comment_info, SQL_FIELD_COMMENT_BODY)->cp;
-  const char* comment_points = list_get(comment_info, SQL_FIELD_COMMENT_POINTS)->cp;
-  const char* date_posted = list_get(comment_info, SQL_FIELD_COMMENT_DATE_POSTED)->cp;
-  const char* post_id = list_get(comment_info, SQL_FIELD_COMMENT_POST_ID)->cp;
-  const char* post_title = list_get(comment_info, SQL_FIELD_COMMENT_POST_TITLE)->cp;
-  const char* community_name = list_get(comment_info, SQL_FIELD_COMMENT_COMMUNITY_NAME)->cp;
+  const char* comment_id = ks_list_get(comment_info, SQL_FIELD_COMMENT_ID)->cp;
+  const char* comment_author = ks_list_get(comment_info, SQL_FIELD_COMMENT_AUTHOR_NAME)->cp;
+  const char* comment_body = ks_list_get(comment_info, SQL_FIELD_COMMENT_BODY)->cp;
+  const char* comment_points = ks_list_get(comment_info, SQL_FIELD_COMMENT_POINTS)->cp;
+  const char* date_posted = ks_list_get(comment_info, SQL_FIELD_COMMENT_DATE_POSTED)->cp;
+  const char* post_id = ks_list_get(comment_info, SQL_FIELD_COMMENT_POST_ID)->cp;
+  const char* post_title = ks_list_get(comment_info, SQL_FIELD_COMMENT_POST_TITLE)->cp;
+  const char* community_name = ks_list_get(comment_info, SQL_FIELD_COMMENT_COMMUNITY_NAME)->cp;
 
   char* upvote_css_class = "upvote_notclicked";
   char* downvote_css_class = "downvote_notclicked";
@@ -101,8 +102,8 @@ char* fill_post_comments(char* template, const char* post_id, const struct auth_
   char query[strlen(query_fmt) + strlen(post_id) + 1];
   sprintf(query, query_fmt, post_id);
 
-  // grab user comment list from database
-  list** comments = query_database_ls(query);
+  // grab user comment ks_list from database
+  ks_list** comments = query_database_ls(query);
 
   // load post comment template
   char* comment_template;
@@ -123,8 +124,8 @@ char* fill_post_comments(char* template, const char* post_id, const struct auth_
     char* comment_template_copy = malloc((comment_template_len + 1) * sizeof(char));
     memcpy(comment_template_copy, comment_template, comment_template_len + 1);
 
-    // current comment (field list)
-    list* c = comments[i];
+    // current comment (field ks_list)
+    ks_list* c = comments[i];
 
     // fill in comment template
     if ((comment_template_copy = fill_post_comment_template(comment_template_copy, c, client_info)) == NULL ||

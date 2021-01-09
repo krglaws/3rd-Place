@@ -119,14 +119,14 @@ struct response* http_get(struct request* req)
 
   // prepare response object
   struct response* resp = calloc(1, sizeof(struct response));
-  resp->header = list_new();
-  list_add(resp->header, datacont_new(STAT200, CHARP, strlen(STAT200)));
-  list_add(resp->header, datacont_new(content_type, CHARP, strlen(content_type)));
+  resp->header = ks_list_new();
+  ks_list_add(resp->header, ks_datacont_new(STAT200, KS_CHARP, strlen(STAT200)));
+  ks_list_add(resp->header, ks_datacont_new(content_type, KS_CHARP, strlen(content_type)));
  
   char contlenline[80];
   int len = sprintf(contlenline, "Content-Length: %d\n", content_length);
 
-  list_add(resp->header, datacont_new(contlenline, CHARP, len));
+  ks_list_add(resp->header, ks_datacont_new(contlenline, KS_CHARP, len));
   resp->content = content;
   resp->content_length = content_length;
 
@@ -250,12 +250,12 @@ enum vote_type check_for_vote(const enum vote_item_type item_type, const char* i
   // query database for up votes
   char upvote_query[strlen(upvote_query_fmt) + 64];
   sprintf(upvote_query, upvote_query_fmt, item_id, user_id, item_id, user_id);
-  list** upvote_query_result = query_database_ls(upvote_query);
+  ks_list** upvote_query_result = query_database_ls(upvote_query);
 
   // query database for down votes
   char downvote_query[strlen(downvote_query_fmt) + 64];
   sprintf(downvote_query, downvote_query_fmt, item_id, user_id, item_id, user_id);
-  list** downvote_query_result = query_database_ls(downvote_query);
+  ks_list** downvote_query_result = query_database_ls(downvote_query);
 
   // NOTE:
   // might remove these checks

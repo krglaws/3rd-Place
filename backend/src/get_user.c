@@ -17,7 +17,7 @@ char* fill_user_info(char* template, const char* user_name)
   char query[strlen(user_name) + strlen(query_fmt) + 1];
   sprintf(query, query_fmt, user_name);
 
-  list** result = query_database_ls(query);
+  ks_list** result = query_database_ls(query);
 
   if (result[0] == NULL)
   {
@@ -36,13 +36,13 @@ char* fill_user_info(char* template, const char* user_name)
     log_crit("fill_user_info(): multiple users with name '%s'", user_name);
   }
 
-  list* user_info = result[0];
+  ks_list* user_info = result[0];
 
-  const char* user_points = list_get(user_info, SQL_FIELD_USER_POINTS)->cp;
-  const char* user_posts = list_get(user_info, SQL_FIELD_USER_POSTS)->cp;
-  const char* user_comments = list_get(user_info, SQL_FIELD_USER_COMMENTS)->cp;
-  const char* user_date_joined = list_get(user_info, SQL_FIELD_USER_DATE_JOINED)->cp;
-  const char* user_about = list_get(user_info, SQL_FIELD_USER_ABOUT)->cp;
+  const char* user_points = ks_list_get(user_info, SQL_FIELD_USER_POINTS)->cp;
+  const char* user_posts = ks_list_get(user_info, SQL_FIELD_USER_POSTS)->cp;
+  const char* user_comments = ks_list_get(user_info, SQL_FIELD_USER_COMMENTS)->cp;
+  const char* user_date_joined = ks_list_get(user_info, SQL_FIELD_USER_DATE_JOINED)->cp;
+  const char* user_about = ks_list_get(user_info, SQL_FIELD_USER_ABOUT)->cp;
 
   // fill in user info
   if ((template = replace(template, "{USER_NAME}", user_name)) == NULL ||
@@ -61,14 +61,14 @@ char* fill_user_info(char* template, const char* user_name)
 } // end fill_user_info()
 
 
-char* fill_user_post_template(char* template, const list* post_info, const struct auth_token* client_info)
+char* fill_user_post_template(char* template, const ks_list* post_info, const struct auth_token* client_info)
 {
-  const char* post_id = list_get(post_info, SQL_FIELD_POST_ID)->cp;
-  const char* post_title = list_get(post_info, SQL_FIELD_POST_TITLE)->cp;
-  const char* post_body = list_get(post_info, SQL_FIELD_POST_BODY)->cp;
-  const char* post_points = list_get(post_info, SQL_FIELD_POST_POINTS)->cp;
-  const char* date_posted = list_get(post_info, SQL_FIELD_POST_DATE_POSTED)->cp;
-  const char* community_name = list_get(post_info, SQL_FIELD_POST_COMMUNITY_NAME)->cp;
+  const char* post_id = ks_list_get(post_info, SQL_FIELD_POST_ID)->cp;
+  const char* post_title = ks_list_get(post_info, SQL_FIELD_POST_TITLE)->cp;
+  const char* post_body = ks_list_get(post_info, SQL_FIELD_POST_BODY)->cp;
+  const char* post_points = ks_list_get(post_info, SQL_FIELD_POST_POINTS)->cp;
+  const char* date_posted = ks_list_get(post_info, SQL_FIELD_POST_DATE_POSTED)->cp;
+  const char* community_name = ks_list_get(post_info, SQL_FIELD_POST_COMMUNITY_NAME)->cp;
 
   char* upvote_css_class = "upvote_notclicked";
   char* downvote_css_class = "downvote_notclicked";
@@ -113,7 +113,7 @@ char* fill_user_posts(char* template, char* user_name, const struct auth_token* 
   char* post_query_fmt = QUERY_POSTS_BY_UNAME;
   char post_query[strlen(post_query_fmt) + strlen(user_name) + 1];
   sprintf(post_query, post_query_fmt, user_name);
-  list** posts = query_database_ls(post_query);
+  ks_list** posts = query_database_ls(post_query);
 
   // load user post template
   char* post_template;
@@ -134,8 +134,8 @@ char* fill_user_posts(char* template, char* user_name, const struct auth_token* 
     char* post_template_copy = malloc((post_template_len + 1) * sizeof(char));
     memcpy(post_template_copy, post_template, post_template_len + 1);
 
-    // current post (field list)
-    list* p = posts[i];
+    // current post (field ks_list)
+    ks_list* p = posts[i];
 
     // fill in post template
     if ((post_template_copy = fill_user_post_template(post_template_copy, p, client_info)) == NULL ||
@@ -170,15 +170,15 @@ char* fill_user_posts(char* template, char* user_name, const struct auth_token* 
 } // end fill_user_posts()
 
 
-char* fill_user_comment_template(char* template, const list* comment_info, const struct auth_token* client_info)
+char* fill_user_comment_template(char* template, const ks_list* comment_info, const struct auth_token* client_info)
 {
-  const char* comment_id = list_get(comment_info, SQL_FIELD_COMMENT_ID)->cp;
-  const char* comment_body = list_get(comment_info, SQL_FIELD_COMMENT_BODY)->cp;
-  const char* comment_points = list_get(comment_info, SQL_FIELD_COMMENT_POINTS)->cp;
-  const char* date_posted = list_get(comment_info, SQL_FIELD_COMMENT_DATE_POSTED)->cp;
-  const char* post_id = list_get(comment_info, SQL_FIELD_COMMENT_POST_ID)->cp;
-  const char* post_title = list_get(comment_info, SQL_FIELD_COMMENT_POST_TITLE)->cp;
-  const char* community_name = list_get(comment_info, SQL_FIELD_COMMENT_COMMUNITY_NAME)->cp;
+  const char* comment_id = ks_list_get(comment_info, SQL_FIELD_COMMENT_ID)->cp;
+  const char* comment_body = ks_list_get(comment_info, SQL_FIELD_COMMENT_BODY)->cp;
+  const char* comment_points = ks_list_get(comment_info, SQL_FIELD_COMMENT_POINTS)->cp;
+  const char* date_posted = ks_list_get(comment_info, SQL_FIELD_COMMENT_DATE_POSTED)->cp;
+  const char* post_id = ks_list_get(comment_info, SQL_FIELD_COMMENT_POST_ID)->cp;
+  const char* post_title = ks_list_get(comment_info, SQL_FIELD_COMMENT_POST_TITLE)->cp;
+  const char* community_name = ks_list_get(comment_info, SQL_FIELD_COMMENT_COMMUNITY_NAME)->cp;
 
   char* upvote_css_class = "upvote_notclicked";
   char* downvote_css_class = "downvote_notclicked";
@@ -225,7 +225,7 @@ char* fill_user_comments(char* template, const char* user_name, const struct aut
   char* query_fmt = QUERY_COMMENTS_BY_UNAME;
   char query[strlen(query_fmt) + strlen(user_name) + 1];
   sprintf(query, query_fmt, user_name);
-  list** comments = query_database_ls(query);
+  ks_list** comments = query_database_ls(query);
 
   // load comment template
   char* comment_template;
@@ -241,8 +241,8 @@ char* fill_user_comments(char* template, const char* user_name, const struct aut
   // iterate over each comment
   for (int i = 0; comments[i] != NULL; i++)
   {
-    // current comment (list of fields)
-    list* c = comments[i];
+    // current comment (ks_list of fields)
+    ks_list* c = comments[i];
 
     // copy comment template string instead of read it from disk every loop
     char* comment_template_copy = malloc((comment_template_len + 1) * sizeof(char));

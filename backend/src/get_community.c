@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <log_manager.h>
 #include <util.h>
@@ -15,7 +16,7 @@ char* fill_community_info(char* template, const char* community_name)
   char query[strlen(query_fmt) + strlen(community_name) + 1];
   sprintf(query, query_fmt, community_name);
 
-  list** result = query_database_ls(query);
+  ks_list** result = query_database_ls(query);
 
   if (result[0] == NULL)
   {
@@ -34,10 +35,10 @@ char* fill_community_info(char* template, const char* community_name)
     log_crit("fill_community_info(): multiple communities with name '%s'", community_name);
   }
 
-  list* community_info = result[0];
+  ks_list* community_info = result[0];
 
-  const char* community_date_created = list_get(community_info, SQL_FIELD_COMMUNITY_DATE_CREATED)->cp;
-  const char* community_about = list_get(community_info, SQL_FIELD_COMMUNITY_ABOUT)->cp;
+  const char* community_date_created = ks_list_get(community_info, SQL_FIELD_COMMUNITY_DATE_CREATED)->cp;
+  const char* community_about = ks_list_get(community_info, SQL_FIELD_COMMUNITY_ABOUT)->cp;
 
   // fill in community info
   if ((template = replace(template, "{COMMUNITY_NAME}", community_name)) == NULL ||
@@ -53,14 +54,14 @@ char* fill_community_info(char* template, const char* community_name)
 } // end fill_community_info
 
 
-char* fill_community_post_template(char* template, const list* post_info, const struct auth_token* client_info)
+char* fill_community_post_template(char* template, const ks_list* post_info, const struct auth_token* client_info)
 {
-  const char* post_id = list_get(post_info, SQL_FIELD_POST_ID)->cp;
-  const char* post_author = list_get(post_info, SQL_FIELD_POST_AUTHOR_NAME)->cp;
-  const char* post_title = list_get(post_info, SQL_FIELD_POST_TITLE)->cp;
-  const char* post_body = list_get(post_info, SQL_FIELD_POST_BODY)->cp;
-  const char* post_points = list_get(post_info, SQL_FIELD_POST_POINTS)->cp;
-  const char* date_posted = list_get(post_info, SQL_FIELD_POST_DATE_POSTED)->cp;
+  const char* post_id = ks_list_get(post_info, SQL_FIELD_POST_ID)->cp;
+  const char* post_author = ks_list_get(post_info, SQL_FIELD_POST_AUTHOR_NAME)->cp;
+  const char* post_title = ks_list_get(post_info, SQL_FIELD_POST_TITLE)->cp;
+  const char* post_body = ks_list_get(post_info, SQL_FIELD_POST_BODY)->cp;
+  const char* post_points = ks_list_get(post_info, SQL_FIELD_POST_POINTS)->cp;
+  const char* date_posted = ks_list_get(post_info, SQL_FIELD_POST_DATE_POSTED)->cp;
 
   char* upvote_css_class = "upvote_notclicked";
   char* downvote_css_class = "downvote_notclicked";
@@ -107,7 +108,7 @@ char* fill_community_posts(char* template, const char* community_name, const str
   sprintf(query, query_fmt, community_name);
 
   // grab posts belonging to this community
-  list** posts = query_database_ls(query);
+  ks_list** posts = query_database_ls(query);
 
   // load post template
   char* post_template;
@@ -128,7 +129,7 @@ char* fill_community_posts(char* template, const char* community_name, const str
     memcpy(post_template_copy, post_template, post_template_len + 1);
 
     // current post
-    list* p = posts[i];
+    ks_list* p = posts[i];
 
     if ((post_template_copy = fill_community_post_template(post_template_copy, p, client_info)) == NULL ||
         (template = replace(template, "{NEXT_ITEM}", post_template_copy)) == NULL)

@@ -1,5 +1,5 @@
-
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 #include <sql_manager.h>
 #include <kylestructs.h>
@@ -8,7 +8,7 @@
 #include <sql_wrapper.h>
 
 
-list** query_database_ls(char* query)
+ks_list** query_database_ls(char* query)
 {
   // query database
   char*** result;
@@ -17,33 +17,33 @@ list** query_database_ls(char* query)
     // NOTE: 
     // the functions that call this don't check for NULL returns,
     // too lazy to fix. Will change at some point though
-    return calloc(1, sizeof(list*));
+    return calloc(1, sizeof(ks_list*));
   }
 
   // get number of rows
   int rows = 0;
   for (; result[rows] != NULL; rows++);
 
-  list** result_ls = calloc(rows + 1, sizeof(list*));
+  ks_list** result_ls = calloc(rows + 1, sizeof(ks_list*));
 
   // for each row
   int i;
   for (i = 0; i < rows; i++)
   {
-    result_ls[i] = list_new();
+    result_ls[i] = ks_list_new();
 
     // for each column
     for (int j = 0; result[i][j] != NULL; j++)
     {
       if (result[i][j] == NULL)
       {
-        datacont* dc = datacont_new("NULL", CHARP, 4);
-        list_add(result_ls[i], dc);
+        ks_datacont* dc = ks_datacont_new("NULL", KS_CHARP, 4);
+        ks_list_add(result_ls[i], dc);
       }
       else
       {
-        datacont* dc = datacont_new(result[i][j], CHARP, strlen(result[i][j]));
-        list_add(result_ls[i], dc);
+        ks_datacont* dc = ks_datacont_new(result[i][j], KS_CHARP, strlen(result[i][j]));
+        ks_list_add(result_ls[i], dc);
       }
       free(result[i][j]);
     }
@@ -57,11 +57,11 @@ list** query_database_ls(char* query)
 }
 
 
-void delete_query_result(list** result)
+void delete_query_result(ks_list** result)
 {
   for (int i = 0; result[i] != NULL; i++)
   {
-    list_delete(result[i]);
+    ks_list_delete(result[i]);
   }
   free(result); 
 }

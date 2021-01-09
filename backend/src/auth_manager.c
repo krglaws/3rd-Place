@@ -3,6 +3,7 @@
 #include <crypt.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 #include <time.h>
 
@@ -11,7 +12,7 @@
 #include <auth_manager.h>
 
 
-/* list of login tokens */
+/* ks_list of login tokens */
 static struct token_entry* head = NULL;
 
 
@@ -86,13 +87,13 @@ static void random_salt(char* saltbuf)
 }
 
 
-static list* get_user_info(const char* uname)
+static ks_list* get_user_info(const char* uname)
 {
   char* query_fmt = QUERY_USER_BY_UNAME;
   char query[strlen(query_fmt) + strlen(uname) + 1];
   sprintf(query, query_fmt, uname);
 
-  list** result = query_database_ls(query);
+  ks_list** result = query_database_ls(query);
 
   // check if user exists
   if (result[0] == NULL)
@@ -108,7 +109,7 @@ static list* get_user_info(const char* uname)
     log_crit("get_user_info(): multiple users with name %s", uname);
   }
 
-  list* user_info = result[0];
+  ks_list* user_info = result[0];
   free(result);
 
   return user_info;
@@ -123,7 +124,7 @@ const char* login_user(const char* uname, const char* passwd)
     return NULL;
   }
 
-  list* user_info;
+  ks_list* user_info;
   if ((user_info = get_user_info(uname)) == NULL)
   {
     // user does not exist
@@ -131,7 +132,7 @@ const char* login_user(const char* uname, const char* passwd)
   }
 
   // grab user hash from query
-  const char* hash1 = list_get(user_info, SQL_FIELD_USER_PASSWORD_HASH)->cp;
+  const char* hash1 = ks_list_get(user_info, SQL_FIELD_USER_PASSWORD_HASH)->cp;
 
   char salt[3];
   salt[0] = hash1[0];
@@ -148,10 +149,10 @@ const char* login_user(const char* uname, const char* passwd)
   // compare hashes
   if (strcmp(hash1, hash2) != 0)
   {
-    list_delete(user_info);
+    ks_list_delete(user_info);
     return NULL;
   }
-  list_delete(user_info);
+  ks_list_delete(user_info);
 
   // user is valid, retrieve token if already exists,
   // else create new token and return
@@ -180,11 +181,11 @@ const char* new_user(const char* uname, const char* passwd)
   }
 
   // check if user already exists
-  list* user_info = get_user_info(uname);
+  ks_list* user_info = get_user_info(uname);
 
   if (user_info != NULL)
   {
-    list_delete(user_info);
+    ks_list_delete(user_info);
     return NULL;
   }
 
@@ -200,7 +201,7 @@ const char* new_user(const char* uname, const char* passwd)
   sprintf(query, query_fmt, uname, pwhash);
 
   // add new user to database
-  list** result = query_database_ls(query);
+  ks_list** result = query_database_ls(query);
   if (result != NULL)
   {
     // should always be null, but just in case
@@ -230,14 +231,14 @@ static void random_token(char* token_buf)
 static const char* new_token(const char* uname)
 {
   // pull user info from database
-  list* user_info = get_user_info(uname);
-  const char* user_id = list_get(user_info, SQL_FIELD_USER_ID)->cp;
+  ks_list* user_info = get_user_info(uname);
+  const char* user_id = ks_list_get(user_info, SQL_FIELD_USER_ID)->cp;
 
   // copy info into auth token
   struct auth_token* new_token = calloc(1, sizeof(struct auth_token));
   memcpy(new_token->user_id, user_id, strlen(user_id));
   memcpy(new_token->user_name, uname, strlen(uname));
-  list_delete(user_info);
+  ks_list_delete(user_info);
 
   // create new token entry
   struct token_entry* new_entry = calloc(1, sizeof(struct token_entry));
@@ -250,7 +251,7 @@ static const char* new_token(const char* uname)
     random_token(new_token->token);
   } while (valid_token(new_token->token) != NULL);
 
-  // append token entry to list
+  // append token entry to ks_list
   if (head == NULL)
   {
     head = new_entry;
@@ -314,7 +315,7 @@ void remove_token(const char* token)
 
   iter = head;
 
-  // check the rest of the list
+  // check the rest of the ks_list
   while (iter->next != NULL)
   {
     if (strcmp(iter->next->token->token, token) == 0)
@@ -358,7 +359,7 @@ const struct auth_token* valid_token(const char* token)
 }
 
 
-/* iterates over all token in list, decrements days,
+/* iterates over all token in ks_list, decrements days,
    removes if days < 1 */
 void check_tokens()
 {
@@ -390,7 +391,7 @@ void check_tokens()
 
   iter = head;
 
-  // now iterate over list with iterator behind one
+  // now iterate over ks_list with iterator behind one
   while (iter->next != NULL)
   {
     iter->next->days--;

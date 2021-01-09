@@ -1,5 +1,6 @@
 #define _XOPEN_SOURCE
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <kylestructs.h>
@@ -22,7 +23,7 @@ struct response* http_post(struct request* req)
   struct response* resp = NULL;
 
   // parse post arguments
-  treemap* args = parse_args(req->content);
+  ks_treemap* args = parse_args(req->content);
 
   // figure out which endpoint
   if (strcmp(req->uri, "./signup") == 0)
@@ -43,13 +44,14 @@ struct response* http_post(struct request* req)
   {
     if (req->client_info)
     {
+      log_info("User '%s' logged out", req->client_info->user_name);
       remove_token(req->client_info->token);
     }
 
     resp = redirect("/home");
   }
 
-  treemap_delete(args);
+  ks_treemap_delete(args);
 
   if (resp == NULL)
   {
@@ -60,41 +62,41 @@ struct response* http_post(struct request* req)
 }
 
 
-static const char* get_arg(const treemap* args, const char* argname)
+static const char* get_arg(const ks_treemap* args, const char* argname)
 {
-  datacont* key = datacont_new(argname, CHARP, strlen(argname));
-  datacont* val = treemap_get(args, key);
+  ks_datacont* key = ks_datacont_new(argname, KS_CHARP, strlen(argname));
+  ks_datacont* val = ks_treemap_get(args, key);
 
   const char* val_str = val ? val->cp : NULL;
 
-  datacont_delete(key);
+  ks_datacont_delete(key);
 
   return val_str;
 }
 
 
-static int add_key_val(treemap* map, char* token)
+static int add_key_val(ks_treemap* map, char* token)
 {
   char* delim = "=";
-  datacont *key, *val;
+  ks_datacont *key, *val;
 
   if ((token = strtok(token, delim)) == NULL ||
-      (key = datacont_new(token, CHARP, strlen(token))) == NULL)
+      (key = ks_datacont_new(token, KS_CHARP, strlen(token))) == NULL)
   {
     return -1;
   }
 
   if ((token = strtok(NULL, delim)) == NULL ||
-      (val = datacont_new(token, CHARP, strlen(token))) == NULL)
+      (val = ks_datacont_new(token, KS_CHARP, strlen(token))) == NULL)
   {
-    datacont_delete(key);
+    ks_datacont_delete(key);
     return -1;
   }
 
-  if ((treemap_add(map, key, val)) == -1)
+  if ((ks_treemap_add(map, key, val)) == -1)
   {
-    datacont_delete(key);
-    datacont_delete(val);
+    ks_datacont_delete(key);
+    ks_datacont_delete(val);
     return -1;
   }
 
@@ -102,35 +104,41 @@ static int add_key_val(treemap* map, char* token)
 }
 
 
-static treemap* parse_args(char* str)
+static ks_treemap* parse_args(char* str)
 {
-  treemap* map = treemap_new();
-  list* ls = list_new();
+  ks_treemap* map = ks_treemap_new();
+
+  if (str == NULL)
+  {
+    return map;
+  }
+
+  ks_list* ls = ks_list_new();
 
   char* delim1 = "&";
   char* token;
 
   if ((token = strtok(str, delim1)) == NULL)
   {
-    list_delete(ls);
+    ks_list_delete(ls);
     return map;
   }
 
-  list_add(ls, datacont_new(token, CHARP, strlen(token)));
+  ks_list_add(ls, ks_datacont_new(token, KS_CHARP, strlen(token)));
 
   while ((token = strtok(NULL, delim1)) != NULL)
   {
-    list_add(ls, datacont_new(token, CHARP, strlen(token)));
+    ks_list_add(ls, ks_datacont_new(token, KS_CHARP, strlen(token)));
   }
 
-  int len = list_length(ls);
+  int len = ks_list_length(ls);
 
   for (int i = 0; i < len; i++)
   {
-    add_key_val(map, list_get(ls, i)->cp);
+    add_key_val(map, ks_list_get(ls, i)->cp);
   }
 
-  list_delete(ls);
+  ks_list_delete(ls);
 
   return map;
 }
@@ -143,9 +151,9 @@ static struct response* bad_login_signup(enum login_error e)
 
   // prepare response object
   struct response* resp = calloc(1, sizeof(struct response));
-  resp->header = list_new();
-  list_add(resp->header, datacont_new(STAT200, CHARP, strlen(STAT200)));
-  list_add(resp->header, datacont_new(TEXTHTML, CHARP, strlen(TEXTHTML)));
+  resp->header = ks_list_new();
+  ks_list_add(resp->header, ks_datacont_new(STAT200, KS_CHARP, strlen(STAT200)));
+  ks_list_add(resp->header, ks_datacont_new(TEXTHTML, KS_CHARP, strlen(TEXTHTML)));
 
   // build content-length header line
   int contlen = strlen(content);
@@ -153,7 +161,7 @@ static struct response* bad_login_signup(enum login_error e)
   int len = sprintf(contlenline, "Content-Length: %d\n", contlen);
 
   // add to response object
-  list_add(resp->header, datacont_new(contlenline, CHARP, len));
+  ks_list_add(resp->header, ks_datacont_new(contlenline, KS_CHARP, len));
   resp->content = content;
   resp->content_length = contlen;
 
@@ -172,9 +180,9 @@ static struct response* redirect(const char* uri)
   int len = sprintf(redirect_hdr, REDIRECT_TEMPLATE, uri);
 
   struct response* resp = calloc(1, sizeof(struct response));
-  resp->header = list_new();
-  list_add(resp->header, datacont_new(STAT302, CHARP, strlen(STAT302)));
-  list_add(resp->header, datacont_new(redirect_hdr, CHARP, len));
+  resp->header = ks_list_new();
+  ks_list_add(resp->header, ks_datacont_new(STAT302, KS_CHARP, strlen(STAT302)));
+  ks_list_add(resp->header, ks_datacont_new(redirect_hdr, KS_CHARP, len));
 
   return resp;
 }
@@ -195,8 +203,8 @@ static struct response* post_login(const char* uname, const char* passwd)
   char* contlenhdr = "Content-Length: 0\n";
   char token_hdr[128];
   sprintf(token_hdr, COOKIE_TEMPLATE, token);
-  list_add(resp->header, datacont_new(token_hdr, CHARP, strlen(token_hdr)));
-  list_add(resp->header, datacont_new(contlenhdr, CHARP, strlen(contlenhdr)));
+  ks_list_add(resp->header, ks_datacont_new(token_hdr, KS_CHARP, strlen(token_hdr)));
+  ks_list_add(resp->header, ks_datacont_new(contlenhdr, KS_CHARP, strlen(contlenhdr)));
 
   return resp;
 }
@@ -223,7 +231,7 @@ static struct response* post_signup(const char* uname, const char* passwd)
   // add token to response
   char token_hdr[128];
   sprintf(token_hdr, COOKIE_TEMPLATE, token);
-  list_add(resp->header, datacont_new(token_hdr, CHARP, strlen(token_hdr)));
+  ks_list_add(resp->header, ks_datacont_new(token_hdr, KS_CHARP, strlen(token_hdr)));
 
   return resp;
 }

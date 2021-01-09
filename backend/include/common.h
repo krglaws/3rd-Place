@@ -35,7 +35,7 @@ struct request
 struct response
 {
   /* list of strings */
-  list* header;
+  ks_list* header;
   int content_length;
   char* content;
 };

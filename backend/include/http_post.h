@@ -13,15 +13,15 @@ struct response* http_post(struct request* req);
 
 /* used to retrieve string arguments from 
     argument map */
-static const char* get_arg(const treemap* args, const char* argname);
+static const char* get_arg(const ks_treemap* args, const char* argname);
 
 
 /* add key-value pair to argument map. used by parse_args() */
-static int add_key_val(treemap* map, char* token);
+static int add_key_val(ks_treemap* map, char* token);
 
 
 /* parses the argument list in post content body */
-static treemap* parse_args(char* str);
+static ks_treemap* parse_args(char* str);
 
 
 /* builds redirect response object */

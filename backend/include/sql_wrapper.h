@@ -89,8 +89,8 @@
 #define INSERT_NEW_POST "";
 #define INSERT_NEW_COMMUNITY "";
 
-list** query_database_ls(char* query);
+ks_list** query_database_ls(char* query);
 
-void delete_query_result(list** result);
+void delete_query_result(ks_list** result);
 
 #endif

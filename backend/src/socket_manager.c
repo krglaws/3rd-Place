@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include <errno.h>
+#include <string.h>
 #include <arpa/inet.h>
 #include <kylestructs.h>
 
@@ -8,8 +9,8 @@
 
 
 /* NOTES:
- * The sockets are currently stored in kylestructs list,
- * but they should really be stored in custom linked list
+ * The sockets are currently stored in kylestructs ks_list,
+ * but they should really be stored in custom linked ks_list
  * with a struct that holds both socket number and the
  * address associated with that socket. It will make it
  * much less annoying to retrieve the addresses of each
@@ -19,7 +20,7 @@
 
 static int server_socket = 0;
 
-static list* socket_list = NULL;
+static ks_list* socket_ks_list = NULL;
 
 static fd_set socket_set;
 
@@ -28,7 +29,7 @@ void init_socket_manager(const struct in6_addr* server_addr, const uint16_t serv
 {
   log_info("Initializing Socket Manager...");
 
-  socket_list = list_new();
+  socket_ks_list = ks_list_new();
 
   struct sockaddr_in6 addr;
   int addrlen = sizeof(addr);
@@ -78,13 +79,13 @@ void terminate_socket_manager()
     close(server_socket);
   }
 
-  int num_sockets = list_length(socket_list);
+  int num_sockets = ks_list_length(socket_ks_list);
   for (int i = 0; i < num_sockets; i++)
   {
-    close(list_get(socket_list, i)->i);
+    close(ks_list_get(socket_ks_list, i)->i);
   }
 
-  list_delete(socket_list);
+  ks_list_delete(socket_ks_list);
 }
 
 
@@ -123,19 +124,19 @@ void add_socket(int sock)
 
   log_info("Connected to %s (socket no. %d)", ipstr, sock);
 
-  list_add(socket_list, datacont_new(&sock, INT, 1));
+  ks_list_add(socket_ks_list, ks_datacont_new(&sock, KS_INT, 1));
 }
 
 
 void remove_socket(int sock)
 {
-  datacont* dc = datacont_new(&sock, INT, 1);
-  if (list_remove_by(socket_list, dc) == -1)
+  ks_datacont* dc = ks_datacont_new(&sock, KS_INT, 1);
+  if (ks_list_remove_by(socket_ks_list, dc) == -1)
   {
     log_err("remove_socket(): socket no. %d does not exist", sock);
     return;
   }
-  datacont_delete(dc);
+  ks_datacont_delete(dc);
 
   char ipstr[64];
   if (get_socket_ip(sock, ipstr, sizeof(ipstr)) == -1)
@@ -158,12 +159,12 @@ static const int reload_socket_set()
   FD_SET(server_socket, &socket_set);
 
   int max = server_socket;
-  int num_sockets = list_length(socket_list);
+  int num_sockets = ks_list_length(socket_ks_list);
 
-  // add sockets in socket list to socket set
+  // add sockets in socket ks_list to socket set
   for (int i = 0; i < num_sockets; i++)
   {
-    datacont* dc = list_get(socket_list, i);
+    ks_datacont* dc = ks_list_get(socket_ks_list, i);
     FD_SET(dc->i, &socket_set);
 
     // find maximum socket no.
@@ -179,7 +180,7 @@ static const int reload_socket_set()
 
 static const int get_active_socket()
 {
-  int num_sockets = list_length(socket_list);
+  int num_sockets = ks_list_length(socket_ks_list);
 
   // check if server socket is active
   if (FD_ISSET(server_socket, &socket_set))
@@ -187,10 +188,10 @@ static const int get_active_socket()
     return server_socket;
   }
 
-  // look for active socket in list
+  // look for active socket in ks_list
   for (int i = 0; i < num_sockets; i++)
   {
-    datacont* dc = list_get(socket_list, i);
+    ks_datacont* dc = ks_list_get(socket_ks_list, i);
     if (FD_ISSET(dc->i, &socket_set))
     {
       int sock = dc->i;

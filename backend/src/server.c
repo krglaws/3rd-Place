@@ -478,7 +478,7 @@ static int send_msg(const int sock, char* buffer, int msg_len)
 
 static void delete_response(struct response* resp)
 {
-  list_delete(resp->header);
+  ks_list_delete(resp->header);
   free(resp->content);
   free(resp);
 }
@@ -493,14 +493,14 @@ static void send_response(const int sock, struct response* resp)
   }
 
   // log first line of resp header
-  log_info("Response: %s", list_get(resp->header, 0)->cp);
+  log_info("Response: %s", ks_list_get(resp->header, 0)->cp);
 
   // send each line of header
   int total, bytes, msg_len;
-  int head_lines = list_length(resp->header);
+  int head_lines = ks_list_length(resp->header);
   for (int i = 0; i < head_lines; i++)
   {
-    datacont* line = list_get(resp->header, i);
+    ks_datacont* line = ks_list_get(resp->header, i);
     if (send_msg(sock, line->cp, line->size) == -1)
     {
       delete_response(resp);
