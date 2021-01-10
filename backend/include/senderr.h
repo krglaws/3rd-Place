@@ -37,6 +37,8 @@ enum http_errno {
 struct response* senderr(enum http_errno eno);
 
 /* sends a redirect to /login */
-struct response* login_redirect();
+//struct response* login_redirect();
+
+struct response* redirect(const char* uri);
 
 #endif

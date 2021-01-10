@@ -6,7 +6,7 @@
 
 #include <log_manager.h>
 #include <common.h>
-#include <util.h>
+#include <load_file.h>
 #include <senderr.h>
 #include <auth_manager.h>
 #include <sql_manager.h>
@@ -104,7 +104,7 @@ struct response* http_get(struct request* req)
     // redirect
     if (err == REDIRECT)
     {
-      return login_redirect();
+      return redirect("/login");
     }
 
     // check for 500 error

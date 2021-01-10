@@ -88,25 +88,6 @@ static struct response* bad_login_signup(enum login_error e)
 }
 
 
-static struct response* redirect(const char* uri)
-{
-  if (uri == NULL)
-  {
-    log_crit("redirect(): null redirect uri");
-  }
-
-  char redirect_hdr[64];
-  int len = sprintf(redirect_hdr, REDIRECT_TEMPLATE, uri);
-
-  struct response* resp = calloc(1, sizeof(struct response));
-  resp->header = ks_list_new();
-  ks_list_add(resp->header, ks_datacont_new(STAT302, KS_CHARP, strlen(STAT302)));
-  ks_list_add(resp->header, ks_datacont_new(redirect_hdr, KS_CHARP, len));
-
-  return resp;
-}
-
-
 static struct response* post_login(const char* uname, const char* passwd)
 {
   const char* token;
@@ -119,11 +100,9 @@ static struct response* post_login(const char* uname, const char* passwd)
   struct response* resp = redirect("/home");
 
   // add token to response
-  char* contlenhdr = "Content-Length: 0\n";
   char token_hdr[128];
   sprintf(token_hdr, COOKIE_TEMPLATE, token);
   ks_list_add(resp->header, ks_datacont_new(token_hdr, KS_CHARP, strlen(token_hdr)));
-  ks_list_add(resp->header, ks_datacont_new(contlenhdr, KS_CHARP, strlen(contlenhdr)));
 
   return resp;
 }

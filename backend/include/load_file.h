@@ -1,5 +1,5 @@
-#ifndef _UTIL_H_
-#define _UTIL_H_
+#ifndef _LOAD_FILE_H_
+#define _LOAD_FILE_H_
 
 char* load_file(const char* path);
 

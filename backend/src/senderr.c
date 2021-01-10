@@ -1,8 +1,10 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <kylestructs.h>
 
 #include <common.h>
+#include <log_manager.h>
 #include <auth_manager.h>
 #include <senderr.h>
 
@@ -47,6 +49,8 @@ struct response* senderr(enum http_errno eno)
     ks_list_add(resp->header, ks_datacont_new(STAT505, KS_CHARP, strlen(STAT505)));
     memcpy(resp->content, "505", 3);
     break;
+  default:
+    log_crit("senderr(): unknown error response number");
   }
 
   ks_list_add(resp->header, ks_datacont_new(contlenhdr, KS_CHARP, strlen(contlenhdr)));
@@ -55,14 +59,25 @@ struct response* senderr(enum http_errno eno)
 }
 
 
-static const char* redir_str = HTTPVERSION "Location: /login\n";
+static const char* redir_tmp = "Location: %s\n";
+static const char* contlen0 = "Content-Length: 0\n";
 
-struct response* login_redirect()
+struct response* redirect(const char* uri)
 {
+  if (uri == NULL)
+  {
+    log_crit("redirect(): null redirect uri");
+  }
+
+  char redir_str[64];
+  sprintf(redir_str, redir_tmp, uri);
+
   // create response object
   struct response* resp = calloc(1, sizeof(struct response));
   resp->header = ks_list_new();
+  ks_list_add(resp->header, ks_datacont_new(STAT302, KS_CHARP, strlen(STAT302)));
   ks_list_add(resp->header, ks_datacont_new(redir_str, KS_CHARP, strlen(redir_str)));
+  ks_list_add(resp->header, ks_datacont_new(contlen0, KS_CHARP, strlen(contlen0)));
 
   return resp;
 }

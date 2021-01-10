@@ -1,11 +1,10 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 
 #include <log_manager.h>
-#include <util.h>
+#include <load_file.h>
 
 
 // load a file into a NULL terminated string

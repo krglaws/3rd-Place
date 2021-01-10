@@ -7,6 +7,12 @@
 ks_hashmap* string_to_map(char* str, const char* delim1, const char* delim2)
 {
   ks_hashmap* map = ks_hashmap_new(KS_CHARP, 8);
+
+  if (str == NULL)
+  {
+    return map;
+  }
+
   ks_list* line_list = ks_list_new();
 
   char* token;

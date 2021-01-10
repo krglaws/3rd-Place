@@ -3,7 +3,6 @@
 
 #include <common.h>
 
-#define REDIRECT_TEMPLATE "Location: %s\n"
 #define COOKIE_TEMPLATE "Set-Cookie: logintoken=%s;Expires=Wed, 1 Jan 2121 00:00:00 GMT\n"
 
 
@@ -12,7 +11,7 @@ struct response* http_post(struct request* req);
 
 
 /* builds redirect response object */
-static struct response* redirect(const char* uri);
+//static struct response* redirect(const char* uri);
 
 
 /* attempts login, returns response object containing result */

@@ -5,7 +5,7 @@
 #include <kylestructs.h>
 
 #include <log_manager.h>
-#include <util.h>
+#include <load_file.h>
 #include <string_map.h>
 #include <sql_manager.h>
 
@@ -100,7 +100,7 @@ ks_list* query_database(const char* query)
     {
       if (sqlrow[j] == NULL)
       {
-        ks_list_add(row, ks_datacont_new("", KS_CHARP, 0));
+        ks_list_add(row, ks_datacont_new("", KS_CHARP, 1));
       }
       else
       {
