@@ -5,7 +5,7 @@
 #include <log_manager.h>
 #include <util.h>
 #include <auth_manager.h>
-#include <sql_wrapper.h>
+#include <sql_manager.h>
 #include <http_get.h>
 #include <get_post.h>
 
@@ -16,26 +16,29 @@ char* fill_post_info(char* template, const char* post_id, const struct auth_toke
   char* query_fmt = QUERY_POST_BY_ID;
   char query[strlen(query_fmt) + strlen(post_id) + 1];
   sprintf(query, query_fmt, post_id);
-  ks_list** result = query_database_ls(query);
+  ks_list* result = query_database(query);
 
-  if (result[0] == NULL)
+  ks_datacont* row0 = ks_list_get(result, 0);
+  ks_datacont* row1 = ks_list_get(result, 1);
+
+  if (row0 == NULL)
   {
     // post not found
     free(template);
-    delete_query_result(result);
+    ks_list_delete(result);
     return NULL;
   }
 
   // NOTE:
   // might remove this check
-  if (result[1] != NULL)
+  if (row1 != NULL)
   {
     free(template);
-    delete_query_result(result);
+    ks_list_delete(result);
     log_crit("fill_post_info(): multiple posts with id %s", post_id);
   }
 
-  ks_list* post_info = result[0];
+  ks_list* post_info = row0->ls;
 
   // fill in post info
   if ((template = replace(template, "{DATE_POSTED}", ks_list_get(post_info, SQL_FIELD_POST_DATE_POSTED)->cp)) == NULL ||
@@ -46,11 +49,11 @@ char* fill_post_info(char* template, const char* post_id, const struct auth_toke
       (template = replace(template, "{POST_TITLE}", ks_list_get(post_info, SQL_FIELD_POST_TITLE)->cp)) == NULL ||
       (template = replace(template, "{POST_BODY}", ks_list_get(post_info, SQL_FIELD_POST_BODY)->cp)) == NULL)
   {
-    delete_query_result(result);
+    ks_list_delete(result);
     return NULL;
   }
 
-  delete_query_result(result);
+  ks_list_delete(result);
   return template;
 } // end fill_post_info()
 
@@ -103,14 +106,14 @@ char* fill_post_comments(char* template, const char* post_id, const struct auth_
   sprintf(query, query_fmt, post_id);
 
   // grab user comment ks_list from database
-  ks_list** comments = query_database_ls(query);
+  ks_list* comments = query_database(query);
 
   // load post comment template
   char* comment_template;
   if ((comment_template = load_vote_wrapper("comment", HTML_POST_COMMENT)) == NULL)
   {
     // failed to load template
-    delete_query_result(comments);
+    ks_list_delete(comments);
     free(template);
     return NULL;
   }
@@ -118,14 +121,15 @@ char* fill_post_comments(char* template, const char* post_id, const struct auth_
   int comment_template_len = strlen(comment_template);
 
   // iterate over each comment
-  for (int i = 0; comments[i] != NULL; i++)
+  int num_comments = ks_list_length(comments);
+  for (int i = 0; i < num_comments; i++)
   {
     // copy comment string instead of read it from disk every loop
     char* comment_template_copy = malloc((comment_template_len + 1) * sizeof(char));
     memcpy(comment_template_copy, comment_template, comment_template_len + 1);
 
     // current comment (field ks_list)
-    ks_list* c = comments[i];
+    ks_list* c = ks_list_get(comments, i)->ls;
 
     // fill in comment template
     if ((comment_template_copy = fill_post_comment_template(comment_template_copy, c, client_info)) == NULL ||
@@ -153,7 +157,7 @@ char* fill_post_comments(char* template, const char* post_id, const struct auth_
   }
 
   // cleanup
-  delete_query_result(comments);
+  ks_list_delete(comments);
   free(comment_template);
 
   return template;

@@ -1,8 +1,8 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <mysql.h>
+#include <kylestructs.h>
 
 #include <log_manager.h>
 #include <util.h>
@@ -60,7 +60,7 @@ void terminate_sql_manager()
 }
 
 
-char*** query_database(char* query)
+ks_list* query_database(const char* query)
 {
   /* check for null query string */
   if (query == NULL)
@@ -84,38 +84,34 @@ char*** query_database(char* query)
 
   if (result == NULL)
   {
-    mysql_free_result(result);
     return NULL;
   }
 
+  ks_list* rows = ks_list_new();
   int num_rows = mysql_num_rows(result);
-  char*** rows = calloc(num_rows + 1, sizeof(char**));
+  int num_fields = mysql_num_fields(result);
 
-  MYSQL_ROW sqlrow;
   for (int i = 0; i < num_rows; i++)
   {
-    sqlrow = mysql_fetch_row(result);
-    int num_fields = mysql_num_fields(result);
-    rows[i] = calloc(num_fields + 1, sizeof(char*));
+    ks_list* row = ks_list_new();
+    MYSQL_ROW sqlrow = mysql_fetch_row(result);
+
     for (int j = 0; j < num_fields; j++)
     {
-      if (sqlrow[j])
+      if (sqlrow[j] == NULL)
       {
-        int fieldlen = strlen(sqlrow[j]);
-        rows[i][j] = calloc((fieldlen + 1), sizeof(char));
-        memcpy(rows[i][j], sqlrow[j], fieldlen);
+        ks_list_add(row, ks_datacont_new("", KS_CHARP, 0));
       }
       else
       {
-        char* nullstr = "NULL";
-        rows[i][j] = calloc(5, sizeof(char));
-        memcpy(rows[i][j], nullstr, 5);
+        ks_list_add(row, ks_datacont_new(sqlrow[j], KS_CHARP, strlen(sqlrow[j])));
       }
     }
+
+    ks_list_add(rows, ks_datacont_new(row, KS_LIST, num_fields));
   }
 
   mysql_free_result(result);
 
   return rows;
 }
-

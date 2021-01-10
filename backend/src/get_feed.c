@@ -2,7 +2,7 @@
 
 #include <log_manager.h>
 #include <util.h>
-#include <sql_wrapper.h>
+#include <sql_manager.h>
 #include <http_get.h>
 #include <get_feed.h>
 

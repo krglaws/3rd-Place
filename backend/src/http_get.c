@@ -9,7 +9,7 @@
 #include <util.h>
 #include <senderr.h>
 #include <auth_manager.h>
-#include <sql_wrapper.h>
+#include <sql_manager.h>
 #include <get_user.h>
 #include <get_post.h>
 #include <get_community.h>
@@ -250,36 +250,40 @@ enum vote_type check_for_vote(const enum vote_item_type item_type, const char* i
   // query database for up votes
   char upvote_query[strlen(upvote_query_fmt) + 64];
   sprintf(upvote_query, upvote_query_fmt, item_id, user_id, item_id, user_id);
-  ks_list** upvote_query_result = query_database_ls(upvote_query);
+  ks_list* upvote_query_result = query_database(upvote_query);
+
+  ks_datacont* uv0 = ks_list_get(upvote_query_result, 0);
+  ks_datacont* uv1 = ks_list_get(upvote_query_result, 1);
 
   // query database for down votes
   char downvote_query[strlen(downvote_query_fmt) + 64];
   sprintf(downvote_query, downvote_query_fmt, item_id, user_id, item_id, user_id);
-  ks_list** downvote_query_result = query_database_ls(downvote_query);
+  ks_list* downvote_query_result = query_database(downvote_query);
+
+  ks_datacont* dv0 = ks_list_get(downvote_query_result, 0);
+  ks_datacont* dv1 = ks_list_get(downvote_query_result, 1);
 
   // NOTE:
   // might remove these checks
-  if (upvote_query_result[0] && downvote_query_result[0])
+  if (uv0 != NULL && dv0 != NULL)
   {
     log_crit("check_for_vote(): downvote and upvote present for same %s_id=%s user_id=%s", item_type==POST_VOTE?"post":"comment", item_id, user_id);
   }
-  if (upvote_query_result[0] && upvote_query_result[1] != NULL)
+  if (uv0 != NULL && uv1 != NULL)
   {
     log_crit("check_for_vote(): multiple upvotes present for same %s_id=%s user_id=%s", item_type==POST_VOTE?"post":"comment", item_id, user_id);
   }
-  if (downvote_query_result[0] && downvote_query_result[1] != NULL)
+  if (dv0 != NULL && dv1 != NULL)
   {
     log_crit("check_for_vote(): multiple downvotes present for same %s_id=%s user_id=%s", item_type==POST_VOTE?"post":"comment", item_id, user_id);
   }
 
   // determine vote type
-  enum vote_type result = upvote_query_result[0] ? UPVOTE : (downvote_query_result[0] ? DOWNVOTE : NOVOTE);
+  enum vote_type result = uv0 ? UPVOTE : (dv0 ? DOWNVOTE : NOVOTE);
 
   // cleanup query results
-  free(upvote_query_result[0]);
-  free(downvote_query_result[0]);
-  free(upvote_query_result);
-  free(downvote_query_result);
+  ks_list_delete(upvote_query_result);
+  ks_list_delete(downvote_query_result);
 
   return result;
 } // end check_for_vote()

@@ -6,7 +6,7 @@
 #include <auth_manager.h>
 #include <util.h>
 #include <http_get.h>
-#include <sql_wrapper.h>
+#include <sql_manager.h>
 #include <get_user.h>
 
 
@@ -17,26 +17,29 @@ char* fill_user_info(char* template, const char* user_name)
   char query[strlen(user_name) + strlen(query_fmt) + 1];
   sprintf(query, query_fmt, user_name);
 
-  ks_list** result = query_database_ls(query);
+  ks_list* result = query_database(query);
 
-  if (result[0] == NULL)
+  ks_datacont* row0 = ks_list_get(result, 0);
+  ks_datacont* row1 = ks_list_get(result, 1);
+
+  if (row0 == NULL)
   {
     // user not found
     free(template);
-    delete_query_result(result);
+    ks_list_delete(result);
     return NULL;
   }
 
   // NOTE:
   // might remove this check
-  if (result[1] != NULL)
+  if (row1 != NULL)
   {
     free(template);
-    delete_query_result(result);
+    ks_list_delete(result);
     log_crit("fill_user_info(): multiple users with name '%s'", user_name);
   }
 
-  ks_list* user_info = result[0];
+  ks_list* user_info = row0->ls;
 
   const char* user_points = ks_list_get(user_info, SQL_FIELD_USER_POINTS)->cp;
   const char* user_posts = ks_list_get(user_info, SQL_FIELD_USER_POSTS)->cp;
@@ -52,11 +55,11 @@ char* fill_user_info(char* template, const char* user_name)
       (template = replace(template, "{USER_BDAY}", user_date_joined)) == NULL ||
       (template = replace(template, "{USER_ABOUT}", user_about)) == NULL)
   {
-    delete_query_result(result);
+    ks_list_delete(result);
     return NULL;
   }
 
-  delete_query_result(result);
+  ks_list_delete(result);
   return template;
 } // end fill_user_info()
 
@@ -113,14 +116,14 @@ char* fill_user_posts(char* template, char* user_name, const struct auth_token* 
   char* post_query_fmt = QUERY_POSTS_BY_UNAME;
   char post_query[strlen(post_query_fmt) + strlen(user_name) + 1];
   sprintf(post_query, post_query_fmt, user_name);
-  ks_list** posts = query_database_ls(post_query);
+  ks_list* posts = query_database(post_query);
 
   // load user post template
   char* post_template;
   if ((post_template = load_vote_wrapper("post", HTML_USER_POST)) == NULL)
   {
     // failed to load template
-    delete_query_result(posts);
+    ks_list_delete(posts);
     free(template);
     return NULL;
   }
@@ -128,14 +131,15 @@ char* fill_user_posts(char* template, char* user_name, const struct auth_token* 
   int post_template_len = strlen(post_template);
 
   // iterate through each post
-  for (int i = 0; posts[i] != NULL; i++)
+  int num_posts = ks_list_length(posts);
+  for (int i = 0; i < num_posts; i++)
   {
     // copy post template string instead of read it from disk every loop
     char* post_template_copy = malloc((post_template_len + 1) * sizeof(char));
     memcpy(post_template_copy, post_template, post_template_len + 1);
 
     // current post (field ks_list)
-    ks_list* p = posts[i];
+    ks_list* p = ks_list_get(posts, i)->ls;
 
     // fill in post template
     if ((post_template_copy = fill_user_post_template(post_template_copy, p, client_info)) == NULL ||
@@ -163,7 +167,7 @@ char* fill_user_posts(char* template, char* user_name, const struct auth_token* 
   }
 
   // cleanup
-  delete_query_result(posts);
+  ks_list_delete(posts);
   free(post_template);
 
   return template;
@@ -225,13 +229,13 @@ char* fill_user_comments(char* template, const char* user_name, const struct aut
   char* query_fmt = QUERY_COMMENTS_BY_UNAME;
   char query[strlen(query_fmt) + strlen(user_name) + 1];
   sprintf(query, query_fmt, user_name);
-  ks_list** comments = query_database_ls(query);
+  ks_list* comments = query_database(query);
 
   // load comment template
   char* comment_template;
   if ((comment_template = load_vote_wrapper("comment", HTML_USER_COMMENT)) == NULL)
   {
-    delete_query_result(comments);
+    ks_list_delete(comments);
     free(template);
     return NULL;
   }
@@ -239,10 +243,11 @@ char* fill_user_comments(char* template, const char* user_name, const struct aut
   int comment_template_len = strlen(comment_template);
 
   // iterate over each comment
-  for (int i = 0; comments[i] != NULL; i++)
+  int num_comments = ks_list_length(comments);
+  for (int i = 0; i < num_comments; i++)
   {
     // current comment (ks_list of fields)
-    ks_list* c = comments[i];
+    ks_list* c = ks_list_get(comments, i)->ls;
 
     // copy comment template string instead of read it from disk every loop
     char* comment_template_copy = malloc((comment_template_len + 1) * sizeof(char));
@@ -274,7 +279,7 @@ char* fill_user_comments(char* template, const char* user_name, const struct aut
   }
 
   // cleanup
-  delete_query_result(comments);
+  ks_list_delete(comments);
   free(comment_template);
 
   return template;

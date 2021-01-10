@@ -8,7 +8,7 @@
 #include <time.h>
 
 #include <log_manager.h>
-#include <sql_wrapper.h>
+#include <sql_manager.h>
 #include <auth_manager.h>
 
 
@@ -93,24 +93,31 @@ static ks_list* get_user_info(const char* uname)
   char query[strlen(query_fmt) + strlen(uname) + 1];
   sprintf(query, query_fmt, uname);
 
-  ks_list** result = query_database_ls(query);
+  ks_list* result = query_database(query);
+
+  ks_datacont* row0 = ks_list_get(result, 0);
+  ks_datacont* row1 = ks_list_get(result, 1);
 
   // check if user exists
-  if (result[0] == NULL)
+  if (row0 == NULL)
   {
-    delete_query_result(result);
+    ks_list_delete(result);
     return NULL;
   }
 
   // NOTE:
   // might remove this check
-  if (result[1] != NULL)
+  if (row1 != NULL)
   {
     log_crit("get_user_info(): multiple users with name %s", uname);
   }
 
-  ks_list* user_info = result[0];
-  free(result);
+  ks_list* user_info = row0->ls;
+
+  // remove reference to user_info so that
+  // ks_list_delete() doesn't delete it.
+  row0->ls = NULL;
+  ks_list_delete(result);
 
   return user_info;
 }
@@ -201,11 +208,11 @@ const char* new_user(const char* uname, const char* passwd)
   sprintf(query, query_fmt, uname, pwhash);
 
   // add new user to database
-  ks_list** result = query_database_ls(query);
+  ks_list* result = query_database(query);
   if (result != NULL)
   {
     // should always be null, but just in case
-    delete_query_result(result);
+    ks_list_delete(result);
   }
 
   const char* token;

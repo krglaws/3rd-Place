@@ -4,7 +4,7 @@
 
 #include <log_manager.h>
 #include <util.h>
-#include <sql_wrapper.h>
+#include <sql_manager.h>
 #include <http_get.h>
 #include <get_community.h>
 
@@ -16,26 +16,28 @@ char* fill_community_info(char* template, const char* community_name)
   char query[strlen(query_fmt) + strlen(community_name) + 1];
   sprintf(query, query_fmt, community_name);
 
-  ks_list** result = query_database_ls(query);
+  ks_list* result = query_database(query);
+  ks_datacont* row0 = ks_list_get(result, 0);
+  ks_datacont* row1 = ks_list_get(result, 1);
 
-  if (result[0] == NULL)
+  if (row0 == NULL)
   {
     // community not found
     free(template);
-    delete_query_result(result);
+    ks_list_delete(result);
     return NULL;
   }
 
   // NOTE:
   // might remove this check at some point
-  if (result[1] != NULL)
+  if (row1 != NULL)
   {
     free(template);
-    delete_query_result(result);
+    ks_list_delete(result);
     log_crit("fill_community_info(): multiple communities with name '%s'", community_name);
   }
 
-  ks_list* community_info = result[0];
+  ks_list* community_info = row0->ls;
 
   const char* community_date_created = ks_list_get(community_info, SQL_FIELD_COMMUNITY_DATE_CREATED)->cp;
   const char* community_about = ks_list_get(community_info, SQL_FIELD_COMMUNITY_ABOUT)->cp;
@@ -45,11 +47,11 @@ char* fill_community_info(char* template, const char* community_name)
       (template = replace(template, "{DATE_CREATED}", community_date_created)) == NULL ||
       (template = replace(template, "{COMMUNITY_ABOUT}", community_about)) == NULL)
   {
-    delete_query_result(result);
+    ks_list_delete(result);
     return NULL;
   }
 
-  delete_query_result(result);
+  ks_list_delete(result);
   return template;
 } // end fill_community_info
 
@@ -108,13 +110,13 @@ char* fill_community_posts(char* template, const char* community_name, const str
   sprintf(query, query_fmt, community_name);
 
   // grab posts belonging to this community
-  ks_list** posts = query_database_ls(query);
+  ks_list* posts = query_database(query);
 
   // load post template
   char* post_template;
   if ((post_template = load_vote_wrapper("post", HTML_COMMUNITY_POST)) == NULL)
   {
-    delete_query_result(posts);
+    ks_list_delete(posts);
     free(template);
     return NULL;
   }
@@ -122,14 +124,15 @@ char* fill_community_posts(char* template, const char* community_name, const str
   int post_template_len = strlen(post_template);
 
   // iterate over each post
-  for (int i = 0; posts[i] != NULL; i++)
+  int num_posts = ks_list_length(posts);
+  for (int i = 0; i < num_posts; i++)
   {
     // copy template string instead of read it from disk every loop
     char* post_template_copy = malloc((post_template_len + 1) * sizeof(char));
     memcpy(post_template_copy, post_template, post_template_len + 1);
 
     // current post
-    ks_list* p = posts[i];
+    ks_list* p = ks_list_get(posts, i)->ls;
 
     if ((post_template_copy = fill_community_post_template(post_template_copy, p, client_info)) == NULL ||
         (template = replace(template, "{NEXT_ITEM}", post_template_copy)) == NULL)
@@ -156,7 +159,7 @@ char* fill_community_posts(char* template, const char* community_name, const str
   }
 
   // cleanup
-  delete_query_result(posts);
+  ks_list_delete(posts);
   free(post_template);
 
   // remove trailing template string
