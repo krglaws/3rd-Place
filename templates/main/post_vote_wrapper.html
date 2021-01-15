@@ -1,22 +1,20 @@
 <div class="vote-content-wrapper">
   <div class="vote-wrapper">
     <div class="arrow-wrapper">
-      <div class="arrow up {UPVOTE_CLICKED}" onclick="toggleVote(this, '{ITEM_TYPE}', '{ITEM_ID}')">
+      <div class="arrow up <<UPVOTE_CLICKED>>" onclick="toggleVote(this, 'post', '<<POST_ID>>')">
       </div>
     </div>
     <div class="score-wrapper">
       <div class="score">
-        {ITEM_POINTS}
+        <<POST_POINTS>>
       </div>
     </div>
     <div class="arrow-wrapper">
-      <div class="arrow down {DOWNVOTE_CLICKED}" onclick="toggleVote(this, '{ITEM_TYPE}', '{ITEM_ID}')">
+      <div class="arrow down <<DOWNVOTE_CLICKED>>" onclick="toggleVote(this, 'post', '<<POST_ID>>')">
       </div>
     </div>
   </div>
 
-  {CURRENT_ITEM}
+  <<POST>>
 
 </div>
-
-{NEXT_ITEM}

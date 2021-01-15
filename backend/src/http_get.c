@@ -5,11 +5,13 @@
 #include <kylestructs.h>
 
 #include <log_manager.h>
+#include <auth_manager.h>
+#include <sql_manager.h>
+#include <templating.h>
+#include <string_map.h>
 #include <common.h>
 #include <load_file.h>
 #include <senderr.h>
-#include <auth_manager.h>
-#include <sql_manager.h>
 #include <get_user.h>
 #include <get_post.h>
 #include <get_community.h>
@@ -134,131 +136,47 @@ struct response* http_get(struct request* req)
 } // end http_get()
 
 
-char* replace(char* template, const char* this, const char* withthat)
-{
-  char* location;
-
-  // check if 'this' is in template
-  if ((location = strstr(template, this)) == NULL)
-  {
-    // set error flag
-    set_error(INTERNAL);
-    log_err("replace(): no match for '%s' found in template", this);
-    log_err(template);
-    free(template);
-    return NULL;
-  }
-
-  // figure out sizes
-  int templen = strlen(template);
-  int thislen = strlen(this);
-  int withlen = strlen(withthat);
-  int outputsize = (templen - thislen) + withlen + 1;
-
-  // create output buffer
-  char* output = malloc(outputsize);
-  output[outputsize - 1] = '\0';
-
-  // do the replacement
-  int dist = (location - template); 
-  memcpy(output, template, dist);
-  memcpy(output + dist, withthat, withlen);
-  memcpy(output + dist + withlen, template + dist + thislen, strlen(template + dist + thislen));
-
-  free(template);
-
-  return output;
-} // end replace()
-
-
-char* fill_nav_login(char* template, const struct auth_token* client_info)
+void add_nav_info(ks_hashmap* page_data, const struct auth_token* client_info)
 {
   char user_link[64];
 
   if (client_info != NULL)
   {
     sprintf(user_link, "/u/%s", client_info->user_name);
-    if ((template = replace(template, "{USER_LINK}", user_link)) == NULL ||
-        (template = replace(template, "{USER_NAME}", client_info->user_name)) == NULL)
-    {
-      return NULL;
-    }
+    add_map_value_str(page_data, CLIENT_LINK_KEY, user_link);
+    add_map_value_str(page_data, CLIENT_NAME_KEY, client_info->user_name);
   }
 
   else
   {
-    if ((template = replace(template, "{USER_LINK}", "/login")) == NULL ||
-        (template = replace(template, "{USER_NAME}", "Login")) == NULL)
-    {
-      return NULL;
-    }
+    add_map_value_str(page_data, CLIENT_LINK_KEY, "/login");
+    add_map_value_str(page_data, CLIENT_NAME_KEY, "Login");
   }
-
-  return template;
-} // end fill_nav_login()
-
-
-char* load_vote_wrapper(const char* type, const char* inner_html_path)
-{
-  // load vote wrapper file
-  char* vote_wrapper;
-  if ((vote_wrapper = load_file(HTML_VOTE_WRAPPER)) == NULL)
-  {
-    return NULL;
-  }
-
-  // load template file
-  char* inner_html;
-  if ((inner_html = load_file(inner_html_path)) == NULL)
-  {
-    free(vote_wrapper);
-    return NULL;
-  }
-
-  if ((vote_wrapper = replace(vote_wrapper, "{CURRENT_ITEM}", inner_html)) == NULL ||
-      (vote_wrapper = replace(vote_wrapper, "{ITEM_TYPE}", type)) == NULL ||
-      (vote_wrapper = replace(vote_wrapper, "{ITEM_TYPE}", type)) == NULL)
-  {
-    free(inner_html);
-    return NULL;
-  }
-
-  free(inner_html);
-  return vote_wrapper;
-} // end load_vote_wrapper()
+}
 
 
 enum vote_type check_for_vote(const enum vote_item_type item_type, const char* item_id, const char* user_id)
 {
-  char *upvote_query_fmt, *downvote_query_fmt;
+  ks_list* upvote_query_result;
+  ks_list* downvote_query_result;
 
   // are we looking for post votes or comment votes?
   if (item_type == POST_VOTE)
   {
-    upvote_query_fmt = QUERY_POST_UPVOTE_BY_POSTID_USERID;
-    downvote_query_fmt = QUERY_POST_DOWNVOTE_BY_POSTID_USERID;
+    upvote_query_result = query_post_upvotes_by_post_id_user_id(item_id, user_id);
+    downvote_query_result = query_post_downvotes_by_post_id_user_id(item_id, user_id);
   }
   else if (item_type == COMMENT_VOTE)
   {
-    upvote_query_fmt = QUERY_COMMENT_UPVOTE_BY_COMMENTID_USERID;
-    downvote_query_fmt = QUERY_COMMENT_DOWNVOTE_BY_COMMENTID_USERID;
+    upvote_query_result = query_comment_upvotes_by_post_id_user_id(item_id, user_id);
+    downvote_query_result = query_comment_downvotes_by_post_id_user_id(item_id, user_id);
   }
   else {
     log_crit("check_for_vote(): invalid item_type argument");
   }
 
-  // query database for up votes
-  char upvote_query[strlen(upvote_query_fmt) + 64];
-  sprintf(upvote_query, upvote_query_fmt, item_id, user_id, item_id, user_id);
-  ks_list* upvote_query_result = query_database(upvote_query);
-
   ks_datacont* uv0 = ks_list_get(upvote_query_result, 0);
   ks_datacont* uv1 = ks_list_get(upvote_query_result, 1);
-
-  // query database for down votes
-  char downvote_query[strlen(downvote_query_fmt) + 64];
-  sprintf(downvote_query, downvote_query_fmt, item_id, user_id, item_id, user_id);
-  ks_list* downvote_query_result = query_database(downvote_query);
 
   ks_datacont* dv0 = ks_list_get(downvote_query_result, 0);
   ks_datacont* dv1 = ks_list_get(downvote_query_result, 1);
@@ -291,81 +209,55 @@ enum vote_type check_for_vote(const enum vote_item_type item_type, const char* i
 
 char* get_login(const struct auth_token* client_info, enum login_error err)
 {
+  ks_hashmap* page_content = ks_hashmap_new(KS_CHARP, 8);
+
   // only get actual login html if user is not logged in yet
-  char* login_html;
   if (client_info == NULL)
   {
-    if ((login_html = load_file(HTML_LOGIN)) == NULL)
-    {
-      set_error(INTERNAL);
-      return NULL;
-    }
+    add_map_value_str(page_content, TEMPLATE_PATH_KEY, HTML_LOGIN);
 
     // check for login/signup error
     if (err == LOGINERR_BAD_LOGIN)
     {
-      if ((login_html = replace(login_html, "{SIGNUP_ERROR}", "")) == NULL ||
-          (login_html = replace(login_html, "{LOGIN_ERROR}", BAD_LOGIN_MSG)) == NULL)
-      {
-        return NULL;
-      }
+      add_map_value_str(page_content, SIGNUP_ERROR_KEY, " ");
+      add_map_value_str(page_content, LOGIN_ERROR_KEY, BAD_LOGIN_MSG);
     }
     else if (err == LOGINERR_UNAME_TAKEN)
     {
-      if ((login_html = replace(login_html, "{SIGNUP_ERROR}", UNAME_TAKEN_MSG)) == NULL ||
-          (login_html = replace(login_html, "{LOGIN_ERROR}", "")) == NULL)
-      {
-        return NULL;
-      }
+      add_map_value_str(page_content, SIGNUP_ERROR_KEY, UNAME_TAKEN_MSG);
+      add_map_value_str(page_content, LOGIN_ERROR_KEY, " ");
     }
     else if (err == LOGINERR_EMPTY)
     {
-      if ((login_html = replace(login_html, "{SIGNUP_ERROR}", EMPTY_INPUT_MSG)) == NULL ||
-          (login_html = replace(login_html, "{LOGIN_ERROR}", "")) == NULL)
-      {
-        return NULL;
-      }
+      add_map_value_str(page_content, SIGNUP_ERROR_KEY, EMPTY_INPUT_MSG);
+      add_map_value_str(page_content, LOGIN_ERROR_KEY, " ");
     }
     else if (err == LOGINERR_NONE)
     {
-      if ((login_html = replace(login_html, "{SIGNUP_ERROR}", "")) == NULL ||
-          (login_html = replace(login_html, "{LOGIN_ERROR}", "")) == NULL)
-      {
-        return NULL;
-      }
+      add_map_value_str(page_content, SIGNUP_ERROR_KEY, " ");
+      add_map_value_str(page_content, LOGIN_ERROR_KEY, " ");
     }
     else
     {
       log_crit("get_login(): invalid login error no.");
     }
   }
-
-  else if (client_info != NULL && (login_html = load_file(HTML_ALREADY_LOGGED_IN)) == NULL)
+  else
   {
-    set_error(INTERNAL);
-    return NULL;
+    add_map_value_str(page_content, TEMPLATE_PATH_KEY, HTML_ALREADY_LOGGED_IN);
   }
 
-  char* main_html;
-  if ((main_html = load_file(HTML_MAIN)) == NULL)
-  {
-    free(login_html);
-    set_error(INTERNAL);
-    return NULL;
-  }
+  ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 8);
+  add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_MAIN);
+  add_map_value_str(page_data, STYLE_PATH_KEY, CSS_LOGIN);
+  add_map_value_str(page_data, SCRIPT_PATH_KEY, " ");
+  add_map_value_hm(page_data, PAGE_CONTENT_KEY, page_content);
+  add_nav_info(page_data, client_info);
 
-  if ((main_html = replace(main_html, "{STYLE}", CSS_LOGIN)) == NULL ||
-      (main_html = replace(main_html, "{SCRIPT}", "")) == NULL ||
-      (main_html = fill_nav_login(main_html, client_info)) == NULL ||
-      (main_html = replace(main_html, "{PAGE_BODY}", login_html)) == NULL)
-  {
-    set_error(INTERNAL);
-    free(login_html);
-    return NULL;
-  }
+  char* html = build_template(page_data);
+  ks_hashmap_delete(page_data);
 
-  free(login_html);
-  return main_html;
+  return html;
 }
 
 

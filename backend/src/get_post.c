@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <kylestructs.h>
 
+#include <templating.h>
+#include <string_map.h>
 #include <log_manager.h>
 #include <load_file.h>
 #include <auth_manager.h>
@@ -10,158 +13,81 @@
 #include <get_post.h>
 
 
-char* fill_post_info(char* template, const char* post_id, const struct auth_token* client_entry)
+static ks_hashmap* get_post_info(const char* post_id)
 {
-  // query post info
-  char* query_fmt = QUERY_POST_BY_ID;
-  char query[strlen(query_fmt) + strlen(post_id) + 1];
-  sprintf(query, query_fmt, post_id);
-  ks_list* result = query_database(query);
+  ks_list* result;
+  if ((result = query_posts_by_id(post_id)) == NULL)
+  {
+    return NULL;
+  }
 
   ks_datacont* row0 = ks_list_get(result, 0);
-  ks_datacont* row1 = ks_list_get(result, 1);
 
   if (row0 == NULL)
   {
     // post not found
-    free(template);
     ks_list_delete(result);
-    return NULL;
   }
 
-  // NOTE:
-  // might remove this check
-  if (row1 != NULL)
-  {
-    free(template);
-    ks_list_delete(result);
-    log_crit("fill_post_info(): multiple posts with id %s", post_id);
-  }
-
-  ks_list* post_info = row0->ls;
-
-  // fill in post info
-  if ((template = replace(template, "{DATE_POSTED}", ks_list_get(post_info, SQL_FIELD_POST_DATE_POSTED)->cp)) == NULL ||
-      (template = replace(template, "{USER_NAME}", ks_list_get(post_info, SQL_FIELD_POST_AUTHOR_NAME)->cp)) == NULL ||
-      (template = replace(template, "{USER_NAME}", ks_list_get(post_info, SQL_FIELD_POST_AUTHOR_NAME)->cp)) == NULL ||
-      (template = replace(template, "{COMMUNITY_NAME}", ks_list_get(post_info, SQL_FIELD_POST_COMMUNITY_NAME)->cp)) == NULL ||
-      (template = replace(template, "{COMMUNITY_NAME}", ks_list_get(post_info, SQL_FIELD_POST_COMMUNITY_NAME)->cp)) == NULL ||
-      (template = replace(template, "{POST_TITLE}", ks_list_get(post_info, SQL_FIELD_POST_TITLE)->cp)) == NULL ||
-      (template = replace(template, "{POST_BODY}", ks_list_get(post_info, SQL_FIELD_POST_BODY)->cp)) == NULL)
-  {
-    ks_list_delete(result);
-    return NULL;
-  }
-
+  ks_hashmap* post_info = row0->hm;
+  row0->hm = NULL;
   ks_list_delete(result);
-  return template;
-} // end fill_post_info()
+
+  return post_info;
+}
 
 
-char* fill_post_comment_template(char* template, const ks_list* comment_info, const struct auth_token* client_info)
+static ks_list* get_post_comments(const char* post_id, const struct auth_token* client_info)
 {
-  const char* comment_id = ks_list_get(comment_info, SQL_FIELD_COMMENT_ID)->cp;
-  const char* comment_author = ks_list_get(comment_info, SQL_FIELD_COMMENT_AUTHOR_NAME)->cp;
-  const char* comment_body = ks_list_get(comment_info, SQL_FIELD_COMMENT_BODY)->cp;
-  const char* comment_points = ks_list_get(comment_info, SQL_FIELD_COMMENT_POINTS)->cp;
-  const char* date_posted = ks_list_get(comment_info, SQL_FIELD_COMMENT_DATE_POSTED)->cp;
-  const char* post_id = ks_list_get(comment_info, SQL_FIELD_COMMENT_POST_ID)->cp;
-  const char* post_title = ks_list_get(comment_info, SQL_FIELD_COMMENT_POST_TITLE)->cp;
-  const char* community_name = ks_list_get(comment_info, SQL_FIELD_COMMENT_COMMUNITY_NAME)->cp;
-
-  char* upvote_css_class = "upvote_notclicked";
-  char* downvote_css_class = "downvote_notclicked";
-
-  // check if client has voted on this post
-  if (client_info)
-  {
-    enum vote_type vt = check_for_vote(COMMENT_VOTE, comment_id, client_info->user_id);
-    upvote_css_class = vt == UPVOTE ? "upvote_clicked" : upvote_css_class;
-    downvote_css_class = vt == DOWNVOTE ? "downovte_clicked" : downvote_css_class;
-  }
-
-  // fill in template
-  if ((template = replace(template, "{UPVOTE_CLICKED}", upvote_css_class)) == NULL ||
-      (template = replace(template, "{ITEM_ID}", comment_id)) == NULL ||
-      (template = replace(template, "{ITEM_POINTS}", comment_points)) == NULL ||
-      (template = replace(template, "{DOWNVOTE_CLICKED}", downvote_css_class)) == NULL ||
-      (template = replace(template, "{ITEM_ID}", comment_id)) == NULL ||
-      (template = replace(template, "{DATE_POSTED}", date_posted)) == NULL ||
-      (template = replace(template, "{USER_NAME}", comment_author)) == NULL ||
-      (template = replace(template, "{USER_NAME}", comment_author)) == NULL ||
-      (template = replace(template, "{COMMENT_BODY}", comment_body)) == NULL)
+  // get user comments
+  ks_list* comments;
+  if ((comments = query_comments_by_post_id(post_id)) == NULL)
   {
     return NULL;
   }
 
-  return template; 
-} // end fill_post_comment_template()
+  // list of vote wrappers
+  ks_list* comment_wrappers = ks_list_new();
 
-
-char* fill_post_comments(char* template, const char* post_id, const struct auth_token* client_info)
-{
-  // prepare query string
-  char* query_fmt = QUERY_COMMENTS_BY_POSTID;
-  char query[strlen(query_fmt) + strlen(post_id) + 1];
-  sprintf(query, query_fmt, post_id);
-
-  // grab user comment ks_list from database
-  ks_list* comments = query_database(query);
-
-  // load post comment template
-  char* comment_template;
-  if ((comment_template = load_vote_wrapper("comment", HTML_POST_COMMENT)) == NULL)
+  // iterate through each post
+  ks_datacont* comment_info;
+  ks_iterator* iter = ks_iterator_new(comments, KS_LIST);
+  while ((comment_info = (ks_datacont*) ks_iterator_get(iter)) != NULL)
   {
-    // failed to load template
-    ks_list_delete(comments);
-    free(template);
-    return NULL;
-  }
+    // add user comment template path
+    add_map_value_str(comment_info->hm, TEMPLATE_PATH_KEY, HTML_POST_COMMENT);
 
-  int comment_template_len = strlen(comment_template);
+    // move comment points and ID into vote wrapper map
+    const char* comment_id = get_map_value(comment_info->hm, FIELD_COMMENT_ID)->cp;
+    const char* points = get_map_value(comment_info->hm, FIELD_COMMENT_POINTS)->cp;
 
-  // iterate over each comment
-  int num_comments = ks_list_length(comments);
-  for (int i = 0; i < num_comments; i++)
-  {
-    // copy comment string instead of read it from disk every loop
-    char* comment_template_copy = malloc((comment_template_len + 1) * sizeof(char));
-    memcpy(comment_template_copy, comment_template, comment_template_len + 1);
+    ks_hashmap* wrapper = ks_hashmap_new(KS_CHARP, 8);
+    add_map_value_str(wrapper, TEMPLATE_PATH_KEY, HTML_COMMENT_VOTE_WRAPPER);
+    add_map_value_str(wrapper, COMMENT_ID_KEY, comment_id);
+    add_map_value_str(wrapper, COMMENT_POINTS_KEY, points);
 
-    // current comment (field ks_list)
-    ks_list* c = ks_list_get(comments, i)->ls;
-
-    // fill in comment template
-    if ((comment_template_copy = fill_post_comment_template(comment_template_copy, c, client_info)) == NULL ||
-        (template = replace(template, "{NEXT_ITEM}", comment_template_copy)) == NULL)
+    // check if client user voted on this post
+    char* upvote_class = UPVOTE_NOTCLICKED_STATE;
+    char* downvote_class = DOWNVOTE_NOTCLICKED_STATE;
+    if (client_info != NULL)
     {
-      if (comment_template_copy != NULL)
-      {
-        free(comment_template_copy);
-      }
-      if (template != NULL)
-      {
-        free(template);
-        template = NULL;
-      }
-      break;
+      enum vote_type vt = check_for_vote(COMMENT_VOTE, comment_id, client_info->user_id);
+      upvote_class = vt == UPVOTE ? UPVOTE_CLICKED_STATE : upvote_class;
+      downvote_class = vt == DOWNVOTE ? DOWNVOTE_CLICKED_STATE : downvote_class;
     }
+    add_map_value_str(wrapper, UPVOTE_CLICKED_KEY, upvote_class);
+    add_map_value_str(wrapper, DOWNVOTE_CLICKED_KEY, downvote_class);
 
-    free(comment_template_copy);
+    // add post info map to vote wrapper map
+    add_map_value_hm(wrapper, COMMENT_KEY, comment_info->hm);
+    comment_info->hm = NULL;
+    ks_list_add(comment_wrappers, ks_datacont_new(wrapper, KS_HASHMAP, 1));
   }
-
-  // remove last template string
-  if (template != NULL)
-  {
-    template = replace(template, "{NEXT_ITEM}", "");
-  }
-
-  // cleanup
+  ks_iterator_delete(iter);
   ks_list_delete(comments);
-  free(comment_template);
 
-  return template;
-} // end fill_post_comments()
+  return comment_wrappers;
+}
 
 
 char* get_post(const char* post_id, const struct auth_token* client_info)
@@ -171,42 +97,37 @@ char* get_post(const char* post_id, const struct auth_token* client_info)
     return NULL;
   }
 
-  // load post template
-  char* post_html;
-  if ((post_html = load_file(HTML_POST)) == NULL)
-  {
-    // set error flag
-    set_error(INTERNAL);
-    return NULL;
-  }
-  
-  // fill in post template
-  if ((post_html = fill_post_info(post_html, post_id, client_info)) == NULL ||
-      (post_html = fill_post_comments(post_html, post_id, client_info)) == NULL)
+  // get post from DB
+  ks_hashmap* post_info;
+  if ((post_info = get_post_info(post_id)) == NULL)
   {
     return NULL;
   }
 
-  // load main template
-  char* main_html;
-  if ((main_html = load_file(HTML_MAIN)) == NULL)
+  add_map_value_str(post_info, TEMPLATE_PATH_KEY, HTML_POST);
+
+  // get post comments
+  ks_list* comments;
+  if ((comments = get_post_comments(post_id, client_info)) == NULL)
   {
-    // set internal error flag
-    set_error(INTERNAL);
-    free(post_html);
-    return NULL;
+    add_map_value_str(post_info, POST_COMMENT_LIST_KEY, " ");
+  }
+  else
+  {
+    add_map_value_ls(post_info, POST_COMMENT_LIST_KEY, comments);
   }
 
-  // fill in main template
-  if ((main_html = replace(main_html, "{STYLE}", CSS_POST)) == NULL ||
-      (main_html = replace(main_html, "{SCRIPT}", "")) == NULL ||
-      (main_html = fill_nav_login(main_html, client_info)) == NULL ||
-      (main_html = replace(main_html, "{PAGE_BODY}", post_html)) == NULL)
-  {
-    free(post_html);
-    return NULL;
-  }
+  // put page data together
+  ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 8);
+  add_map_value_hm(page_data, PAGE_CONTENT_KEY, post_info);
+  add_map_value_str(page_data, STYLE_PATH_KEY, CSS_POST);
+  add_map_value_str(page_data, SCRIPT_PATH_KEY, " ");
+  add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_MAIN);
+  add_nav_info(page_data, client_info);
 
-  free(post_html);
-  return main_html;
-} // end get_post()
+  // build template
+  char* html = build_template(page_data);
+  ks_hashmap_delete(page_data);
+
+  return html;
+}

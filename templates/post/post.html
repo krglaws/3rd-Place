@@ -1,14 +1,14 @@
 <div class="post-content-container">
   <div class="post-content">
     <div class="post-author">
-      <p class="utc-timestamp">{DATE_POSTED}</p>
-      by <a href="/u/{USER_NAME}">{USER_NAME}</a> in <a href="/c/{COMMUNITY_NAME}">{COMMUNITY_NAME}</a>
+      <p class="utc-timestamp"><<POST_DATE_POSTED>></p>
+      by <a href="/u/<<POST_AUTHOR_NAME>>"><<POST_AUTHOR_NAME>></a> in <a href="/c/<<POST_COMMUNITY_NAME>>"><<POST_COMMUNITY_NAME>></a>
     </div>
     <div class="post-title">
-      {POST_TITLE}
+      <<POST_TITLE>>
     </div>
     <div class="post-body">
-      {POST_BODY}
+      <<POST_BODY>>
     </div>
   </div>
 </div>
@@ -16,7 +16,7 @@
 <div class="comment-content-container">
   <div class="comment-content border-box">
 
-{NEXT_ITEM}
+<<POST_COMMENT_LIST>>
 
   </div>
 </div>

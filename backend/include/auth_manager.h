@@ -36,7 +36,7 @@ static char rand_byte();
 
 static void random_salt(char* salt_buf);
 
-static ks_list* get_user_info(const char* uname);
+static ks_hashmap* get_user_info(const char* uname);
 
 const char* new_user(const char* uname, const char* passwd);
 

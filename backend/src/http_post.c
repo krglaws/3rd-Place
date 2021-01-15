@@ -29,16 +29,18 @@ struct response* http_post(struct request* req)
   // figure out which endpoint
   if (strcmp(req->uri, "./signup") == 0)
   {
-    const char* uname = get_map_val(args, "uname");
-    const char* passwd = get_map_val(args, "passwd");
-    resp = post_signup(uname, passwd);
+    const ks_datacont* uname = get_map_value(args, "uname");
+    const ks_datacont* passwd = get_map_value(args, "passwd");
+    resp = post_signup(uname ? uname->cp : NULL,
+                       passwd ? passwd->cp : NULL);
   }
 
   else if (strcmp(req->uri, "./login") == 0)
   {
-    const char* uname = get_map_val(args, "uname");
-    const char* passwd = get_map_val(args, "passwd");
-    resp = post_login(uname, passwd);
+    const ks_datacont* uname = get_map_value(args, "uname");
+    const ks_datacont* passwd = get_map_value(args, "passwd");
+    resp = post_login(uname ? uname->cp : NULL,
+                      passwd ? passwd->cp : NULL);
   }
 
   else if (strcmp(req->uri, "./logout") == 0)

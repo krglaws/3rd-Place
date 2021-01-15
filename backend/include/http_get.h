@@ -7,7 +7,8 @@
 #define HTML_MAIN "templates/main/main.html"
 #define HTML_LOGIN "templates/login/login.html"
 #define HTML_ALREADY_LOGGED_IN "templates/login/already_logged_in.html"
-#define HTML_VOTE_WRAPPER "templates/main/vote_wrapper.html"
+#define HTML_POST_VOTE_WRAPPER "templates/main/post_vote_wrapper.html"
+#define HTML_COMMENT_VOTE_WRAPPER "templates/main/comment_vote_wrapper.html"
 #define HTML_USER "templates/user/user.html"
 #define HTML_USER_POST "templates/user/post.html"
 #define HTML_USER_COMMENT "templates/user/comment.html"
@@ -34,11 +35,12 @@
 
 struct response* http_get(struct request* req);
 
-char* replace(char* template, const char* this, const char* withthat);
+void add_nav_info(ks_hashmap* page_data, const struct auth_token* client_info);
 
-char* fill_nav_login(char* template, const struct auth_token* client_info);
-
-char* load_vote_wrapper(const char* type, const char* inner_html_path);
+#define UPVOTE_CLICKED_STATE "upvote-clicked"
+#define UPVOTE_NOTCLICKED_STATE "upvote-notclicked"
+#define DOWNVOTE_CLICKED_STATE "downvote-clicked"
+#define DOWNVOTE_NOTCLICKED_STATE "downvote-notclicked"
 
 enum login_error {
   LOGINERR_NONE,

@@ -1,6 +1,6 @@
 <div class="user-title-container">
   <div class="user-title border-box">
-    {USER_NAME}
+    <<USER_NAME>>
   </div>
 </div>
 
@@ -16,24 +16,24 @@
 
     <div id="overview" class="user-tab-content-container">
       <div class="user-tab-content border-box">
-        <p>Points: {USER_POINTS}</p>
-        <p>Posts: {USER_POSTS}</p>
-        <p>Comments: {USER_COMMENTS}</p>
-        <p id="user-bday">Joined: {USER_BDAY}</p>
+        <p>Points: <<USER_POINTS>></p>
+        <p>Posts: <<USER_POST_COUNT>></p>
+        <p>Comments: <<USER_COMMENT_COUNT>></p>
+        <p id="user-bday">Joined: <<USER_DATE_JOINED>></p>
       </div>
     </div>
 
     <div id="posts" class="user-tab-content-container">
-      {NEXT_ITEM}
+      <<USER_POST_LIST>>
     </div>
 
     <div id="comments" class="user-tab-content-container">
-      {NEXT_ITEM}
+      <<USER_COMMENT_LIST>>
     </div>
 
     <div id="about" class="user-tab-content-container">
       <div class="user-tab-content border-box">
-        {USER_ABOUT}
+        <<USER_ABOUT>>
       </div>
     </div>
 

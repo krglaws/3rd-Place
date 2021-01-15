@@ -1,91 +1,113 @@
 #ifndef _SQL_MANAGER_H_
 #define _SQL_MANAGER_H_
 
-/* user sql field names */
-#define SQL_FIELD_USER_ID            (0)
-#define SQL_FIELD_USER_NAME          (1)
-#define SQL_FIELD_USER_PASSWORD_HASH (2)
-#define SQL_FIELD_USER_ABOUT         (3)
-#define SQL_FIELD_USER_POINTS        (4)
-#define SQL_FIELD_USER_POSTS         (5)
-#define SQL_FIELD_USER_COMMENTS      (6)
-#define SQL_FIELD_USER_DATE_JOINED   (7)
+
+/* user sql field names/indeces */
+#define USERS_NUM_FIELDS            (8)
+#define FIELD_USER_ID               "USER_ID"
+#define FIELD_USER_NAME             "USER_NAME"
+#define FIELD_USER_PASSWORD_HASH    "USER_PASSWORD_HASH"
+#define FIELD_USER_ABOUT            "USER_ABOUT"
+#define FIELD_USER_POINTS           "USER_POINTS"
+#define FIELD_USER_POSTS            "USER_POST_COUNT"
+#define FIELD_USER_COMMENTS         "USER_COMMENT_COUNT"
+#define FIELD_USER_DATE_JOINED      "USER_DATE_JOINED"
+
 
 /* post sql field names */
-#define SQL_FIELD_POST_ID             (0)
-#define SQL_FIELD_POST_COMMUNITY_ID   (1)
-#define SQL_FIELD_POST_COMMUNITY_NAME (2)
-#define SQL_FIELD_POST_AUTHOR_ID      (3)
-#define SQL_FIELD_POST_AUTHOR_NAME    (4)
-#define SQL_FIELD_POST_TITLE          (5)
-#define SQL_FIELD_POST_BODY           (6)
-#define SQL_FIELD_POST_POINTS         (7)
-#define SQL_FIELD_POST_DATE_POSTED    (8)
+#define POSTS_NUM_FIELDS             (9)
+#define FIELD_POST_ID                "POST_ID"
+#define FIELD_POST_COMMUNITY_ID      "POST_COMMUNITY_ID"
+#define FIELD_POST_COMMUNITY_NAME    "POST_COMMUNITY_NAME"
+#define FIELD_POST_AUTHOR_ID         "POST_AUTHOR_ID"
+#define FIELD_POST_AUTHOR_NAME       "POST_AUTHOR_NAME"
+#define FIELD_POST_TITLE             "POST_TITLE"
+#define FIELD_POST_BODY              "POST_BODY"
+#define FIELD_POST_POINTS            "POST_POINTS"
+#define FIELD_POST_DATE_POSTED       "POST_DATE_POSTED"
+
 
 /* comment sql field names */
-#define SQL_FIELD_COMMENT_ID             (0)
-#define SQL_FIELD_COMMENT_POST_ID        (1)
-#define SQL_FIELD_COMMENT_POST_TITLE     (2)
-#define SQL_FIELD_COMMENT_COMMUNITY_NAME (3)
-#define SQL_FIELD_COMMENT_AUTHOR_ID      (4)
-#define SQL_FIELD_COMMENT_AUTHOR_NAME    (5)
-#define SQL_FIELD_COMMENT_BODY           (6)
-#define SQL_FIELD_COMMENT_POINTS         (7)
-#define SQL_FIELD_COMMENT_DATE_POSTED    (8)
+#define COMMENTS_NUM_FIELDS              (9)
+#define FIELD_COMMENT_ID                  "COMMENT_ID"
+#define FIELD_COMMENT_POST_ID             "COMMENT_POST_ID"
+#define FIELD_COMMENT_POST_TITLE          "COMMENT_POST_TITLE"
+#define FIELD_COMMENT_COMMUNITY_NAME      "COMMENT_COMMUNITY_NAME"
+#define FIELD_COMMENT_AUTHOR_ID           "COMMENT_AUTHOR_ID"
+#define FIELD_COMMENT_AUTHOR_NAME         "COMMENT_AUTHOR_NAME"
+#define FIELD_COMMENT_BODY                "COMMENT_BODY"
+#define FIELD_COMMENT_POINTS              "COMMENT_POINTS"
+#define FIELD_COMMENT_DATE_POSTED         "COMMENT_DATE_POSTED"
+
 
 /* community sql field names */
-#define SQL_FIELD_COMMUNITY_ID           (0)
-#define SQL_FIELD_COMMUNITY_NAME         (1)
-#define SQL_FIELD_COMMUNITY_ABOUT        (2)
-#define SQL_FIELD_COMMUNITY_MEMBERS      (3)
-#define SQL_FIELD_COMMUNITY_DATE_CREATED (4)
+#define COMMUNITIES_NUM_FIELDS         (5)
+#define FIELD_COMMUNITY_ID              "COMMUNITY_ID"
+#define FIELD_COMMUNITY_NAME            "COMMUNITY_NAME"
+#define FIELD_COMMUNITY_ABOUT           "COMMUNITY_ABOUT"
+#define FIELD_COMMUNITY_MEMBERS         "COMMUNITY_MEMBERS"
+#define FIELD_COMMUNITY_DATE_CREATED    "COMMUNITY_DATE_CREATED"
+
 
 /* subscription field names */
-#define SQL_FIELD_SUB_ID             (0)
-#define SQL_FIELD_SUB_USER_ID        (1)
-#define SQL_FIELD_SUB_USER_NAME      (2)
-#define SQL_FIELD_SUB_COMMUNITY_ID   (2)
-#define SQL_FIELD_SUB_COMMUNITY_NAME (4)
+#define SUBSCRIPTIONS_NUM_FIELDS    (5)
+#define FIELD_SUB_ID                 "SUB_ID"
+#define FIELD_SUB_USER_ID            "SUB_USER_ID"
+#define FIELD_SUB_USER_NAME          "SUB_USER_NAME"
+#define FIELD_SUB_COMMUNITY_ID       "SUB_COMMUNITY_ID"
+#define FIELD_SUB_COMMUNITY_NAME     "SUB_COMMUNITY_NAME"
+
 
 /* post up vote field names */
-#define SQL_FIELD_POST_UP_VOTE_ID        (0)
-#define SQL_FIELD_POST_UP_VOTE_POST_ID   (1)
-#define SQL_FIELD_POST_UP_VOTE_USER_ID   (2)
+#define POST_UPVOTES_NUM_FIELDS    (3)
+#define FIELD_POST_UPVOTE_ID        "POST_UP_VOTE_ID"
+#define FIELD_POST_UPVOTE_POST_ID   "POST_UP_VOTE_POST_ID"
+#define FIELD_POST_UPVOTE_USER_ID   "POST_UP_VOTE_USER_ID"
+
 
 /* post down vote field names */
-#define SQL_FIELD_POST_DOWN_VOTE_ID        (0)
-#define SQL_FIELD_POST_DOWN_VOTE_POST_ID   (1)
-#define SQL_FIELD_POST_DOWN_VOTE_USER_ID   (2)
+#define POST_DOWNVOTES_NUM_FIELDS    (3)
+#define FIELD_POST_DOWNVOTE_ID        "POST_DOWN_VOTE_ID"
+#define FIELD_POST_DOWNVOTE_POST_ID   "POST_DOWN_VOTE_POST_ID"
+#define FIELD_POST_DOWNVOTE_USER_ID   "POST_DOWN_VOTE_USER_ID"
+
 
 /* comment up vote field names */
-#define SQL_FIELD_COMMENT_UP_VOTE_ID        (0)
-#define SQL_FIELD_COMMENT_UP_VOTE_POST_ID   (1)
-#define SQL_FIELD_COMMENT_UP_VOTE_USER_ID   (2)
+#define COMMENT_UPVOTES_NUM_FIELDS    (3)
+#define FIELD_COMMENT_UPVOTE_ID        "COMMENT_UP_VOTE_ID"
+#define FIELD_COMMENT_UPVOTE_POST_ID   "COMMENT_UP_VOTE_POST_ID"
+#define FIELD_COMMENT_UPVOTE_USER_ID   "COMMENT_UP_VOTE_USER_ID"
+
 
 /* comment down vote field names */
-#define SQL_FIELD_COMMENT_DOWN_VOTE_ID        (0)
-#define SQL_FIELD_COMMENT_DOWN_VOTE_POST_ID   (1)
-#define SQL_FIELD_COMMENT_DOWN_VOTE_USER_ID   (2)
+#define COMMENT_DOWNVOTES_NUM_FIELDS    (3)
+#define FIELD_COMMENT_DOWNVOTE_ID        "COMMENT_DOWN_VOTE_ID"
+#define FIELD_COMMENT_DOWNVOTE_POST_ID   "COMMENT_DOWN_VOTE_POST_ID"
+#define FIELD_COMMENT_DOWNVOTE_USER_ID   "COMMENT_DOWN_VOTE_USER_ID"
+
 
 /* query templates */
-#define QUERY_USER_BY_UNAME "SELECT * FROM users WHERE name = '%s';"
-#define QUERY_POSTS_BY_UNAME "SELECT * FROM posts WHERE author_name = '%s';"
-#define QUERY_COMMENTS_BY_UNAME "SELECT * FROM comments WHERE author_name = '%s';"
-#define QUERY_POST_BY_ID "SELECT * FROM posts WHERE id = '%s';"
+#define QUERY_USERS_BY_NAME "SELECT * FROM users WHERE name = '%s';"
+
+#define QUERY_POSTS_BY_ID "SELECT * FROM posts WHERE id = '%s';"
+#define QUERY_POSTS_BY_AUTHOR_NAME "SELECT * FROM posts WHERE author_name = '%s';"
 #define QUERY_POSTS_BY_COMMUNITY_NAME "SELECT * FROM posts WHERE community_name = '%s';"
-#define QUERY_COMMENTS_BY_POSTID "SELECT * FROM comments WHERE post_id = '%s';"
-#define QUERY_COMMUNITY_BY_NAME "SELECT * FROM communities WHERE name = '%s';"
 
-#define QUERY_POST_UPVOTE_BY_POSTID_USERID "SELECT * FROM post_up_votes WHERE post_id = %s AND user_id = %d;"
-#define QUERY_POST_DOWNVOTE_BY_POSTID_USERID "SELECT * FROM post_down_votes WHERE post_id = %s AND user_id = %d;"
+#define QUERY_COMMENTS_BY_AUTHOR_NAME "SELECT * FROM comments WHERE author_name = '%s';"
+#define QUERY_COMMENTS_BY_POST_ID "SELECT * FROM comments WHERE post_id = '%s';"
 
-#define QUERY_COMMENT_UPVOTE_BY_COMMENTID_USERID "SELECT * FROM comment_up_votes WHERE comment_id = %s AND user_id = %d"
-#define QUERY_COMMENT_DOWNVOTE_BY_COMMENTID_USERID "SELECT * FROM comment_down_votes WHERE comment_id = %s AND user_id = %d;"
+#define QUERY_COMMUNITIES_BY_NAME "SELECT * FROM communities WHERE name = '%s';"
+
+#define QUERY_POST_UPVOTES_BY_POST_ID_USER_ID "SELECT * FROM post_up_votes WHERE post_id = %s AND user_id = %d;"
+#define QUERY_POST_DOWNVOTES_BY_POST_ID_USER_ID "SELECT * FROM post_down_votes WHERE post_id = %s AND user_id = %d;"
+
+#define QUERY_COMMENT_UPVOTES_BY_COMMENT_ID_USER_ID "SELECT * FROM comment_up_votes WHERE comment_id = %s AND user_id = %d;"
+#define QUERY_COMMENT_DOWNVOTES_BY_COMMENT_ID_USER_ID "SELECT * FROM comment_down_votes WHERE comment_id = %s AND user_id = %d;"
 
 #define INSERT_NEW_USER "INSERT INTO users (name, password_hash, date_joined) VALUES ('%s', '%s', UNIX_TIMESTAMP());"
-#define INSERT_NEW_COMMENT "";
-#define INSERT_NEW_POST "";
-#define INSERT_NEW_COMMUNITY "";
+#define INSERT_NEW_COMMENT ""
+#define INSERT_NEW_POST ""
+#define INSERT_NEW_COMMUNITY ""
 
 #include <kylestructs.h>
 
@@ -93,6 +115,38 @@ void init_sql_manager();
 
 void terminate_sql_manager();
 
-ks_list* query_database(const char* query);
+
+/* The following functions return lists of hashmaps.
+ * Each index in the list is a hashmap which represents
+ * a table row. Each map maps the field name (a string)
+ * to the field value.
+ */
+
+ks_list* query_users_by_name(const char* user_name);
+
+ks_list* query_posts_by_id(const char* id);
+
+ks_list* query_posts_by_author_name(const char* user_name);
+
+ks_list* query_posts_by_community_name(const char* community_name);
+
+ks_list* query_comments_by_author_name(const char* author_name);
+
+ks_list* query_comments_by_post_id(const char* post_id);
+
+ks_list* query_communities_by_name(const char* community_name);
+
+ks_list* query_post_upvotes_by_post_id_user_id(const char* post_id, const char* user_id);
+
+ks_list* query_post_downvotes_by_post_id_user_id(const char* post_id, const char* user_id);
+
+ks_list* query_comment_upvotes_by_post_id_user_id(const char* comment_id, const char* user_id);
+
+ks_list* query_comment_downvotes_by_post_id_user_id(const char* comment_id, const char* user_id);
+
+
+/* Insert queries return -1 if the insert statement failed
+ */
+int insert_new_user(const char* user_name, const char* passwd_hash);
 
 #endif

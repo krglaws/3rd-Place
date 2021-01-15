@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <time.h>
 
+#include <string_map.h>
 #include <log_manager.h>
 #include <sql_manager.h>
 #include <auth_manager.h>
@@ -87,13 +88,9 @@ static void random_salt(char* saltbuf)
 }
 
 
-static ks_list* get_user_info(const char* uname)
+static ks_hashmap* get_user_info(const char* uname)
 {
-  char* query_fmt = QUERY_USER_BY_UNAME;
-  char query[strlen(query_fmt) + strlen(uname) + 1];
-  sprintf(query, query_fmt, uname);
-
-  ks_list* result = query_database(query);
+  ks_list* result = query_users_by_name(uname);
 
   ks_datacont* row0 = ks_list_get(result, 0);
   ks_datacont* row1 = ks_list_get(result, 1);
@@ -112,11 +109,11 @@ static ks_list* get_user_info(const char* uname)
     log_crit("get_user_info(): multiple users with name %s", uname);
   }
 
-  ks_list* user_info = row0->ls;
+  ks_hashmap* user_info = row0->hm;
 
   // remove reference to user_info so that
   // ks_list_delete() doesn't delete it.
-  row0->ls = NULL;
+  row0->hm = NULL;
   ks_list_delete(result);
 
   return user_info;
@@ -131,7 +128,7 @@ const char* login_user(const char* uname, const char* passwd)
     return NULL;
   }
 
-  ks_list* user_info;
+  ks_hashmap* user_info;
   if ((user_info = get_user_info(uname)) == NULL)
   {
     // user does not exist
@@ -139,14 +136,14 @@ const char* login_user(const char* uname, const char* passwd)
   }
 
   // grab user hash from query
-  const char* hash1 = ks_list_get(user_info, SQL_FIELD_USER_PASSWORD_HASH)->cp;
+  const char* hash1 = get_map_value(user_info, FIELD_USER_PASSWORD_HASH)->cp;
 
   char salt[3];
   salt[0] = hash1[0];
   salt[1] = hash1[1];
   salt[2] = '\0';
 
-  // hash submittted passwd
+  // hash submitted passwd
   char* hash2;
   if ((hash2 = crypt(passwd, salt)) == NULL)
   {
@@ -156,10 +153,10 @@ const char* login_user(const char* uname, const char* passwd)
   // compare hashes
   if (strcmp(hash1, hash2) != 0)
   {
-    ks_list_delete(user_info);
+    ks_hashmap_delete(user_info);
     return NULL;
   }
-  ks_list_delete(user_info);
+  ks_hashmap_delete(user_info);
 
   // user is valid, retrieve token if already exists,
   // else create new token and return
@@ -188,11 +185,11 @@ const char* new_user(const char* uname, const char* passwd)
   }
 
   // check if user already exists
-  ks_list* user_info = get_user_info(uname);
+  ks_hashmap* user_info = get_user_info(uname);
 
   if (user_info != NULL)
   {
-    ks_list_delete(user_info);
+    ks_hashmap_delete(user_info);
     return NULL;
   }
 
@@ -202,17 +199,10 @@ const char* new_user(const char* uname, const char* passwd)
   char* pwhash = crypt(passwd, salt);
 
   // prepare insert query
-  char *query_fmt = INSERT_NEW_USER;
-  int querylen = strlen(query_fmt) + strlen(uname) + strlen(pwhash) + 1;
-  char query[querylen];
-  sprintf(query, query_fmt, uname, pwhash);
-
-  // add new user to database
-  ks_list* result = query_database(query);
-  if (result != NULL)
+  if (insert_new_user(uname, pwhash) == -1)
   {
-    // should always be null, but just in case
-    ks_list_delete(result);
+    log_err("new_user(): failed to create new user");
+    return NULL;
   }
 
   const char* token;
@@ -238,14 +228,14 @@ static void random_token(char* token_buf)
 static const char* new_token(const char* uname)
 {
   // pull user info from database
-  ks_list* user_info = get_user_info(uname);
-  const char* user_id = ks_list_get(user_info, SQL_FIELD_USER_ID)->cp;
+  ks_hashmap* user_info = get_user_info(uname);
+  const char* user_id = get_map_value(user_info, FIELD_USER_ID)->cp;
 
   // copy info into auth token
   struct auth_token* new_token = calloc(1, sizeof(struct auth_token));
   memcpy(new_token->user_id, user_id, strlen(user_id));
   memcpy(new_token->user_name, uname, strlen(uname));
-  ks_list_delete(user_info);
+  ks_hashmap_delete(user_info);
 
   // create new token entry
   struct token_entry* new_entry = calloc(1, sizeof(struct token_entry));

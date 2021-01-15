@@ -74,12 +74,38 @@ ks_hashmap* string_to_map(char* str, const char* delim1, const char* delim2)
 }
 
 
-const char* get_map_val(const ks_hashmap* map, const char* keystr)
+const ks_datacont* get_map_value(const ks_hashmap* hm, const char* key)
 {
-  ks_datacont* key = ks_datacont_new(keystr, KS_CHARP, strlen(keystr));
+  ks_datacont* key_dc = ks_datacont_new(key, KS_CHARP, strlen(key));
+  const ks_datacont* val_dc = ks_hashmap_get(hm, key_dc);
+  ks_datacont_delete(key_dc);
 
-  const ks_datacont* val = ks_hashmap_get(map, key);
-  ks_datacont_delete(key);
+  return val_dc;
+}
 
-  return val->cp;
+
+void add_map_value_str(ks_hashmap* hm, const char* key, const char* val)
+{
+  ks_datacont* key_dc = ks_datacont_new(key, KS_CHARP, strlen(key));
+  ks_datacont* val_dc = ks_datacont_new(val, KS_CHARP, strlen(val));
+
+  ks_hashmap_add(hm, key_dc, val_dc);
+}
+
+
+void add_map_value_ls(ks_hashmap* hm, const char* key, const ks_list* val)
+{
+  ks_datacont* key_dc = ks_datacont_new(key, KS_CHARP, strlen(key));
+  ks_datacont* val_dc = ks_datacont_new(val, KS_LIST, 1);
+
+  ks_hashmap_add(hm, key_dc, val_dc);
+}
+
+
+void add_map_value_hm(ks_hashmap* hm, const char* key, const ks_hashmap* val)
+{
+  ks_datacont* key_dc = ks_datacont_new(key, KS_CHARP, strlen(key));
+  ks_datacont* val_dc = ks_datacont_new(val, KS_HASHMAP, 1);
+
+  ks_hashmap_add(hm, key_dc, val_dc);
 }

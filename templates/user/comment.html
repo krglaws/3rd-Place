@@ -1,9 +1,9 @@
 <div class="user-tab-content border-box">
-  <p class="utc-timestamp">{DATE_POSTED}</p>
+  <p class="utc-timestamp"><<COMMENT_DATE_POSTED>></p>
   <p>
-    <a href="/p/{POST_ID}#{COMMENT_ID}">{COMMENT_BODY}</a>
+    <a href="/p/<<COMMENT_POST_ID>>#<<COMMENT_ID>>"><<COMMENT_BODY>></a>
   </p>
   <h3>
-    On <a href="/p/{POST_ID}">"{POST_TITLE}"</a> from <a href="/c/{COMMUNITY_NAME}">"{COMMUNITY_NAME}"</a>
+    On <a href="/p/<<COMMENT_POST_ID>>">"<<COMMENT_POST_TITLE>>"</a> from <a href="/c/<<COMMENT_COMMUNITY_NAME>>">"<<COMMENT_COMMUNITY_NAME>>"</a>
   </h3>
 </div>

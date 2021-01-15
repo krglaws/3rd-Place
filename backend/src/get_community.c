@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <kylestructs.h>
 
+#include <templating.h>
+#include <string_map.h>
 #include <log_manager.h>
 #include <load_file.h>
 #include <sql_manager.h>
@@ -9,162 +12,81 @@
 #include <get_community.h>
 
 
-char* fill_community_info(char* template, const char* community_name)
+static ks_hashmap* get_community_info(const char* community_name)
 {
-  // prepare query string
-  char* query_fmt = QUERY_COMMUNITY_BY_NAME;
-  char query[strlen(query_fmt) + strlen(community_name) + 1];
-  sprintf(query, query_fmt, community_name);
+  ks_list* result;
+  if ((result = query_communities_by_name(community_name)) == NULL)
+  {
+    return NULL;
+  }
 
-  ks_list* result = query_database(query);
   ks_datacont* row0 = ks_list_get(result, 0);
-  ks_datacont* row1 = ks_list_get(result, 1);
 
   if (row0 == NULL)
   {
-    // community not found
-    free(template);
     ks_list_delete(result);
     return NULL;
   }
 
-  // NOTE:
-  // might remove this check at some point
-  if (row1 != NULL)
-  {
-    free(template);
-    ks_list_delete(result);
-    log_crit("fill_community_info(): multiple communities with name '%s'", community_name);
-  }
-
-  ks_list* community_info = row0->ls;
-
-  const char* community_date_created = ks_list_get(community_info, SQL_FIELD_COMMUNITY_DATE_CREATED)->cp;
-  const char* community_about = ks_list_get(community_info, SQL_FIELD_COMMUNITY_ABOUT)->cp;
-
-  // fill in community info
-  if ((template = replace(template, "{COMMUNITY_NAME}", community_name)) == NULL ||
-      (template = replace(template, "{DATE_CREATED}", community_date_created)) == NULL ||
-      (template = replace(template, "{COMMUNITY_ABOUT}", community_about)) == NULL)
-  {
-    ks_list_delete(result);
-    return NULL;
-  }
-
+  ks_hashmap* community_info = row0->hm;
+  row0->hm = NULL;
   ks_list_delete(result);
-  return template;
-} // end fill_community_info
+
+  return community_info;
+}
 
 
-char* fill_community_post_template(char* template, const ks_list* post_info, const struct auth_token* client_info)
+static ks_list* get_community_posts(const char* community_name, const struct auth_token* client_info)
 {
-  const char* post_id = ks_list_get(post_info, SQL_FIELD_POST_ID)->cp;
-  const char* post_author = ks_list_get(post_info, SQL_FIELD_POST_AUTHOR_NAME)->cp;
-  const char* post_title = ks_list_get(post_info, SQL_FIELD_POST_TITLE)->cp;
-  const char* post_body = ks_list_get(post_info, SQL_FIELD_POST_BODY)->cp;
-  const char* post_points = ks_list_get(post_info, SQL_FIELD_POST_POINTS)->cp;
-  const char* date_posted = ks_list_get(post_info, SQL_FIELD_POST_DATE_POSTED)->cp;
-
-  char* upvote_css_class = "upvote_notclicked";
-  char* downvote_css_class = "downvote_notclicked";
-
-  // check if client has voted on this post
-  if (client_info != NULL)
-  {
-    enum vote_type vt = check_for_vote(POST_VOTE, post_id, client_info->user_id);
-    upvote_css_class = vt == UPVOTE ? "upvote_clicked" : upvote_css_class;
-    downvote_css_class = vt == DOWNVOTE ? "downovte_clicked" : downvote_css_class;
-  }
-
-  // limit post body to 64 chars in template
-  char body[65];
-  int end = sprintf(body, "%61s", post_body);
-  memcpy(body + end, "...", 3);
-  body[end+3] = '\0';
-  template = replace(template, "{POST_BODY}", body);
-
-  // fill template
-  if ((template = replace(template, "{UPVOTE_CLICKED}", upvote_css_class)) == NULL ||
-      (template = replace(template, "{ITEM_ID}", post_id)) == NULL ||
-      (template = replace(template, "{ITEM_POINTS}", post_points)) == NULL ||
-      (template = replace(template, "{DOWNVOTE_CLICKED}", downvote_css_class)) == NULL ||
-      (template = replace(template, "{ITEM_ID}", post_id)) == NULL ||
-      (template = replace(template, "{DATE_POSTED}", date_posted)) == NULL ||
-      (template = replace(template, "{USER_NAME}", post_author)) == NULL ||
-      (template = replace(template, "{USER_NAME}", post_author)) == NULL ||
-      (template = replace(template, "{POST_ID}", post_id)) == NULL ||
-      (template = replace(template, "{POST_TITLE}", post_title)) == NULL)
+  // get community posts
+  ks_list* posts;
+  if ((posts = query_posts_by_community_name(community_name)) == NULL)
   {
     return NULL;
   }
 
-  return template;
-} // end fill_community_post_template()
+  // vote wrapper list
+  ks_list* post_wrappers = ks_list_new();
 
-
-char* fill_community_posts(char* template, const char* community_name, const struct auth_token* client_info)
-{
-  // prepare query string
-  char* query_fmt = QUERY_POSTS_BY_COMMUNITY_NAME;
-  char query[strlen(query_fmt) + strlen(community_name) + 1];
-  sprintf(query, query_fmt, community_name);
-
-  // grab posts belonging to this community
-  ks_list* posts = query_database(query);
-
-  // load post template
-  char* post_template;
-  if ((post_template = load_vote_wrapper("post", HTML_COMMUNITY_POST)) == NULL)
+  // iterate through each post
+  ks_datacont* post_info;
+  ks_iterator* iter = ks_iterator_new(posts, KS_LIST);
+  while ((post_info = (ks_datacont*) ks_iterator_get(iter)) != NULL)
   {
-    ks_list_delete(posts);
-    free(template);
-    return NULL;
-  }
+    // add user post template path
+    add_map_value_str(post_info->hm, TEMPLATE_PATH_KEY, HTML_COMMUNITY_POST);
 
-  int post_template_len = strlen(post_template);
+    // move post points and ID into vote wrapper map
+    const char* post_id = get_map_value(post_info->hm, FIELD_POST_ID)->cp;
+    const char* points = get_map_value(post_info->hm, FIELD_POST_POINTS)->cp;
 
-  // iterate over each post
-  int num_posts = ks_list_length(posts);
-  for (int i = 0; i < num_posts; i++)
-  {
-    // copy template string instead of read it from disk every loop
-    char* post_template_copy = malloc((post_template_len + 1) * sizeof(char));
-    memcpy(post_template_copy, post_template, post_template_len + 1);
+    ks_hashmap* wrapper = ks_hashmap_new(KS_CHARP, 8);
+    add_map_value_str(wrapper, TEMPLATE_PATH_KEY, HTML_POST_VOTE_WRAPPER);
+    add_map_value_str(wrapper, POST_ID_KEY, post_id);
+    add_map_value_str(wrapper, POST_POINTS_KEY, points);
 
-    // current post
-    ks_list* p = ks_list_get(posts, i)->ls;
-
-    if ((post_template_copy = fill_community_post_template(post_template_copy, p, client_info)) == NULL ||
-        (template = replace(template, "{NEXT_ITEM}", post_template_copy)) == NULL)
+    // check if client user voted on this post
+    char* upvote_class = UPVOTE_NOTCLICKED_STATE;
+    char* downvote_class = DOWNVOTE_NOTCLICKED_STATE;
+    if (client_info != NULL)
     {
-      if (post_template_copy != NULL)
-      {
-        free(post_template_copy);
-      }
-      if (template != NULL)
-      {
-        free(template);
-        template = NULL;
-      }
-      break;
+      enum vote_type vt = check_for_vote(POST_VOTE, post_id, client_info->user_id);
+      upvote_class = vt == UPVOTE ? UPVOTE_CLICKED_STATE : upvote_class;
+      downvote_class = vt == DOWNVOTE ? DOWNVOTE_CLICKED_STATE : downvote_class;
     }
+    add_map_value_str(wrapper, UPVOTE_CLICKED_KEY, upvote_class);
+    add_map_value_str(wrapper, DOWNVOTE_CLICKED_KEY, downvote_class);
 
-    free(post_template_copy);
+    // add post info map to vote wrapper map
+    add_map_value_hm(wrapper, POST_KEY, post_info->hm);
+    post_info->hm = NULL;
+    ks_list_add(post_wrappers, ks_datacont_new(wrapper, KS_HASHMAP, 1));
   }
-
-  // remove last template string
-  if (template != NULL)
-  {
-    template = replace(template, "{NEXT_ITEM}", "");
-  }
-
-  // cleanup
+  ks_iterator_delete(iter);
   ks_list_delete(posts);
-  free(post_template);
 
-  // remove trailing template string
-  return template;
-} // end fill_community_posts()
+  return post_wrappers;
+}
 
 
 char* get_community(const char* community_name, const struct auth_token* client_info)
@@ -174,42 +96,38 @@ char* get_community(const char* community_name, const struct auth_token* client_
     return NULL;
   }
 
-  // load community template
-  char* community_html;
-  if ((community_html = load_file(HTML_COMMUNITY)) == NULL)
+  // get community info
+  ks_hashmap* community_info;
+  if ((community_info = get_community_info(community_name)) == NULL)
   {
-    // set error flag
-    set_error(INTERNAL);
+    // community does not exist
     return NULL;
   }
 
-  // fill in community template
-  if ((community_html = fill_community_info(community_html, community_name)) == NULL ||
-      (community_html = fill_community_posts(community_html, community_name, client_info)) == NULL)
+  add_map_value_str(community_info, TEMPLATE_PATH_KEY, HTML_COMMUNITY);
+
+  // get community posts
+  ks_list* community_posts;
+  if ((community_posts = get_community_posts(community_name, client_info)) == NULL)
   {
-    return NULL;
+    add_map_value_str(community_info, COMMUNITY_POST_LIST_KEY, " ");
+  }
+  else
+  {
+    add_map_value_ls(community_info, COMMUNITY_POST_LIST_KEY, community_posts);
   }
 
-  // load main html
-  char* main_html;
-  if ((main_html = load_file(HTML_MAIN)) == NULL)
-  {
-    // set error flag
-    set_error(INTERNAL);
-    free(community_html);
-    return NULL;
-  }
+  // put page data together
+  ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 8);
+  add_map_value_hm(page_data, PAGE_CONTENT_KEY, community_info);
+  add_map_value_str(page_data, STYLE_PATH_KEY, CSS_COMMUNITY);
+  add_map_value_str(page_data, SCRIPT_PATH_KEY, JS_COMMUNITY);
+  add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_MAIN);
+  add_nav_info(page_data, client_info);
 
-  // fill in main template
-  if ((main_html = replace(main_html, "{STYLE}", CSS_COMMUNITY)) == NULL ||
-      (main_html = replace(main_html, "{SCRIPT}", JS_COMMUNITY)) == NULL ||
-      (main_html = fill_nav_login(main_html, client_info)) == NULL ||
-      (main_html = replace(main_html, "{PAGE_BODY}", community_html)) == NULL)
-  {
-    free(community_html);
-    return NULL;
-  }
+  // build template
+  char* html = build_template(page_data);
+  ks_hashmap_delete(page_data);
 
-  free(community_html);
-  return main_html;
-} // end get_community()
+  return html;
+}
