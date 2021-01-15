@@ -3,10 +3,9 @@
 
 #include <stdarg.h>
 
-#define INFOSTR "\e[92m[INFO]:\e[0m "
-#define WARNSTR "\e[93m[WARN]:\e[0m "
-#define ERRSTR  "\e[91m[ERROR]:\e[0m "
 #define CRITSTR "\e[91m[CRITICAL]:\e[0m "
+#define INFOSTR "\e[92m[INFO]:\e[0m "
+#define ERRSTR  "\e[93m[ERROR]:\e[0m "
 
 #define MAXLOGLEN (512)
 
@@ -25,10 +24,6 @@ void terminate_log_manager();
 void log_info(const char* fmt, ...);
 
 
-/* Used for logging server warnings */
-void log_warn(const char* fmt, ...);
-
-
 /* Used for logging server errors */
 void log_err(const char* fmt, ...);
 
@@ -37,8 +32,5 @@ void log_err(const char* fmt, ...);
     (This will send sigterm to terminate the program) */
 void log_crit(const char* fmt, ...);
 
-
-/* Used by all log procedures */
-static void __log(const char* logtype, const char* fmt, va_list ap);
 
 #endif

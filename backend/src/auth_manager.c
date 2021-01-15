@@ -41,7 +41,7 @@ void init_auth_manager()
 
   if ((urandom = fopen("/dev/urandom", "r")) == NULL)
   {
-    log_warn("Failed to open /dev/urandom: %s", strerror(errno));
+    log_info("Failed to open /dev/urandom: %s\nUsing rand() instead", strerror(errno));
     srand(time(NULL));
   }
 }
