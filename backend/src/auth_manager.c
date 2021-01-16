@@ -6,6 +6,7 @@
 #include <string.h>
 #include <errno.h>
 #include <time.h>
+#include <kylestructs.h>
 
 #include <string_map.h>
 #include <log_manager.h>
@@ -15,6 +16,8 @@
 
 /* ks_list of login tokens */
 static struct token_entry* head = NULL;
+
+static ks_list* token_list;
 
 
 // file for reading from /dev/urandom for secure
@@ -28,7 +31,7 @@ static FILE* urandom = NULL;
 // and there's supposed to be a '+' instead of '.', but
 // that doesnt really matter here.
 
-// 64 chars used by random_salt and random_token
+// 64 chars used by rand_byte()
 static const char base64[64] = "./0123456789ABCD" \
                                "EFGHIJKLMNOPQRST" \
                                "UVWXYZabcdefghij" \
@@ -44,17 +47,8 @@ void init_auth_manager()
     log_info("Failed to open /dev/urandom: %s\nUsing rand() instead", strerror(errno));
     srand(time(NULL));
   }
-}
 
-
-static void delete_all_tokens(struct token_entry* t)
-{
-  if (t != NULL)
-  {
-    delete_all_tokens(t->next);
-  }
-
-  delete_token_entry(t);
+  token_list = ks_list_new();
 }
 
 
@@ -66,8 +60,18 @@ void terminate_auth_manager()
   {
     fclose(urandom);
   }
-
-  delete_all_tokens(head);
+  // iterate through token list, delete each auth token struct
+  // (auth token deletion has to be done separately since
+  // ks_datacont_delete doesnt call free() on void pointer type.
+  ks_datacont* curr;
+  ks_iterator* iter = ks_iterator_new(token_list, KS_LIST);
+  while ((curr = (ks_datacont*)ks_iterator_get(iter)) != NULL)
+  {
+    free(curr->vp);
+    curr->vp = NULL;
+  }
+  ks_iterator_delete(iter);
+  ks_list_delete(token_list);
 }
 
 
@@ -78,7 +82,7 @@ static char rand_byte()
 }
 
 
-static void random_salt(char* saltbuf)
+static void rand_salt(char* saltbuf)
 {
   saltbuf[0] = rand_byte();
   saltbuf[1] = rand_byte();
@@ -88,25 +92,26 @@ static void random_salt(char* saltbuf)
 }
 
 
+static void rand_token(char* token_buf)
+{
+  for (int i = 0; i < TOKENLEN; i++)
+  {
+    token_buf[i] = rand_byte();
+  }
+}
+
+
 static ks_hashmap* get_user_info(const char* uname)
 {
   ks_list* result = query_users_by_name(uname);
 
   ks_datacont* row0 = ks_list_get(result, 0);
-  ks_datacont* row1 = ks_list_get(result, 1);
 
   // check if user exists
   if (row0 == NULL)
   {
     ks_list_delete(result);
     return NULL;
-  }
-
-  // NOTE:
-  // might remove this check
-  if (row1 != NULL)
-  {
-    log_crit("get_user_info(): multiple users with name %s", uname);
   }
 
   ks_hashmap* user_info = row0->hm;
@@ -120,7 +125,6 @@ static ks_hashmap* get_user_info(const char* uname)
 }
 
 
-// just return reference to token
 const char* login_user(const char* uname, const char* passwd)
 {
   if (uname == NULL || passwd == NULL)
@@ -154,11 +158,12 @@ const char* login_user(const char* uname, const char* passwd)
   if (strcmp(hash1, hash2) != 0)
   {
     ks_hashmap_delete(user_info);
+    // invalid passwd
     return NULL;
   }
   ks_hashmap_delete(user_info);
 
-  // user is valid, retrieve token if already exists,
+  // user and passwd match, retrieve token if already exists,
   // else create new token and return
   const char* token;
   if ((token = get_token(uname)) != NULL)
@@ -195,7 +200,7 @@ const char* new_user(const char* uname, const char* passwd)
 
   // hash user passwd
   char salt[3];
-  random_salt(salt);
+  rand_salt(salt);
   char* pwhash = crypt(passwd, salt);
 
   // prepare insert query
@@ -216,14 +221,6 @@ const char* new_user(const char* uname, const char* passwd)
 }
 
 
-static void random_token(char* token_buf)
-{
-  for (int i = 0; i < TOKENLEN; i++)
-  {
-    token_buf[i] = rand_byte();
-  }
-}
-
 
 static const char* new_token(const char* uname)
 {
@@ -235,33 +232,17 @@ static const char* new_token(const char* uname)
   struct auth_token* new_token = calloc(1, sizeof(struct auth_token));
   memcpy(new_token->user_id, user_id, strlen(user_id));
   memcpy(new_token->user_name, uname, strlen(uname));
+  new_token->last_active = time(NULL);
   ks_hashmap_delete(user_info);
-
-  // create new token entry
-  struct token_entry* new_entry = calloc(1, sizeof(struct token_entry));
-  new_entry->token = new_token;
-  new_entry->days = TOKENLIFESPAN;
 
   // generate random token
   do
   {
-    random_token(new_token->token);
+    rand_token(new_token->token);
   } while (valid_token(new_token->token) != NULL);
 
   // append token entry to ks_list
-  if (head == NULL)
-  {
-    head = new_entry;
-  }
-  else
-  {
-    struct token_entry* tail = head;
-    while (tail->next != NULL)
-    {
-      tail = tail->next;
-    }
-    tail->next = new_entry;
-  }
+  ks_list_add(token_list, ks_datacont_new(new_token, KS_VOIDP, 1));
 
   // return token string
   return new_token->token;
@@ -275,16 +256,18 @@ static const char* get_token(const char* uname)
     return NULL;
   }
 
-  struct token_entry* iter = head;
-
-  while (iter != NULL)
+  const ks_datacont* curr;
+  ks_iterator* iter = ks_iterator_new(token_list, KS_CHARP);
+  while ((curr = ks_iterator_get(iter)) != NULL)
   {
-    if (strcmp(iter->token->user_name, uname) == 0)
+    struct auth_token* at = curr->vp;
+    if (strcmp(at->user_name, uname) == 0)
     {
-      return iter->token->token;
+      ks_iterator_delete(iter);
+      return at->token;
     }
-    iter = iter->next;
   }
+  ks_iterator_delete(iter);
 
   return NULL;
 }
@@ -295,42 +278,32 @@ void remove_token(const char* token)
 {
   if (token == NULL)
   {
-    log_err("remove_token(): null token argument");
-    return;
+    // should be unreachable
+    log_crit("remove_token(): null token argument");
   }
 
-  struct token_entry* iter;
-
-  // check head
-  if (strcmp(head->token->token, token) == 0)
+  int index = 0;
+  ks_datacont* curr;
+  ks_iterator* iter = ks_iterator_new(token_list, KS_LIST);
+  while ((curr = (ks_datacont*) ks_iterator_get(iter)) != NULL)
   {
-    iter = head->next;
-    delete_token_entry(head);
-    head = iter;
-    return;
-  }
-
-  iter = head;
-
-  // check the rest of the ks_list
-  while (iter->next != NULL)
-  {
-    if (strcmp(iter->next->token->token, token) == 0)
+    struct auth_token* at = curr->vp;
+    if (strcmp(token, at->token) == 0)
     {
-      struct token_entry* temp = iter->next->next;
-      delete_token_entry(iter->next);
-      iter->next = temp;
+      free(at);
+      curr->vp = NULL;
+      ks_iterator_delete(iter);
+      ks_list_remove_at(token_list, index);
       return;
     }
-
-    iter = iter->next;
+    index++;
   }
+  ks_iterator_delete(iter);
 
   log_err("remove_token(): failed to find matching token string");
 }
 
 
-/* returns auth_token struct that contains token if present, else NULL */
 const struct auth_token* valid_token(const char* token)
 {
   if (token == NULL)
@@ -338,82 +311,58 @@ const struct auth_token* valid_token(const char* token)
     return NULL;
   }
 
-  struct token_entry* iter = head;
+  // check all tokens for expiration
+  check_tokens();
 
-  while (iter != NULL)
+  const ks_datacont* curr;
+  ks_iterator* iter = ks_iterator_new(token_list, KS_LIST);
+  while ((curr = ks_iterator_get(iter)) != NULL)
   {
-    if (strcmp(iter->token->token, token) == 0)
+    struct auth_token* at = curr->vp;
+    if (strcmp(token, at->token) == 0)
     {
-      // user has visited site, so restore token lifespan
-      iter->days = TOKENLIFESPAN;
-      return iter->token;
+      // reset last active time
+      at->last_active = time(NULL);
+      ks_iterator_delete(iter);
+      return at;
     }
-    iter = iter->next;
   }
+  ks_iterator_delete(iter);
 
-  /* token not found */
+  // token not found
   return NULL;
 }
 
 
-/* iterates over all token in ks_list, decrements days,
-   removes if days < 1 */
 void check_tokens()
 {
-  if (head == NULL)
+  time_t currtime = time(NULL);
+
+  // compile list of expired tokens
+  int index = 0;
+  ks_datacont* curr;
+  ks_list* dellist = ks_list_new();
+  ks_iterator* iter = ks_iterator_new(token_list, KS_LIST);
+  while ((curr = (ks_datacont*) ks_iterator_get(iter)) != NULL)
   {
-    return;
+    struct auth_token* at = curr->vp;
+    int elapsed = (currtime - at->last_active);
+    if (elapsed > TOKENLIFESPAN)
+    {
+      free(at);
+      curr->vp = NULL;
+      ks_list_add(dellist, ks_datacont_new(&index, KS_INT, 1));
+    }
+    index++;
   }
+  ks_iterator_delete(iter);
 
-  struct token_entry* iter;
-
-  // check if head node is toast
-  int done = 1;
-  do
+  // delete all expired tokens
+  iter = ks_iterator_new(dellist, KS_LIST);
+  while ((curr = (ks_datacont*) ks_iterator_get(iter)) != NULL)
   {
-    head->days--;
-
-    if (head->days < 1)
-    {
-      done = 0;
-      iter = head->next;
-      delete_token_entry(head);
-      head = iter;
-    }
-    else
-    {
-      done = 1;
-    }
-  } while (!done);
-
-  iter = head;
-
-  // now iterate over ks_list with iterator behind one
-  while (iter->next != NULL)
-  {
-    iter->next->days--;
-
-    if (iter->next->days == 0)
-    {
-      struct token_entry* temp = iter->next->next;
-      delete_token_entry(iter->next);
-      iter->next = temp;
-    }
-    else
-    {
-      iter = iter->next;
-    }
+    ks_list_remove_at(token_list, curr->i);
   }
-}
-
-
-void delete_token_entry(struct token_entry* t)
-{
-  if (t == NULL)
-  {
-    return;
-  }
-
-  free(t->token);
-  free(t);
+  ks_iterator_delete(iter);
+  ks_list_delete(dellist);
 }
