@@ -253,6 +253,12 @@ ks_list* query_users_by_name(const char* user_name)
 }
 
 
+ks_list* query_all_posts()
+{
+  return query_database(posts_field_table, QUERY_ALL_POSTS);
+}
+
+
 ks_list* query_posts_by_id(const char* id)
 {
   return query_database(posts_field_table, QUERY_POSTS_BY_ID, id);
@@ -286,6 +292,12 @@ ks_list* query_comments_by_post_id(const char* post_id)
 ks_list* query_communities_by_name(const char* community_name)
 {
   return query_database(communities_field_table, QUERY_COMMUNITIES_BY_NAME, community_name);
+}
+
+
+ks_list* query_subscriptions_by_user_id(const char* user_id)
+{
+  return query_database(subscriptions_field_table, QUERY_SUBSCRIPTIONS_BY_USER_ID, user_id);
 }
 
 

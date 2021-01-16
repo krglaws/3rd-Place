@@ -3,6 +3,12 @@
 
 #include <auth_manager.h>
 
-char* get_feed(const char* home_or_popular, const struct auth_token* client_info);
+enum feed_type
+{
+  HOME_FEED,
+  POPULAR_FEED
+};
+
+char* get_feed(const enum feed_type ft, const struct auth_token* client_info);
 
 #endif

@@ -1,6 +1,6 @@
 /********************************/
 /* import globals and nav style */
-@import "main/main.css";
+@import "../main/main.css";
 
 /********************/
 /* start feed title */
@@ -28,39 +28,41 @@
 }
 
 .feed-content {
+  background-color: white;
   display: table;
   margin: 0 auto;
   width: 75%;
 }
 
-.post-stub {
+.post {
   margin: 1%;
   padding: 1%;
+  flex: 98%;
 }
 
-.post-stub a {
+.post a {
   color: black;
   text-decoration: none;
 }
 
-.post-stub a:hover {
+.post a:hover {
   text-decoration: underline;
 }
 
-.post-stub-author {
+.post-author {
   font-size: var(--uname-font-size);
   margin: 0%;
   padding: 0%;
 }
 
-.post-stub-title {
+.post-title {
   font-size: var(--title-font-size);
   font-weight: normal;
   padding: 0%;
   margin: 0%;
 }
 
-.post-stub-body {
+.post-body {
   font-size: var(--body-font-size);
   margin: 0%;
   padding: 0%;

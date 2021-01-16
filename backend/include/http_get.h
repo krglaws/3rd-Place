@@ -16,6 +16,8 @@
 #define HTML_POST_COMMENT "templates/post/comment.html"
 #define HTML_COMMUNITY "templates/community/community.html"
 #define HTML_COMMUNITY_POST "templates/community/post.html"
+#define HTML_FEED "templates/feed/feed.html"
+#define HTML_FEED_POST "templates/feed/post.html"
 
 /* paths hereafter need the leading '/' since
    they will be requested by the client browser
@@ -68,13 +70,11 @@ enum vote_item_type {
 
 enum vote_type check_for_vote(const enum vote_item_type item_type, const char* vote_id, const char* user_id);
 
-
 enum get_err {
   NO_GET_ERR,
   REDIRECT, // redirect to /login
   INTERNAL // send 500 err
 };
-
 
 /* Called by the get_* files in the event of an internal
     server error to notify http_get to send a 500 instead

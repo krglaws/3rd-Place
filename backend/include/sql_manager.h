@@ -89,6 +89,7 @@
 /* query templates */
 #define QUERY_USERS_BY_NAME "SELECT * FROM users WHERE name = '%s';"
 
+#define QUERY_ALL_POSTS "SELECT* FROM posts;"
 #define QUERY_POSTS_BY_ID "SELECT * FROM posts WHERE id = '%s';"
 #define QUERY_POSTS_BY_AUTHOR_NAME "SELECT * FROM posts WHERE author_name = '%s';"
 #define QUERY_POSTS_BY_COMMUNITY_NAME "SELECT * FROM posts WHERE community_name = '%s';"
@@ -97,6 +98,8 @@
 #define QUERY_COMMENTS_BY_POST_ID "SELECT * FROM comments WHERE post_id = '%s';"
 
 #define QUERY_COMMUNITIES_BY_NAME "SELECT * FROM communities WHERE name = '%s';"
+
+#define QUERY_SUBSCRIPTIONS_BY_USER_ID "SELECT * FROM subscriptions WHERE user_id = '%s';"
 
 #define QUERY_POST_UPVOTES_BY_POST_ID_USER_ID "SELECT * FROM post_up_votes WHERE post_id = %s AND user_id = %d;"
 #define QUERY_POST_DOWNVOTES_BY_POST_ID_USER_ID "SELECT * FROM post_down_votes WHERE post_id = %s AND user_id = %d;"
@@ -124,6 +127,8 @@ void terminate_sql_manager();
 
 ks_list* query_users_by_name(const char* user_name);
 
+ks_list* query_all_posts();
+
 ks_list* query_posts_by_id(const char* id);
 
 ks_list* query_posts_by_author_name(const char* user_name);
@@ -135,6 +140,8 @@ ks_list* query_comments_by_author_name(const char* author_name);
 ks_list* query_comments_by_post_id(const char* post_id);
 
 ks_list* query_communities_by_name(const char* community_name);
+
+ks_list* query_subscriptions_by_user_id(const char* user_id);
 
 ks_list* query_post_upvotes_by_post_id_user_id(const char* post_id, const char* user_id);
 

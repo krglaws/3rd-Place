@@ -15,6 +15,7 @@
 #include <get_user.h>
 #include <get_post.h>
 #include <get_community.h>
+#include <get_feed.h>
 #include <http_get.h>
 
 
@@ -57,6 +58,23 @@ struct response* http_get(struct request* req)
       content = ico->contents;
       content_length = ico->len;
       free(ico);
+    }
+  }
+  else if ((strcmp(req->uri, "./") == 0) ||
+           (strcmp(req->uri, "./home") == 0))
+  {
+    content_type = TEXTHTML;
+    if ((content = get_feed(HOME_FEED, req->client_info)) != NULL)
+    {
+      content_length = strlen(content);
+    }
+  }
+  else if (strcmp(req->uri, "./popular") == 0)
+  {
+    content_type = TEXTHTML;
+    if ((content = get_feed(POPULAR_FEED, req->client_info)) != NULL)
+    {
+      content_length = strlen(content);
     }
   }
   else if (strstr(req->uri, "./u/"))
