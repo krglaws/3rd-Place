@@ -1,6 +1,6 @@
 /********************************/
 /* import globals and nav style */
-@import "../main/main.css";
+@import "/css/main.css";
 
 .form-container-container {
   width: 100%;

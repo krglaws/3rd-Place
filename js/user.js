@@ -1,23 +1,22 @@
 
-function openPage(pageName, elmnt, color) {
-	
-	var i, tabcontent, tablinks;
-	
-	tabcontent = document.getElementsByClassName("tabcontent");
-	for (i = 0; i < tabcontent.length; i++) {
-		tabcontent[i].style.display = "none";
-	}
+function openPage(pageName, button) {
+  var i, tabcontent, tablinks;
 
-	tablinks = document.getElementsByClassName("tablink");
-	for (i = 0; i < tablinks.length; i++) {
-		tablinks[i].style.backgroundColor = "";
-	}
+  tabcontent = document.getElementsByClassName("user-tab-content-container");
+  for (i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none";
+  }
 
-	document.getElementById(pageName).style.display = "block";
+  tablinks = document.getElementsByClassName("user-tab-link");
+  for (i = 0; i < tablinks.length; i++) {
+    tablinks[i].style.backgroundColor = "#CACBCC";
+  }
 
-	elmnt.style.backgroundcolor = color;
+  document.getElementById(pageName).style.display = "block";
+  button.style.backgroundColor = "white";
 }
 
-/* default tab */
-document.getElementById("overview").click();
+function selectOverview() {
+  document.getElementById("default-tab").click();
+}
 

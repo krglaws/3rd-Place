@@ -24,16 +24,16 @@
    directly */
 
 /* css paths */
-#define CSS_MAIN "/templates/main/main.css"
-#define CSS_LOGIN "/templates/login/login.css"
-#define CSS_USER "/templates/user/user.css"
-#define CSS_POST "/templates/post/post.css"
-#define CSS_COMMUNITY "/templates/community/community.css"
-#define CSS_FEED "/templates/feed/feed.css"
+#define CSS_MAIN "/css/main.css"
+#define CSS_LOGIN "/css/login.css"
+#define CSS_USER "/css/user.css"
+#define CSS_POST "/css/post.css"
+#define CSS_COMMUNITY "/css/community.css"
+#define CSS_FEED "/css/feed.css"
 
 /* js paths */
-#define JS_USER "/templates/user/user.js"
-#define JS_COMMUNITY "/templates/community/community.js"
+#define JS_USER "/js/user.js"
+#define JS_COMMUNITY "/js/community.js"
 
 struct response* http_get(struct request* req);
 
