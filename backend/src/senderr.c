@@ -9,7 +9,7 @@
 #include <senderr.h>
 
 
-static const char* contlenhdr = "Connection: close\nContent-Length: 3\n";
+static const char* contlenhdr = "Connection: close\r\nContent-Length: 3\r\n";
 
 struct response* senderr(enum http_errno eno)
 {
@@ -59,8 +59,8 @@ struct response* senderr(enum http_errno eno)
 }
 
 
-static const char* redir_tmp = "Location: %s\n";
-static const char* contlen0 = "Content-Length: 0\n";
+static const char* redir_tmp = "Location: %s\r\n";
+static const char* contlen0 = "Content-Length: 0\r\n";
 
 struct response* redirect(const char* uri)
 {

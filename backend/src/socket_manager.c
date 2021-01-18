@@ -20,7 +20,7 @@
 
 static int server_socket = 0;
 
-static ks_list* socket_ks_list = NULL;
+static ks_list* socket_list = NULL;
 
 static fd_set socket_set;
 
@@ -29,7 +29,7 @@ void init_socket_manager(const struct in6_addr* server_addr, const uint16_t serv
 {
   log_info("Initializing Socket Manager...");
 
-  socket_ks_list = ks_list_new();
+  socket_list = ks_list_new();
 
   struct sockaddr_in6 addr;
   int addrlen = sizeof(addr);
@@ -79,13 +79,13 @@ void terminate_socket_manager()
     close(server_socket);
   }
 
-  int num_sockets = ks_list_length(socket_ks_list);
+  int num_sockets = ks_list_length(socket_list);
   for (int i = 0; i < num_sockets; i++)
   {
-    close(ks_list_get(socket_ks_list, i)->i);
+    close(ks_list_get(socket_list, i)->i);
   }
 
-  ks_list_delete(socket_ks_list);
+  ks_list_delete(socket_list);
 }
 
 
@@ -124,14 +124,14 @@ void add_socket(int sock)
 
   log_info("Connected to %s (socket no. %d)", ipstr, sock);
 
-  ks_list_add(socket_ks_list, ks_datacont_new(&sock, KS_INT, 1));
+  ks_list_add(socket_list, ks_datacont_new(&sock, KS_INT, 1));
 }
 
 
 void remove_socket(int sock)
 {
   ks_datacont* dc = ks_datacont_new(&sock, KS_INT, 1);
-  if (ks_list_remove_by(socket_ks_list, dc) == -1)
+  if (ks_list_remove_by(socket_list, dc) == -1)
   {
     log_err("remove_socket(): socket no. %d does not exist", sock);
     return;
@@ -159,12 +159,12 @@ static const int reload_socket_set()
   FD_SET(server_socket, &socket_set);
 
   int max = server_socket;
-  int num_sockets = ks_list_length(socket_ks_list);
+  int num_sockets = ks_list_length(socket_list);
 
   // add sockets in socket ks_list to socket set
   for (int i = 0; i < num_sockets; i++)
   {
-    ks_datacont* dc = ks_list_get(socket_ks_list, i);
+    ks_datacont* dc = ks_list_get(socket_list, i);
     FD_SET(dc->i, &socket_set);
 
     // find maximum socket no.
@@ -180,7 +180,7 @@ static const int reload_socket_set()
 
 static const int get_active_socket()
 {
-  int num_sockets = ks_list_length(socket_ks_list);
+  int num_sockets = ks_list_length(socket_list);
 
   // check if server socket is active
   if (FD_ISSET(server_socket, &socket_set))
@@ -191,7 +191,7 @@ static const int get_active_socket()
   // look for active socket in ks_list
   for (int i = 0; i < num_sockets; i++)
   {
-    ks_datacont* dc = ks_list_get(socket_ks_list, i);
+    ks_datacont* dc = ks_list_get(socket_list, i);
     if (FD_ISSET(dc->i, &socket_set))
     {
       int sock = dc->i;

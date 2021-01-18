@@ -6,10 +6,10 @@
 #define HTTPVERSION "HTTP/1.1"
 
 /* content types */
-#define TEXTHTML "Content-Type: text/html\n"
-#define TEXTCSS "Content-Type: text/css\n"
-#define APPJS "Content-Type: application/javascript\n"
-#define IMGICO "Content-Type: image/x-icon\n"
+#define TEXTHTML "Content-Type: text/html\r\n"
+#define TEXTCSS "Content-Type: text/css\r\n"
+#define APPJS "Content-Type: application/javascript\r\n"
+#define IMGICO "Content-Type: image/x-icon\r\n"
 
 /* request methods */
 enum request_method

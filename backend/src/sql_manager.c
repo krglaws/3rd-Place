@@ -321,11 +321,35 @@ ks_list* query_comment_upvotes_by_post_id_user_id(const char* comment_id, const 
 
 ks_list* query_comment_downvotes_by_post_id_user_id(const char* comment_id, const char* user_id)
 {
-  return query_database(post_downvotes_field_table, QUERY_COMMENT_UPVOTES_BY_COMMENT_ID_USER_ID, comment_id, user_id);
+  return query_database(post_downvotes_field_table, QUERY_COMMENT_DOWNVOTES_BY_COMMENT_ID_USER_ID, comment_id, user_id);
 }
 
 
 int insert_new_user(const char* user_name, const char* passwd_hash)
 {
   return insert_database(INSERT_NEW_USER, user_name, passwd_hash);
+}
+
+
+int toggle_post_upvote(const char* post_id, const char* user_id)
+{
+  return insert_database(TOGGLE_POST_UPVOTE, post_id, user_id);
+}
+
+
+int toggle_post_downvote(const char* post_id, const char* user_id)
+{
+  return insert_database(TOGGLE_POST_DOWNVOTE, post_id, user_id);
+}
+
+
+int toggle_comment_upvote(const char* comment_id, const char* user_id)
+{
+  return insert_database(TOGGLE_COMMENT_UPVOTE, comment_id, user_id);
+}
+
+
+int toggle_comment_downvote(const char* comment_id, const char* user_id)
+{
+  return insert_database(TOGGLE_COMMENT_DOWNVOTE, comment_id, user_id);
 }

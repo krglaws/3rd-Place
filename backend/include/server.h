@@ -7,7 +7,7 @@
 /* Server settings */
 #define DEFAULT_PORT (80)
 #define DEFAULT_ADDR in6addr_loopback
-#define DEFAULT_MAX_CLIENTS (10)
+#define DEFAULT_MAX_CLIENTS (100)
 
 
 /* Constants related to incoming message sizes */

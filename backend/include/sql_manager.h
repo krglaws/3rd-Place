@@ -101,16 +101,22 @@
 
 #define QUERY_SUBSCRIPTIONS_BY_USER_ID "SELECT * FROM subscriptions WHERE user_id = '%s';"
 
-#define QUERY_POST_UPVOTES_BY_POST_ID_USER_ID "SELECT * FROM post_up_votes WHERE post_id = %s AND user_id = %d;"
-#define QUERY_POST_DOWNVOTES_BY_POST_ID_USER_ID "SELECT * FROM post_down_votes WHERE post_id = %s AND user_id = %d;"
+#define QUERY_POST_UPVOTES_BY_POST_ID_USER_ID "SELECT * FROM post_up_votes WHERE post_id = %s AND user_id = %s;"
+#define QUERY_POST_DOWNVOTES_BY_POST_ID_USER_ID "SELECT * FROM post_down_votes WHERE post_id = %s AND user_id = %s;"
 
-#define QUERY_COMMENT_UPVOTES_BY_COMMENT_ID_USER_ID "SELECT * FROM comment_up_votes WHERE comment_id = %s AND user_id = %d;"
-#define QUERY_COMMENT_DOWNVOTES_BY_COMMENT_ID_USER_ID "SELECT * FROM comment_down_votes WHERE comment_id = %s AND user_id = %d;"
+#define QUERY_COMMENT_UPVOTES_BY_COMMENT_ID_USER_ID "SELECT * FROM comment_up_votes WHERE comment_id = %s AND user_id = %s;"
+#define QUERY_COMMENT_DOWNVOTES_BY_COMMENT_ID_USER_ID "SELECT * FROM comment_down_votes WHERE comment_id = %s AND user_id = %s;"
 
 #define INSERT_NEW_USER "INSERT INTO users (name, password_hash, date_joined) VALUES ('%s', '%s', UNIX_TIMESTAMP());"
-#define INSERT_NEW_COMMENT ""
-#define INSERT_NEW_POST ""
-#define INSERT_NEW_COMMUNITY ""
+#define INSERT_POST_UPVOTE "INSERT INTO post_up_votes (user_id, post_id) VALUES (%s, %s);"
+#define INSERT_POST_DOWNVOTE "INSERT INTO post_down_votes (user_id, post_id) VALUES (%s, %s);"
+#define INSERT_COMMENT_UPVOTE "INSERT INTO comment_up_votes (user_id, post_id) VALUES (%s, %s);"
+#define INSERT_COMMENT_DOWNVOTE "INSERT INTO comment_up_votes (user_id, post_id) VALUES (%s, %s);"
+
+#define TOGGLE_POST_UPVOTE "CALL TogglePostUpvote(%s, %s);"
+#define TOGGLE_POST_DOWNVOTE "CALL TogglePostDownvote(%s, %s);"
+#define TOGGLE_COMMENT_UPVOTE "CALL ToggleCommentUpvote(%s, %s);"
+#define TOGGLE_COMMENT_DOWNVOTE "CALL ToggleCommentDOwnvote(%s, %s);"
 
 #include <kylestructs.h>
 
@@ -155,5 +161,13 @@ ks_list* query_comment_downvotes_by_post_id_user_id(const char* comment_id, cons
 /* Insert queries return -1 if the insert statement failed
  */
 int insert_new_user(const char* user_name, const char* passwd_hash);
+
+int toggle_post_upvote(const char* post_id, const char* user_id);
+
+int toggle_post_downvote(const char* post_id, const char* user_id);
+
+int toggle_comment_upvote(const char* comment_id, const char* user_id);
+
+int toggle_comment_downvote(const char* comment_id, const char* user_id);
 
 #endif

@@ -6,21 +6,21 @@
 
 
 /* success reponses */
-#define STAT200 HTTPVERSION " 200 OK\n"
+#define STAT200 HTTPVERSION " 200 OK\r\n"
 
 /* redirect responses */
-#define STAT302 HTTPVERSION " 302 Found\n"
+#define STAT302 HTTPVERSION " 302 Found\r\n"
 
 /* client errors */
-#define STAT400 HTTPVERSION " 400 Bad Request\n"
-#define STAT404 HTTPVERSION " 404 Not Found\n"
-#define STAT413 HTTPVERSION " 413 Payload Too Large\n"
-#define STAT414 HTTPVERSION " 414 URI Too Long\n"
+#define STAT400 HTTPVERSION " 400 Bad Request\r\n"
+#define STAT404 HTTPVERSION " 404 Not Found\r\n"
+#define STAT413 HTTPVERSION " 413 Payload Too Large\r\n"
+#define STAT414 HTTPVERSION " 414 URI Too Long\r\n"
 
 /* server errors */
-#define STAT500 HTTPVERSION " 500 Internal Server Error\n"
-#define STAT501 HTTPVERSION " 501 Not Implemented\n"
-#define STAT505 HTTPVERSION " 505 HTTP Version Not Supported\n"
+#define STAT500 HTTPVERSION " 500 Internal Server Error\r\n"
+#define STAT501 HTTPVERSION " 501 Not Implemented\r\n"
+#define STAT505 HTTPVERSION " 505 HTTP Version Not Supported\r\n"
 
 
 enum http_errno {

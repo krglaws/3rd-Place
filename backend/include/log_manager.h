@@ -7,7 +7,7 @@
 #define INFOSTR "\e[92m[INFO]:\e[0m "
 #define ERRSTR  "\e[93m[ERROR]:\e[0m "
 
-#define MAXLOGLEN (512)
+#define MAXLOGLEN (1024)
 
 
 /* Initializes the logger output file

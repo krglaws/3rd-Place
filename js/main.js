@@ -24,16 +24,6 @@ function findSibling(arrow, upOrDown) {
 }
 
 
-function deleteVote(upOrDown, postOrComment, id) {
-
-}
-
-
-function createVote(upOrDown, postOrComment, id) {
-
-}
-
-
 function getScoreWrapper(arrow) {
 
   var voteWrapper = arrow.parentElement.parentElement;
@@ -74,11 +64,7 @@ function incrementScore(arrow) {
 }
 
 
-function toggleVote(arrow, postOrComment, id) {
-
-  // determine arrow types
-  var arrowDirection = arrow.classList.contains("up") ? "up" : "down";
-  var siblingDirection = arrowDirection === "up" ? "down" : "up";
+function toggleVote(arrow, postOrComment, id, arrowDirection, siblingDirection) {
 
   // make sure sibling arrow is not clicked
   var sibling = findSibling(arrow, siblingDirection);
@@ -102,9 +88,6 @@ function toggleVote(arrow, postOrComment, id) {
     arrow.classList.remove(arrowDirection + "vote-clicked");
     arrow.classList.add(arrowDirection + "vote-notclicked");
 
-    // delete vote from db
-    deleteVote(arrowDirection, postOrComment, id);
-
     // change score accordingly
     if (arrowDirection === "up") {
       decrementScore(arrow);
@@ -118,9 +101,6 @@ function toggleVote(arrow, postOrComment, id) {
     arrow.classList.remove(arrowDirection + "vote-notclicked");
     arrow.classList.add(arrowDirection + "vote-clicked");
 
-    // add vote to db
-    createVote(arrowDirection, postOrComment, id);
-
     // change score accordingly
     if (arrowDirection === "up") {
       incrementScore(arrow);
@@ -129,4 +109,26 @@ function toggleVote(arrow, postOrComment, id) {
       decrementScore(arrow);
     }
   }
+}
+
+
+function vote(arrow, postOrComment, id) {
+
+  // determine arrow types
+  var arrowDirection = arrow.classList.contains("up") ? "up" : "down";
+  var siblingDirection = arrowDirection === "up" ? "down" : "up";
+
+  fetch('/vote', {
+    method: 'POST',
+    redirect: 'follow',
+    credentials: 'same-origin',
+    body: "type="+postOrComment+"&direction="+arrowDirection+"&id="+id
+  }).then(response => {
+    if (response.redirected) {
+      window.location.href = response.url;
+    }
+    else {
+      toggleVote(arrow, postOrComment, id, arrowDirection, siblingDirection);
+    }
+  });
 }

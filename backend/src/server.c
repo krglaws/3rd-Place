@@ -269,7 +269,7 @@ static enum request_method get_request_method(const char* req_str)
 
 static char* get_uri(const enum request_method method, const char* request)
 {
-  if (strstr(request, "..") || method == BAD_REQ)
+  if (method == BAD_REQ)
   {
     return NULL;
   }
@@ -302,6 +302,12 @@ static char* get_uri(const enum request_method method, const char* request)
   {
     getloc = strstr(request, "DELETE");
     sscanf(getloc + 6, "%s", uri + 1);
+  }
+
+  if (strstr(uri, "..") != NULL)
+  {
+    free(uri);
+    return NULL;
   }
 
   return uri;
@@ -411,27 +417,27 @@ static struct response* process_request(const int sock, char* req_str)
   switch (req.method)
   {
   case GET_REQ:
-    log_info("Request from %s: GET %s", ipstr, (req.uri + 1));
+    log_info("Request from %s (sock no. %d): GET %s", ipstr, sock, (req.uri + 1));
     resp = http_get(&req);
     break;
 
   case HEAD_REQ:
-    log_info("Request from %s: HEAD %s", ipstr, (req.uri + 1));
+    log_info("Request from %s(sock no. %d): HEAD %s", ipstr, sock, (req.uri + 1));
     resp = http_get(&req);
     break;
 
   case PUT_REQ:
-    log_info("Request from %s: PUT %s", ipstr, (req.uri + 1));
+    log_info("Request from %s(sock no. %d): PUT %s", ipstr, sock, (req.uri + 1));
     resp = http_put(&req);
     break;
 
   case POST_REQ:
-    log_info("Request from %s: POST %s", ipstr, (req.uri + 1));
+    log_info("Request from %s(sock no. %d): POST %s", ipstr, sock, (req.uri + 1));
     resp = http_post(&req);
     break;
 
   case DELETE_REQ:
-    log_info("Request from %s: DELETE %s", ipstr, (req.uri + 1));
+    log_info("Request from %s(sock no. %d): DELETE %s", ipstr, sock, (req.uri + 1));
     resp = http_delete(&req);
     break;
 
@@ -509,7 +515,7 @@ static void send_response(const int sock, struct response* resp)
   }
 
   // end header
-  send_msg(sock, "\n", 1);
+  send_msg(sock, "\r\n", 2);
 
   // send resp body
   if (resp->content)

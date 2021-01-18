@@ -7,6 +7,7 @@
 
 #include <log_manager.h>
 #include <auth_manager.h>
+#include <sql_manager.h>
 #include <senderr.h>
 #include <common.h>
 #include <string_map.h>
@@ -54,6 +55,18 @@ struct response* http_post(struct request* req)
     resp = redirect("/home");
   }
 
+  else if (strcmp(req->uri, "./vote") == 0)
+  {
+    const ks_datacont* type = get_map_value(args, "type");
+    const ks_datacont* direction = get_map_value(args, "direction");
+    const ks_datacont* id = get_map_value(args, "id");
+
+    resp = post_vote(type ? type->cp : NULL,
+                     direction ? direction->cp : NULL,
+                     id ? id->cp : NULL,
+                     req->client_info);
+  }
+
   ks_hashmap_delete(args);
 
   if (resp == NULL)
@@ -79,7 +92,7 @@ static struct response* bad_login_signup(enum login_error e)
   // build content-length header line
   int contlen = strlen(content);
   char contlenline[80];
-  int len = sprintf(contlenline, "Content-Length: %d\n", contlen);
+  int len = sprintf(contlenline, "Content-Length: %d\r\n", contlen);
 
   // add to response object
   ks_list_add(resp->header, ks_datacont_new(contlenline, KS_CHARP, len));
@@ -132,6 +145,55 @@ static struct response* post_signup(const char* uname, const char* passwd)
   char token_hdr[128];
   sprintf(token_hdr, COOKIE_TEMPLATE, token);
   ks_list_add(resp->header, ks_datacont_new(token_hdr, KS_CHARP, strlen(token_hdr)));
+
+  return resp;
+}
+
+
+static struct response* post_vote(const char* type, const char* direction, const char* id, const struct auth_token* client_info)
+{
+  if (client_info == NULL)
+  {
+    return redirect("/login");
+  }
+
+  if (type == NULL || direction == NULL || id == NULL)
+  {
+    return senderr(ERR_BAD_REQ);
+  }
+
+  if (strcmp(type, "post") == 0)
+  {
+    if (strcmp(direction, "up") == 0)
+    {
+      toggle_post_upvote(id, client_info->user_id);
+    }
+    else if (strcmp(direction, "down") == 0)
+    {
+      toggle_post_downvote(id, client_info->user_id);
+    }
+    else return senderr(ERR_BAD_REQ);
+  }
+  else if (strcmp(type, "comment") == 0)
+  {
+    if (strcmp(direction, "up") == 0)
+    {
+      toggle_comment_upvote(id, client_info->user_id);
+    }
+    else if (strcmp(direction, "down") == 0)
+    {
+      toggle_comment_downvote(id, client_info->user_id);
+    }
+    else return senderr(ERR_BAD_REQ);
+  }
+
+  // prepare 200 response object
+  struct response* resp = calloc(1, sizeof(struct response));
+  resp->header = ks_list_new();
+  ks_list_add(resp->header, ks_datacont_new(STAT200, KS_CHARP, strlen(STAT200)));
+
+  char* contlen = "Content-Length: 0\r\n";
+  ks_list_add(resp->header, ks_datacont_new(contlen, KS_CHARP, strlen(contlen)));
 
   return resp;
 }

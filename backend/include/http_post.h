@@ -3,7 +3,7 @@
 
 #include <common.h>
 
-#define COOKIE_TEMPLATE "Set-Cookie: logintoken=%s;Expires=Wed, 1 Jan 2121 00:00:00 GMT\n"
+#define COOKIE_TEMPLATE "Set-Cookie: logintoken=%s;Expires=Wed, 1 Jan 2121 00:00:00 GMT\r\n"
 
 
 /* processes post request, returns response object */
@@ -20,5 +20,8 @@ static struct response* post_login(const char* uname, const char* passwd);
 
 /* attempts signup, returns response object containing result */
 static struct response* post_signup(const char* uname, const char* passwd);
+
+
+static struct response* post_vote(const char* type, const char* direction, const char* id, const struct auth_token* client_info);
 
 #endif
