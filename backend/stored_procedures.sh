@@ -56,7 +56,7 @@ proc_label:BEGIN
 
   # check if downvote exists
   IF EXISTS (SELECT * FROM $DBNAME.post_down_votes WHERE post_id = pid AND user_id = uid) THEN
-    DELETE FROM $DBNAME.post_down_votes WHERE post_id = postid AND name = user_name;
+    DELETE FROM $DBNAME.post_down_votes WHERE post_id = pid AND user_id = uid;
 
     # update points
     UPDATE $DBNAME.posts SET points = points + 1 WHERE id = pid;

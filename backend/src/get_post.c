@@ -66,7 +66,7 @@ static ks_list* get_post_comments(const char* post_id, const struct auth_token* 
     add_map_value_str(wrapper, COMMENT_ID_KEY, comment_id);
     add_map_value_str(wrapper, COMMENT_POINTS_KEY, points);
 
-    // check if client user voted on this post
+    // check if client user voted on this comment
     char* upvote_class = UPVOTE_NOTCLICKED_STATE;
     char* downvote_class = DOWNVOTE_NOTCLICKED_STATE;
     if (client_info != NULL)
@@ -104,6 +104,17 @@ char* get_post(const char* post_id, const struct auth_token* client_info)
     return NULL;
   }
 
+  char* upvote_class = UPVOTE_NOTCLICKED_STATE;
+  char* downvote_class = DOWNVOTE_NOTCLICKED_STATE;
+  if (client_info != NULL)
+  {
+    enum vote_type vt = check_for_vote(POST_VOTE, post_id, client_info->user_id);
+    upvote_class = vt == UPVOTE ? UPVOTE_CLICKED_STATE : upvote_class;
+    downvote_class = vt == DOWNVOTE ? DOWNVOTE_CLICKED_STATE : downvote_class;
+  }
+
+  add_map_value_str(post_info, UPVOTE_CLICKED_KEY, upvote_class);
+  add_map_value_str(post_info, DOWNVOTE_CLICKED_KEY, downvote_class);
   add_map_value_str(post_info, TEMPLATE_PATH_KEY, HTML_POST);
 
   // get post comments

@@ -1,14 +1,32 @@
-<div class="post-content-container">
-  <div class="post-content">
-    <div class="post-author">
-      <p class="utc-timestamp"><<POST_DATE_POSTED>></p>
-      by <a href="/u/<<POST_AUTHOR_NAME>>"><<POST_AUTHOR_NAME>></a> in <a href="/c/<<POST_COMMUNITY_NAME>>"><<POST_COMMUNITY_NAME>></a>
+<div class="vote-content-wrapper">
+  <div class="vote-wrapper" style="margin: 0% 0% 0% 25%;">
+    <div class="arrow-wrapper">
+      <div class="arrow up <<UPVOTE_CLICKED>>" onclick="vote(this, 'post', '<<POST_ID>>')">
+      </div>
     </div>
-    <div class="post-title">
-      <<POST_TITLE>>
+    <div class="score-wrapper">
+      <div class="score">
+        <<POST_POINTS>>
+      </div>
     </div>
-    <div class="post-body">
-      <<POST_BODY>>
+    <div class="arrow-wrapper">
+      <div class="arrow down <<DOWNVOTE_CLICKED>>" onclick="vote(this, 'post', '<<POST_ID>>')">
+      </div>
+    </div>
+  </div>
+
+  <div class="post-content-container">
+    <div class="post-content">
+      <div class="post-author">
+        <p class="utc-timestamp"><<POST_DATE_POSTED>></p>
+        by <a href="/u/<<POST_AUTHOR_NAME>>"><<POST_AUTHOR_NAME>></a> in <a href="/c/<<POST_COMMUNITY_NAME>>"><<POST_COMMUNITY_NAME>></a>
+      </div>
+      <div class="post-title">
+        <<POST_TITLE>>
+      </div>
+      <div class="post-body">
+        <<POST_BODY>>
+      </div>
     </div>
   </div>
 </div>
