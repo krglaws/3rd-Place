@@ -8,16 +8,6 @@
 #include <socket_manager.h>
 
 
-/* NOTES:
- * The sockets are currently stored in kylestructs ks_list,
- * but they should really be stored in custom linked ks_list
- * with a struct that holds both socket number and the
- * address associated with that socket. It will make it
- * much less annoying to retrieve the addresses of each
- * socket (i.e. I wont have to use get_socket_ip()).
- */
-
-
 static int server_socket = 0;
 
 static ks_list* socket_list = NULL;
@@ -79,12 +69,14 @@ void terminate_socket_manager()
     close(server_socket);
   }
 
-  int num_sockets = ks_list_length(socket_list);
-  for (int i = 0; i < num_sockets; i++)
+  ks_datacont* curr;
+  ks_iterator* iter = ks_iterator_new(socket_list, KS_LIST);
+  while ((curr = (ks_datacont*) ks_iterator_get(iter)) != NULL)
   {
-    close(ks_list_get(socket_list, i)->i);
+    close(curr->i);
   }
 
+  ks_iterator_delete(iter);
   ks_list_delete(socket_list);
 }
 
@@ -159,20 +151,20 @@ static const int reload_socket_set()
   FD_SET(server_socket, &socket_set);
 
   int max = server_socket;
-  int num_sockets = ks_list_length(socket_list);
 
-  // add sockets in socket ks_list to socket set
-  for (int i = 0; i < num_sockets; i++)
+  const ks_datacont* curr;
+  ks_iterator* iter = ks_iterator_new(socket_list, KS_LIST);
+  while ((curr = ks_iterator_get(iter)) != NULL)
   {
-    ks_datacont* dc = ks_list_get(socket_list, i);
-    FD_SET(dc->i, &socket_set);
+    FD_SET(curr->i, &socket_set);
 
     // find maximum socket no.
-    if (max < dc->i) 
+    if (max < curr->i)
     {
-      max = dc->i;
+      max = curr->i;
     }
   }
+  ks_iterator_delete(iter);
 
   return max; 
 }
@@ -189,15 +181,17 @@ static const int get_active_socket()
   }
 
   // look for active socket in ks_list
-  for (int i = 0; i < num_sockets; i++)
+  const ks_datacont* curr;
+  ks_iterator* iter = ks_iterator_new(socket_list, KS_LIST);
+  while ((curr = ks_iterator_get(iter)) != NULL)
   {
-    ks_datacont* dc = ks_list_get(socket_list, i);
-    if (FD_ISSET(dc->i, &socket_set))
+    if (FD_ISSET(curr->i, &socket_set))
     {
-      int sock = dc->i;
-      return sock;
+      ks_iterator_delete(iter);
+      return curr->i;
     }
   }
+  ks_iterator_delete(iter);
 
   return -1;
 }
