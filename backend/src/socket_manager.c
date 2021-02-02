@@ -31,23 +31,23 @@ void init_socket_manager(const struct in6_addr* server_addr, const uint16_t serv
 
   if ((server_socket = socket(AF_INET6, SOCK_STREAM, 0)) == -1)
   {
-    log_crit("init_socket_manager(): failed on call to socket(): ", strerror(errno));
+    log_crit("init_socket_manager(): failed on call to socket(): %s", strerror(errno));
   }
 
   int on = 1;
   if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (void*) &on, sizeof(on)) == -1)
   {
-    log_crit("init_socket_manager(): setsockopt(): ", strerror(errno));
+    log_crit("init_socket_manager(): setsockopt(): %s", strerror(errno));
   }
 
   if (bind(server_socket, (struct sockaddr *) &addr, addrlen) == -1)
   {
-    log_crit("init_socket_manager(): failed on call to bind(): ", strerror(errno));
+    log_crit("init_socket_manager(): failed on call to bind(): %s", strerror(errno));
   }
 
   if (listen(server_socket, max_clients) == -1)
   {
-    log_crit("init_socket_manager(): failed on call to listen(): ", strerror(errno));
+    log_crit("init_socket_manager(): failed on call to listen(): %s", strerror(errno));
   }
 
   char ipstr[64];

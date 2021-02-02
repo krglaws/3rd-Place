@@ -4,6 +4,7 @@
 #include <kylestructs.h>
 
 #define HTTPVERSION "HTTP/1.1"
+#define HTTPVERSION_ALT "HTTP/1.0"
 
 /* content types */
 #define TEXTHTML "Content-Type: text/html\r\n"
@@ -11,32 +12,52 @@
 #define APPJS "Content-Type: application/javascript\r\n"
 #define IMGICO "Content-Type: image/x-icon\r\n"
 
-/* request methods */
-enum request_method
-{
-  GET_REQ,
-  HEAD_REQ,
-  PUT_REQ,
-  POST_REQ,
-  DELETE_REQ,
-  BAD_REQ
-};
-
 /* struct containing stripped down request info */
 struct request
 {
-  enum request_method method;
+  /* if client is logged in, this will
+     contain the clients user name and
+     user ID */
+  struct auth_token* client_info;
+
+  /* will accept either 1.1 or 1.0 */
+  char* http_version;
+
+  /* POST, GET, PUT, DELETE, or HEAD */
+  char* method;
+
+  /* path to requested resource */
   char* uri;
-  const struct auth_token* client_info; // NULL token means client is not logged in
-  char* content;
+
+  /* if a query string is present,
+     this will contain the key-value
+     pairs */
+  ks_hashmap* query;
+
+  /* key-value pair for each header */
+  ks_hashmap* header;
+
+  /* cookies parsed from header */
+  ks_hashmap* cookies;
+
+  /* key-value pair for each parameter
+     in request content */
+  ks_hashmap* content;  
 };
+
 
 /* struct containing response info */
 struct response
 {
-  /* list of strings */
+  /* list of header lines */
   ks_list* header;
+
+  /* content might contain NULL bytes, so 
+     can't rely 'content' being properly
+     NULL terminated */
   int content_length;
+
+  /* response content body */
   char* content;
 };
 

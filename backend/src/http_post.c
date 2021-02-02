@@ -17,29 +17,27 @@
 
 struct response* http_post(struct request* req)
 {
+  // should never be NULL
   if (req == NULL)
   {
-    return NULL;
+    log_crit("http_post(): NULL request object");
   }
 
   struct response* resp = NULL;
 
-  // parse post arguments
-  ks_hashmap* args = string_to_map(req->content, "&", "=");
-
   // figure out which endpoint
   if (strcmp(req->uri, "./signup") == 0)
   {
-    const ks_datacont* uname = get_map_value(args, "uname");
-    const ks_datacont* passwd = get_map_value(args, "passwd");
+    const ks_datacont* uname = get_map_value(req->content, "uname");
+    const ks_datacont* passwd = get_map_value(req->content, "passwd");
     resp = post_signup(uname ? uname->cp : NULL,
                        passwd ? passwd->cp : NULL);
   }
 
   else if (strcmp(req->uri, "./login") == 0)
   {
-    const ks_datacont* uname = get_map_value(args, "uname");
-    const ks_datacont* passwd = get_map_value(args, "passwd");
+    const ks_datacont* uname = get_map_value(req->content, "uname");
+    const ks_datacont* passwd = get_map_value(req->content, "passwd");
     resp = post_login(uname ? uname->cp : NULL,
                       passwd ? passwd->cp : NULL);
   }
@@ -57,17 +55,15 @@ struct response* http_post(struct request* req)
 
   else if (strcmp(req->uri, "./vote") == 0)
   {
-    const ks_datacont* type = get_map_value(args, "type");
-    const ks_datacont* direction = get_map_value(args, "direction");
-    const ks_datacont* id = get_map_value(args, "id");
+    const ks_datacont* type = get_map_value(req->content, "type");
+    const ks_datacont* direction = get_map_value(req->content, "direction");
+    const ks_datacont* id = get_map_value(req->content, "id");
 
     resp = post_vote(type ? type->cp : NULL,
                      direction ? direction->cp : NULL,
                      id ? id->cp : NULL,
                      req->client_info);
   }
-
-  ks_hashmap_delete(args);
 
   if (resp == NULL)
   {

@@ -10,6 +10,7 @@
 
 #include <common.h>
 #include <senderr.h>
+#include <string_map.h>
 #include <log_manager.h>
 #include <socket_manager.h>
 #include <sql_manager.h>
@@ -167,292 +168,203 @@ static void serve()
     int active_socket = await_active_socket();
 
     send_response(active_socket,
-      process_request(active_socket,
-        receive_request(active_socket)));
+      process_request(active_socket));
   }
 }
 
 
-static char* receive_request(const int sock)
+#define COPY_STR(dest, s) {\
+  int s_len = strlen(s);\
+  char* s_cpy = malloc((s_len + 1) * sizeof(char));\
+  memcpy(s_cpy, s, s_len);\
+  s_cpy[s_len] = '\0';\
+  dest = s_cpy;\
+}
+
+
+/* If something is off about the request structure,
+ * return NULL and send 400 Bad Request back to client.
+ */
+static struct request* parse_request(char* req_buf)
 {
-  char* message_buffer = calloc(1, BUFFERLEN);
-  char* curr_buff_ptr = message_buffer;
-  int multiplier = 1;
-  int total_bytes = 0, bytes = 0, cont_bytes = 0;
+  // delimiters
+  char* space_del = " ";
+  char* question_del = "?";
+  char* crlf_del = "\r\n";
+  char* hdrend_del = "\r\n\r\n";
 
-  while (multiplier++ < MAXBUFFERMUL+1)
+  // grab first line of request
+  char* end_req_line;
+  if ((end_req_line = strstr(req_buf, crlf_del)) == NULL)
   {
-    // check if message is too big
-    if (multiplier >= MAXBUFFERMUL)
-    {
-      log_err("receive_request(): Request exceeds %d byte limit", (MAXBUFFERMUL * BUFFERLEN));
-      free(message_buffer);
-      return NULL;
-    }
-
-    // read in bytes from socket
-    if ((bytes = recv(sock, curr_buff_ptr, BUFFERLEN - 1, 0)) == -1)
-    {
-      log_err("receive_request(): recv(): %s ", strerror(errno));
-      remove_socket(sock);
-      free(message_buffer);
-      return NULL;
-    }
-
-    // increment total bytes read
-    total_bytes += bytes;
-    if (bytes == 0 || bytes < BUFFERLEN - 1)
-    {
-      break;
-    }
-
-    // adjust message buffer
-    message_buffer = realloc(message_buffer, BUFFERLEN * multiplier);
-    curr_buff_ptr = message_buffer + strlen(message_buffer);
-    memset(curr_buff_ptr, 0, BUFFERLEN);
-  }
-
-  // 0 bytes read means client disconnected
-  if (total_bytes == 0)
-  {
-    remove_socket(sock);
-    free(message_buffer);
     return NULL;
   }
 
-  return message_buffer;
+  struct request* req = calloc(1, sizeof(struct request));
+
+  // NULL terminate request line
+  *end_req_line = '\0';
+  end_req_line += 2;
+
+  // get request method
+  char* token;
+  if ((token = strtok(req_buf, space_del)) == NULL)
+  {
+    delete_request(req);
+    return NULL;
+  }
+  COPY_STR(req->method, token);
+
+  // get URI
+  if ((token = strtok(NULL, space_del)) == NULL)
+  {
+    delete_request(req);
+    return NULL;
+  }
+
+  // check for query string
+  char* q_begin;
+  if ((q_begin = strstr(token, "?")) != NULL)
+  {
+    // delete '?'
+    *q_begin = '\0';
+    q_begin++;
+    req->query = string_to_map(q_begin, "&", "=");
+  }
+
+  // prep uri string and copy
+  int uri_len = strlen(token);
+  req->uri = malloc(sizeof(char) * (strlen(token) + 2));
+  req->uri[0] = '.'; // prepend '.'
+  memcpy(req->uri+1, token, uri_len);
+  req->uri[uri_len+1] = '\0';
+
+  // get HTTP version
+  if ((token = strtok(NULL, space_del)) == NULL)
+  {
+    delete_request(req);
+    return NULL;
+  }
+  COPY_STR(req->http_version, token);
+
+  // find end of header
+  char* hdr_end;
+  if ((hdr_end = strstr(end_req_line, "\r\n\r\n")) == NULL)
+  {
+    delete_request(req);
+    return NULL;
+  }
+
+  *hdr_end = '\0';
+  hdr_end += 4;
+
+  // parse header and content
+  req->header = string_to_map(end_req_line, crlf_del, ": ");
+  req->content = string_to_map(hdr_end, "&", "=");
+
+  // parse cookies
+  const ks_datacont* cookies;
+  if ((cookies = get_map_value(req->header, "Cookie")) != NULL)
+  {
+    char* cookies_cpy;
+    COPY_STR(cookies_cpy, cookies->cp);
+    req->cookies = string_to_map(cookies_cpy, "; ", "=");
+    free(cookies_cpy);
+  }
+
+  // get client info
+  const ks_datacont* login_token;
+  if ((login_token = get_map_value(req->cookies, "logintoken")) != NULL)
+  {
+    req->client_info = (struct auth_token* ) valid_token(login_token->cp);
+  }
+
+  return req;
 }
 
 
-static enum request_method get_request_method(const char* req_str)
+static void delete_request(struct request* req)
 {
-  if (req_str == NULL)
-  {
-    return BAD_REQ;
-  }
-
-  char* endofline = strstr(req_str, "\n");
-
-  char* loc = strstr(req_str, "GET");
-  if (loc && loc < endofline)
-  {
-    return GET_REQ;
-  }
-
-  loc = strstr(req_str, "HEAD");
-  if (loc && loc < endofline)
-  {
-    return HEAD_REQ;
-  }
-
-  loc = strstr(req_str, "PUT");
-  if (loc && loc < endofline)
-  {
-    return PUT_REQ;
-  }
-
-  loc = strstr(req_str, "POST");
-  if (loc && loc < endofline)
-  {
-    return POST_REQ;
-  }
-
-  loc = strstr(req_str, "DELETE");
-  if (loc && loc < endofline)
-  {
-    return DELETE_REQ;
-  }
-
-  return BAD_REQ;
+  free(req->http_version);
+  free(req->method);
+  free(req->uri);
+  ks_hashmap_delete(req->query);
+  ks_hashmap_delete(req->header);
+  ks_hashmap_delete(req->cookies);
+  ks_hashmap_delete(req->content);
+  free(req);
 }
 
 
-static char* get_uri(const enum request_method method, const char* request)
+static struct response* process_request(const int sock)
 {
-  if (method == BAD_REQ)
-  {
-    return NULL;
-  }
-
-  char* uri = calloc(1, MAXURILEN);
-  uri[0] = '.';
-
-  char* getloc;
-  if (method == GET_REQ)
-  {
-    getloc = strstr(request, "GET");
-    sscanf(getloc + 4, "%s", uri + 1);
-  }
-  else if (method == HEAD_REQ)
-  {
-    getloc = strstr(request, "HEAD");
-    sscanf(getloc + 5, "%s", uri + 1);
-  }
-  else if (method == PUT_REQ)
-  {
-    getloc = strstr(request, "PUT");
-    sscanf(getloc + 4, "%s", uri + 1);
-  }
-  else if (method == POST_REQ)
-  {
-    getloc = strstr(request, "POST");
-    sscanf(getloc + 5, "%s", uri + 1);
-  }
-  else //if (method == DELETE_REQ)
-  {
-    getloc = strstr(request, "DELETE");
-    sscanf(getloc + 6, "%s", uri + 1);
-  }
-
-  if (strstr(uri, "..") != NULL)
-  {
-    free(uri);
-    return NULL;
-  }
-
-  return uri;
-}
-
-
-static const struct auth_token* get_login_token(const char* req_str)
-{
-  if (req_str == NULL)
-  {
-    return NULL;
-  }
-
-  // locate cookie location within request string
-  char* find = "Cookie: logintoken=";
-  char* token_loc = strstr(req_str, find);
-  if (token_loc == NULL)
-  {
-    return NULL;
-  }
-  token_loc += strlen(find);
-
-  char* newline = strstr(token_loc, "\r\n");
-  int len = newline - token_loc;
-
-  if (len != TOKENLEN)
-  {
-    return NULL;
-  }
-
-  // copy token
-  char tokenstr[TOKENLEN + 1];
-  memcpy(tokenstr, token_loc, TOKENLEN);
-  tokenstr[TOKENLEN] = '\0';
-
-  const struct auth_token* token = valid_token(tokenstr);
-
-  return token;
-}
-
-
-static char* get_request_content(const char* req_str) 
-{
-  if (req_str == NULL)
-  {
-    return NULL;
-  }
-
-  // find end of request header
-  char* contstart = strstr(req_str, "\r\n\r\n");
-
-  if (contstart == NULL)
-  {
-    return NULL;
-  }
-
-  contstart += 4; // skip over '\r\n\r\n'
-  if (*contstart == '\0')
-  {
-    return NULL;
-  }
-
-  int len = strlen(contstart);
-  char* content = malloc(sizeof(char) * (len + 1));
-  memcpy(content, contstart, len);
-  content[len] = '\0';
-
-  return content;
-}
-
-
-static struct response* process_request(const int sock, char* req_str) 
-{ 
-  if (req_str == NULL)
-  {
-    // client disconnected
-    return NULL; 
-  }
-
-  // fill in request struct
-  struct request req;
-  req.content = get_request_content(req_str);
-  req.method = get_request_method(req_str);
-  req.uri = get_uri(req.method, req_str);
-  req.client_info = get_login_token(req_str);
-
-  // check if method could be found, but URI was bad
-  if (req.method != BAD_REQ && req.uri == NULL)
-  {
-    req.method = BAD_REQ;
-  }
-
-  free(req_str);
-
-  // get socket info
   char ipstr[64];
-  if (get_socket_ip(sock, ipstr, sizeof(ipstr)) == -1)
+  get_socket_ip(sock, ipstr, 64);
+
+  // stack allocate request buffer here
+  char req_buf[MAXREQUESTSIZE + 1];
+  req_buf[0] = '\0';
+
+  // read request into buffer
+  int req_len;
+  if ((req_len = recv(sock, req_buf, MAXREQUESTSIZE + 1, 0)) == -1)
   {
-    log_err("process_request(): failed on call to get_socket_ip()");
+    log_err("process_request(): Failed on call to recv(): %s", strerror(errno));
     remove_socket(sock);
     return NULL;
+  }
+
+  if (req_len == 0)
+  {
+    log_info("Connection to %s closed (sock no. %d)", ipstr, sock);
+    remove_socket(sock);
+    return NULL;
+  }
+
+  if (req_len > MAXREQUESTSIZE)
+  {
+    log_info("Bad request from %s (sock no. %d)", ipstr, sock);
+    return senderr(ERR_MSG_TOO_BIG);
+  }
+
+  // pass the buffer to parse_request()
+  struct request* req;
+  if ((req = parse_request(req_buf)) == NULL)
+  {
+    return senderr(ERR_BAD_REQ);
   }
 
   struct response* resp;
 
-  // determine correct request handler
-  switch (req.method)
+  // send request object to appropriate handler
+  if (strcmp(req->method, "GET") == 0 ||
+           strcmp(req->method, "HEAD") == 0)
   {
-  case GET_REQ:
-    log_info("Request from %s (sock no. %d): GET %s", ipstr, sock, (req.uri + 1));
-    resp = http_get(&req);
-    break;
-
-  case HEAD_REQ:
-    log_info("Request from %s(sock no. %d): HEAD %s", ipstr, sock, (req.uri + 1));
-    resp = http_get(&req);
-    break;
-
-  case PUT_REQ:
-    log_info("Request from %s(sock no. %d): PUT %s", ipstr, sock, (req.uri + 1));
-    resp = http_put(&req);
-    break;
-
-  case POST_REQ:
-    log_info("Request from %s(sock no. %d): POST %s", ipstr, sock, (req.uri + 1));
-    resp = http_post(&req);
-    break;
-
-  case DELETE_REQ:
-    log_info("Request from %s(sock no. %d): DELETE %s", ipstr, sock, (req.uri + 1));
-    resp = http_delete(&req);
-    break;
-
-  case BAD_REQ:
-  default:
+    log_info("Request from %s (sock no. %d): %s %s", ipstr, sock, req->method, (req->uri + 1));
+    resp = http_get(req);
+  }
+  else if (strcmp(req->method, "POST") == 0)
+  {
+    log_info("Request from %s(sock no. %d): POST %s", ipstr, sock, (req->uri + 1));
+    resp = http_post(req);
+  }
+  else if (strcmp(req->method, "PUT") == 0)
+  {
+    log_info("Request from %s(sock no. %d): PUT %s", ipstr, sock, (req->uri + 1));
+    resp = http_put(req);
+  }
+  else if (strcmp(req->method, "DELETE") == 0)
+  {
+    log_info("Request from %s(sock no. %d): DELETE %s", ipstr, sock, (req->uri + 1));
+    resp = http_delete(req);
+  }
+  else
+  {
     log_info("Bad request from %s", ipstr);
-
-    free(req.uri);
-    free(req.content);
-
-    return senderr(ERR_BAD_REQ);
+    resp = senderr(ERR_BAD_REQ);
   }
 
-  free(req.uri);
-  free(req.content);
+  delete_request(req);
 
   return resp;
 }

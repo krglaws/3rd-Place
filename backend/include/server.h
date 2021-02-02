@@ -11,9 +11,7 @@
 
 
 /* Constants related to incoming message sizes */
-#define BUFFERLEN (1024)
-#define MAXBUFFERMUL (10)
-#define MAXURILEN (256)
+#define MAXREQUESTSIZE (10240)
 
 
 /* Prints usage string */
@@ -29,13 +27,13 @@ struct options
   char* logpath;
 };
 
-static void delete_options(struct options* opts);
-
 
 /* Fills out an options structure with information from args
    passed via commandline. Uses default options if no args 
    passed. */
 static void get_options(const int argc, char* const* argv, struct options* opts);
+
+static void delete_options(struct options* opts);
 
 
 /* Initializes services, signal handling, and sets up server socket */
@@ -51,31 +49,16 @@ void terminate_server(const int signum);
 static void serve();
 
 
-/* Allocates a buffer of up to (MAXBUFFERMUL * BUFFERLEN) bytes
-   on the heap and returns it to the serve() function for precessing. */
-static char* receive_request(const int sock);
+/* Parses the raw request data into a request struct */
+static struct request* parse_request(char* req_buf);
 
-
-/* Parses request method into enum type */
-static enum request_method get_request_method(const char* req_str);
-
-
-/* Parses the request URI */
-static char* get_uri(const enum request_method method, const char* request);
-
-
-/* Gets login token from request */
-static const struct auth_token* get_login_token(const char* req_str);
-
-
-/* Gets request content from request string */
-static char* get_request_content(const char* req_str);
+static void delete_request(struct request* req);
 
 
 /* Parses the request string into a 'request' struct, passes it to 
    the corresponding HTTP method handler, and returns a 'response' 
    struct. */
-static struct response* process_request(const int sock, char* req_str);
+static struct response* process_request(const int sock);
 
 
 /* Sends the contents of a buffer to a specified socket */
