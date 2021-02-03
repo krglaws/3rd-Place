@@ -22,6 +22,8 @@ static struct response* post_login(const char* uname, const char* passwd);
 static struct response* post_signup(const char* uname, const char* passwd);
 
 
+/* toggles a users vote on post or comment */
 static struct response* post_vote(const char* type, const char* direction, const char* id, const struct auth_token* client_info);
+
 
 #endif

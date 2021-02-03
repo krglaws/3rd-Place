@@ -40,13 +40,11 @@
 #define COMMENT_TYPE "COMMENT_TYPE"
 
 /* post vote wrapper keys */
-//#define POSTS_KEY "POSTS"
 #define POST_ID_KEY "POST_ID"
 #define POST_POINTS_KEY "POST_POINTS"
 #define POST_KEY "POST"
 
 /* comment vote wrapper keys */
-//#define COMMENTS_KEY "COMMENTS"
 #define COMMENT_ID_KEY "COMMENT_ID"
 #define COMMENT_POINTS_KEY "COMMENT_POINTS"
 #define COMMENT_KEY "COMMENT"

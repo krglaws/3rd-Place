@@ -44,6 +44,7 @@ static ks_list* get_community_posts(const char* community_name, const struct aut
   {
     return NULL;
   }
+  posts = sort_items(posts, POST_ITEM);
 
   // vote wrapper list
   ks_list* post_wrappers = ks_list_new();
@@ -70,7 +71,7 @@ static ks_list* get_community_posts(const char* community_name, const struct aut
     char* downvote_class = DOWNVOTE_NOTCLICKED_STATE;
     if (client_info != NULL)
     {
-      enum vote_type vt = check_for_vote(POST_VOTE, post_id, client_info->user_id);
+      enum vote_type vt = check_for_vote(POST_ITEM, post_id, client_info->user_id);
       upvote_class = vt == UPVOTE ? UPVOTE_CLICKED_STATE : upvote_class;
       downvote_class = vt == DOWNVOTE ? DOWNVOTE_CLICKED_STATE : downvote_class;
     }

@@ -45,6 +45,7 @@ static ks_list* get_user_posts(const char* user_name, const struct auth_token* c
   {
     return NULL;
   }
+  posts = sort_items(posts, POST_ITEM);
 
   // list of vote wrappers
   ks_list* post_wrappers = ks_list_new();
@@ -71,7 +72,7 @@ static ks_list* get_user_posts(const char* user_name, const struct auth_token* c
     char* downvote_class = DOWNVOTE_NOTCLICKED_STATE;
     if (client_info != NULL)
     {
-      enum vote_type vt = check_for_vote(POST_VOTE, post_id, client_info->user_id);
+      enum vote_type vt = check_for_vote(POST_ITEM, post_id, client_info->user_id);
       upvote_class = vt == UPVOTE ? UPVOTE_CLICKED_STATE : upvote_class;
       downvote_class = vt == DOWNVOTE ? DOWNVOTE_CLICKED_STATE : downvote_class;
     }
@@ -98,6 +99,7 @@ static ks_list* get_user_comments(const char* user_name, const struct auth_token
   {
     return NULL;
   }
+  comments = sort_items(comments, COMMENT_ITEM);
 
   // list of vote wrappers
   ks_list* comment_wrappers = ks_list_new();
@@ -124,7 +126,7 @@ static ks_list* get_user_comments(const char* user_name, const struct auth_token
     char* downvote_class = DOWNVOTE_NOTCLICKED_STATE;
     if (client_info != NULL)
     {
-      enum vote_type vt = check_for_vote(COMMENT_VOTE, comment_id, client_info->user_id);
+      enum vote_type vt = check_for_vote(COMMENT_ITEM, comment_id, client_info->user_id);
       upvote_class = vt == UPVOTE ? UPVOTE_CLICKED_STATE : upvote_class;
       downvote_class = vt == DOWNVOTE ? DOWNVOTE_CLICKED_STATE : downvote_class;
     }

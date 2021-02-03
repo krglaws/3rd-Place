@@ -173,18 +173,18 @@ void add_nav_info(ks_hashmap* page_data, const struct auth_token* client_info)
 }
 
 
-enum vote_type check_for_vote(const enum vote_item_type item_type, const char* item_id, const char* user_id)
+enum vote_type check_for_vote(enum item_type item_type, const char* item_id, const char* user_id)
 {
   ks_list* upvote_query_result;
   ks_list* downvote_query_result;
 
   // are we looking for post votes or comment votes?
-  if (item_type == POST_VOTE)
+  if (item_type == POST_ITEM)
   {
     upvote_query_result = query_post_upvotes_by_post_id_user_id(item_id, user_id);
     downvote_query_result = query_post_downvotes_by_post_id_user_id(item_id, user_id);
   }
-  else if (item_type == COMMENT_VOTE)
+  else if (item_type == COMMENT_ITEM)
   {
     upvote_query_result = query_comment_upvotes_by_post_id_user_id(item_id, user_id);
     downvote_query_result = query_comment_downvotes_by_post_id_user_id(item_id, user_id);
@@ -203,15 +203,15 @@ enum vote_type check_for_vote(const enum vote_item_type item_type, const char* i
   // might remove these checks
   if (uv0 != NULL && dv0 != NULL)
   {
-    log_crit("check_for_vote(): downvote and upvote present for same %s_id=%s user_id=%s", item_type==POST_VOTE?"post":"comment", item_id, user_id);
+    log_crit("check_for_vote(): downvote and upvote present for same %s_id=%s user_id=%s", item_type==POST_ITEM?"post":"comment", item_id, user_id);
   }
   if (uv0 != NULL && uv1 != NULL)
   {
-    log_crit("check_for_vote(): multiple upvotes present for same %s_id=%s user_id=%s", item_type==POST_VOTE?"post":"comment", item_id, user_id);
+    log_crit("check_for_vote(): multiple upvotes present for same %s_id=%s user_id=%s", item_type==POST_ITEM?"post":"comment", item_id, user_id);
   }
   if (dv0 != NULL && dv1 != NULL)
   {
-    log_crit("check_for_vote(): multiple downvotes present for same %s_id=%s user_id=%s", item_type==POST_VOTE?"post":"comment", item_id, user_id);
+    log_crit("check_for_vote(): multiple downvotes present for same %s_id=%s user_id=%s", item_type==POST_ITEM?"post":"comment", item_id, user_id);
   }
 
   // determine vote type
@@ -290,4 +290,121 @@ static enum get_err get_error()
   enum get_err err = gerr;
   gerr = NO_GET_ERR;
   return err;
+}
+
+
+time_t get_item_date(const ks_hashmap* item, enum item_type it)
+{
+  const char* date_str;
+
+  if (it == POST_ITEM)
+  {
+    date_str = get_map_value(item, FIELD_POST_DATE_POSTED)->cp;
+  }
+  else if (it == COMMENT_ITEM)
+  {
+    date_str = get_map_value(item, FIELD_COMMENT_DATE_POSTED)->cp;
+  }
+  else log_crit("get_item_date(): Invalid item_type param");
+
+  return (time_t) strtol(date_str, NULL, 10);
+}
+
+
+ks_list* sort_items(ks_list* items, enum item_type it)
+{
+  if (items == NULL)
+  {
+    return NULL;
+  }
+
+  int count = ks_list_length(items);
+
+  // reverse item list
+  // (odds are the items at the beginning of
+  // list are older)
+  ks_list* rev_list = ks_list_new();
+  const ks_datacont* curr;
+  ks_iterator* iter = ks_iterator_new(items, KS_LIST);
+  while ((curr = ks_iterator_get(iter)) != NULL)
+  {
+    ks_list_insert(rev_list, ks_datacont_copy(curr), 0);
+  }
+  ks_iterator_delete(iter);
+  ks_list_delete(items);
+
+  // bubble sort, too lazy to do better right now
+  // TODO: change this to quicksort or something
+  items = rev_list;
+  for (int i = 0; i < count; i++)
+  {
+    bool done = true;
+    for (int j = 0; j < count-1-i; j++)
+    {
+      ks_datacont* itemA = ks_list_get(items, j);
+      time_t tA = get_item_date(itemA->hm, it);
+
+      ks_datacont* itemB = ks_list_get(items, j+1);
+      time_t tB = get_item_date(itemB->hm, it);
+
+      if (tA < tB)
+      {
+        done = false;
+
+        // swap positions
+        ks_datacont* temp = ks_datacont_copy(itemA);
+        ks_list_remove_at(items, j);
+        ks_list_insert(items, temp, j + 1);
+      }
+    }
+    if (done == true)
+    {
+      break;
+    }
+  }
+
+  return items;
+}
+
+
+ks_list* merge_items(ks_list* lsA, ks_list* lsB, enum item_type it)
+{
+  if (lsA == NULL || lsB == NULL)
+  {
+    return (lsA ? lsA : (lsB ? lsB : NULL));
+  }
+
+  ks_list* merged = ks_list_new();
+  ks_iterator* iterA = ks_iterator_new(lsA, KS_LIST);
+  ks_iterator* iterB = ks_iterator_new(lsB, KS_LIST);
+  ks_datacont* itemA, *itemB;
+
+  do
+  {
+    itemA = ks_datacont_copy(ks_iterator_get(iterA));
+    time_t tA = itemA ? get_item_date(itemA->hm, it) : 0;
+
+    itemB = ks_datacont_copy(ks_iterator_get(iterB));
+    time_t tB = itemB ? get_item_date(itemB->hm, it) : 0;
+
+    ks_datacont* first = tA < tB ? itemB : itemA;
+    ks_datacont* second = tA < tB ? itemA : itemB;
+
+    if (first != NULL)
+    {
+      ks_list_add(merged, first);
+    }
+
+    if (second != NULL)
+    {
+      ks_list_add(merged, second);
+    }
+  } while (itemA != NULL || itemB != NULL);
+
+  ks_iterator_delete(iterA);
+  ks_iterator_delete(iterB);
+  ks_list_delete(lsA);
+  ks_list_delete(lsB);
+
+  return merged;
 }

@@ -57,18 +57,28 @@ enum login_error {
 
 char* get_login(const struct auth_token* client_info, enum login_error err);
 
+/* Utilities for arranging posts and comments into the correct order */
+enum item_type
+{
+  POST_ITEM,
+  COMMENT_ITEM
+};
+
+time_t get_item_date(const ks_hashmap* item, enum item_type it);
+
+/* items are sorted by date posted (newest at the top) */
+ks_list* sort_items(ks_list* items, enum item_type it);
+
+ks_list* merge_items(ks_list* lsA, ks_list* lsB, enum item_type it);
+
 enum vote_type {
   UPVOTE,
   DOWNVOTE,
   NOVOTE
 };
 
-enum vote_item_type {
-  POST_VOTE,
-  COMMENT_VOTE
-};
-
-enum vote_type check_for_vote(const enum vote_item_type item_type, const char* vote_id, const char* user_id);
+/* returns UPVOTE, DOWNVOTE, or NOVOTE for a given post or comment ID and user ID*/
+enum vote_type check_for_vote(enum item_type item_type, const char* vote_id, const char* user_id);
 
 enum get_err {
   NO_GET_ERR,
@@ -84,5 +94,6 @@ void set_error(enum get_err err);
 
 /* Retrieves value of static int internal_error and sets it to 0 */
 static enum get_err get_error();
+
 
 #endif
