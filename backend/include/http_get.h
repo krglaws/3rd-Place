@@ -18,6 +18,8 @@
 #define HTML_COMMUNITY_POST "templates/community/post.html"
 #define HTML_FEED "templates/feed/feed.html"
 #define HTML_FEED_POST "templates/feed/post.html"
+#define HTML_NEW_ITEM "templates/new/new_item.html"
+#define HTML_NEW_POST "templates/new/post.hml"
 
 /* paths hereafter need the leading '/' since
    they will be requested by the client browser
@@ -39,25 +41,7 @@ struct response* http_get(struct request* req);
 
 void add_nav_info(ks_hashmap* page_data, const struct auth_token* client_info);
 
-#define UPVOTE_CLICKED_STATE "upvote-clicked"
-#define UPVOTE_NOTCLICKED_STATE "upvote-notclicked"
-#define DOWNVOTE_CLICKED_STATE "downvote-clicked"
-#define DOWNVOTE_NOTCLICKED_STATE "downvote-notclicked"
-
-enum login_error {
-  LOGINERR_NONE,
-  LOGINERR_BAD_LOGIN,
-  LOGINERR_EMPTY,
-  LOGINERR_UNAME_TAKEN
-};
-
-#define BAD_LOGIN_MSG "<p>Bad Login</p>"
-#define UNAME_TAKEN_MSG "<p>Username Already Exists</p>"
-#define EMPTY_INPUT_MSG "<p>Empty username or password</p>"
-
-char* get_login(const struct auth_token* client_info, enum login_error err);
-
-/* Utilities for arranging posts and comments into the correct order */
+/* Display posts/comments in correct order (newest at the top) */
 enum item_type
 {
   POST_ITEM,
@@ -66,16 +50,22 @@ enum item_type
 
 time_t get_item_date(const ks_hashmap* item, enum item_type it);
 
-/* items are sorted by date posted (newest at the top) */
 ks_list* sort_items(ks_list* items, enum item_type it);
 
 ks_list* merge_items(ks_list* lsA, ks_list* lsB, enum item_type it);
 
+
+/* Vote checking */
 enum vote_type {
   UPVOTE,
   DOWNVOTE,
   NOVOTE
 };
+
+#define UPVOTE_CLICKED_STATE "upvote-clicked"
+#define UPVOTE_NOTCLICKED_STATE "upvote-notclicked"
+#define DOWNVOTE_CLICKED_STATE "downvote-clicked"
+#define DOWNVOTE_NOTCLICKED_STATE "downvote-notclicked"
 
 /* returns UPVOTE, DOWNVOTE, or NOVOTE for a given post or comment ID and user ID*/
 enum vote_type check_for_vote(enum item_type item_type, const char* vote_id, const char* user_id);

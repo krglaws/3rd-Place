@@ -12,30 +12,6 @@
 #include <get_community.h>
 
 
-static ks_hashmap* get_community_info(const char* community_name)
-{
-  ks_list* result;
-  if ((result = query_communities_by_name(community_name)) == NULL)
-  {
-    return NULL;
-  }
-
-  ks_datacont* row0 = ks_list_get(result, 0);
-
-  if (row0 == NULL)
-  {
-    ks_list_delete(result);
-    return NULL;
-  }
-
-  ks_hashmap* community_info = row0->hm;
-  row0->hm = NULL;
-  ks_list_delete(result);
-
-  return community_info;
-}
-
-
 static ks_list* get_community_posts(const char* community_name, const struct auth_token* client_info)
 {
   // get community posts
