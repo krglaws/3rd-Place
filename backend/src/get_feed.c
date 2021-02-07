@@ -1,6 +1,9 @@
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <log_manager.h>
+#include <senderr.h>
 #include <auth_manager.h>
 #include <sql_manager.h>
 #include <string_map.h>
@@ -60,12 +63,11 @@ static ks_list* wrap_posts(ks_list* posts, const struct auth_token* client_info)
 }
 
 
-char* get_feed(const enum feed_type ft, const struct auth_token* client_info)
+struct response* get_feed(const enum feed_type ft, const struct auth_token* client_info)
 {
   if (ft == HOME_FEED && client_info == NULL)
   {
-    set_error(REDIRECT);
-    return NULL;
+    return redirect("/popular");
   }
 
   ks_hashmap* feed_info = ks_hashmap_new(KS_CHARP, 8);
@@ -125,9 +127,25 @@ char* get_feed(const enum feed_type ft, const struct auth_token* client_info)
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_MAIN);
   add_nav_info(page_data, client_info);
 
+  struct response* resp = calloc(1, sizeof(struct response));
+
   // build template
-  char* html = build_template(page_data);
+  if ((resp->content = build_template(page_data)) == NULL)
+  {
+    free(resp);
+    ks_hashmap_delete(page_data);
+    return senderr(ERR_INTERNAL);
+  }
   ks_hashmap_delete(page_data);
 
-  return html;
+  // prepare response object
+  resp->content_length = strlen(resp->content);
+  char contlenline[80];
+  int contlen = sprintf(contlenline, "Content-Length: %d\r\n", resp->content_length);
+  resp->header = ks_list_new();
+  ks_list_add(resp->header, ks_datacont_new(STAT200, KS_CHARP, strlen(STAT200)));
+  ks_list_add(resp->header, ks_datacont_new(TEXTHTML, KS_CHARP, strlen(TEXTHTML)));
+  ks_list_add(resp->header, ks_datacont_new(contlenline, KS_CHARP, contlen));
+
+  return resp;
 }

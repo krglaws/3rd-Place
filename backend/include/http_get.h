@@ -2,6 +2,7 @@
 #define _HTTP_GET_H_
 
 #include <common.h>
+#include <auth_manager.h>
 
 /* html template paths */
 #define HTML_MAIN "templates/main/main.html"
@@ -18,7 +19,6 @@
 #define HTML_COMMUNITY_POST "templates/community/post.html"
 #define HTML_FEED "templates/feed/feed.html"
 #define HTML_FEED_POST "templates/feed/post.html"
-#define HTML_NEW_ITEM "templates/new/new_item.html"
 #define HTML_NEW_POST "templates/new/post.hml"
 
 /* paths hereafter need the leading '/' since
@@ -39,21 +39,18 @@
 
 struct response* http_get(struct request* req);
 
+struct response* get_file(const char* uri);
+
 void add_nav_info(ks_hashmap* page_data, const struct auth_token* client_info);
 
-/* Display posts/comments in correct order (newest at the top) */
-enum item_type
-{
-  POST_ITEM,
-  COMMENT_ITEM
-};
+ks_hashmap* get_community_info(const char* community_name);
 
-time_t get_item_date(const ks_hashmap* item, enum item_type it);
+ks_hashmap* get_post_info(const char* post_id);
 
-ks_list* sort_items(ks_list* items, enum item_type it);
-
-ks_list* merge_items(ks_list* lsA, ks_list* lsB, enum item_type it);
-
+#define UPVOTE_CLICKED_STATE "upvote-clicked"
+#define UPVOTE_NOTCLICKED_STATE "upvote-notclicked"
+#define DOWNVOTE_CLICKED_STATE "downvote-clicked"
+#define DOWNVOTE_NOTCLICKED_STATE "downvote-notclicked"
 
 /* Vote checking */
 enum vote_type {
@@ -62,28 +59,20 @@ enum vote_type {
   NOVOTE
 };
 
-#define UPVOTE_CLICKED_STATE "upvote-clicked"
-#define UPVOTE_NOTCLICKED_STATE "upvote-notclicked"
-#define DOWNVOTE_CLICKED_STATE "downvote-clicked"
-#define DOWNVOTE_NOTCLICKED_STATE "downvote-notclicked"
-
-/* returns UPVOTE, DOWNVOTE, or NOVOTE for a given post or comment ID and user ID*/
-enum vote_type check_for_vote(enum item_type item_type, const char* vote_id, const char* user_id);
-
-enum get_err {
-  NO_GET_ERR,
-  REDIRECT, // redirect to /login
-  INTERNAL // send 500 err
+/* Display posts/comments in correct order (newest at the top) */
+enum item_type
+{
+  POST_ITEM,
+  COMMENT_ITEM
 };
 
-/* Called by the get_* files in the event of an internal
-    server error to notify http_get to send a 500 instead
-    404. */
-void set_error(enum get_err err);
+/* returns UPVOTE, DOWNVOTE, or NOVOTE for a given post or comment ID and user ID*/
+enum vote_type check_for_vote(enum item_type it, const char* vote_id, const char* user_id);
 
+time_t get_item_date(const ks_hashmap* item, enum item_type it);
 
-/* Retrieves value of static int internal_error and sets it to 0 */
-static enum get_err get_error();
+ks_list* sort_items(ks_list* items, enum item_type it);
 
+ks_list* merge_items(ks_list* lsA, ks_list* lsB, enum item_type it);
 
 #endif

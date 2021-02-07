@@ -10,6 +10,6 @@ char* fill_community_post_template(char* template, const ks_list* post_info, con
 
 char* fill_community_posts(char* template, const char* community_name, const struct auth_token* client_info);
 
-char* get_community(const char* community_name, const struct auth_token* client_info);
+struct response* get_community(const char* community_name, const struct auth_token* client_info);
 
 #endif

@@ -4,16 +4,17 @@
 #include <kylestructs.h>
 
 #include <string_map.h>
+#include <senderr.h>
 #include <common.h>
 #include <log_manager.h>
 #include <auth_manager.h>
 #include <templating.h>
 #include <http_get.h>
 #include <sql_manager.h>
-#include <get_new_post.h>
+#include <get_new.h>
 
 
-char* get_login(const struct auth_token* client_info, enum login_error err)
+struct response* get_login(const struct auth_token* client_info, enum login_error err)
 {
   ks_hashmap* page_content = ks_hashmap_new(KS_CHARP, 8);
 
@@ -60,25 +61,72 @@ char* get_login(const struct auth_token* client_info, enum login_error err)
   add_map_value_hm(page_data, PAGE_CONTENT_KEY, page_content);
   add_nav_info(page_data, client_info);
 
-  char* html = build_template(page_data);
+  struct response* resp = calloc(1, sizeof(struct response));
+
+  // build template
+  if ((resp->content = build_template(page_data)) == NULL)
+  {
+    free(resp);
+    ks_hashmap_delete(page_data);
+    return senderr(ERR_INTERNAL);
+  }
   ks_hashmap_delete(page_data);
 
-  return html;
+  // prepare response object
+  resp->content_length = strlen(resp->content);
+  char contlenline[80];
+  int contlen = sprintf(contlenline, "Content-Length: %d\r\n", resp->content_length);
+  resp->header = ks_list_new();
+  ks_list_add(resp->header, ks_datacont_new(STAT200, KS_CHARP, strlen(STAT200)));
+  ks_list_add(resp->header, ks_datacont_new(TEXTHTML, KS_CHARP, strlen(TEXTHTML)));
+  ks_list_add(resp->header, ks_datacont_new(contlenline, KS_CHARP, contlen));
+
+  return resp;
 }
 
 
-struct response* get_new_post(const char* community_id, const struct auth_token* client_info)
+struct response* get_new_post(const char* community_name, const struct auth_token* client_info)
 {
-  if (community_id == NULL)
-  {
-    return senderr(ERR_NOT_FOUND);
-  }
-
   if (client_info == NULL)
   {
     return redirect("/login");
   }
 
-  list* community_info;
-  if ((community_info = 
+  // get community info
+  ks_hashmap* community_info;
+  if (community_name == NULL || (community_info = get_community_info(community_name)) == NULL)
+  {
+    senderr(ERR_NOT_FOUND);
+  }
+
+  // put page data together
+  add_map_value_str(community_info, TEMPLATE_PATH_KEY, HTML_NEW_POST);
+  ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 8);
+  add_map_value_hm(page_data, PAGE_CONTENT_KEY, community_info);
+  add_map_value_str(page_data, STYLE_PATH_KEY, " ");
+  add_map_value_str(page_data, SCRIPT_PATH_KEY, " ");
+  add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_MAIN);
+  add_nav_info(page_data, client_info);
+
+  struct response* resp = calloc(1, sizeof(struct response));
+
+  // build template
+  if ((resp->content = build_template(page_data)) == NULL)
+  {
+    free(resp);
+    ks_hashmap_delete(page_data);
+    return senderr(ERR_INTERNAL);
+  }
+  ks_hashmap_delete(page_data);
+
+  // prepare response object
+  resp->content_length = strlen(resp->content);
+  char contlenline[80];
+  int contlen = sprintf(contlenline, "Content-Length: %d\r\n", resp->content_length);
+  resp->header = ks_list_new();
+  ks_list_add(resp->header, ks_datacont_new(STAT200, KS_CHARP, strlen(STAT200)));
+  ks_list_add(resp->header, ks_datacont_new(TEXTHTML, KS_CHARP, strlen(TEXTHTML)));
+  ks_list_add(resp->header, ks_datacont_new(contlenline, KS_CHARP, contlen));
+
+  return resp;
 }

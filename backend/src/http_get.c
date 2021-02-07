@@ -12,6 +12,7 @@
 #include <common.h>
 #include <load_file.h>
 #include <senderr.h>
+#include <get_new.h>
 #include <get_user.h>
 #include <get_post.h>
 #include <get_community.h>
@@ -19,139 +20,96 @@
 #include <http_get.h>
 
 
-// used to signal errors while getting 
-static enum get_err gerr = 0;
-
-
 struct response* http_get(struct request* req)
 {
-  if (req == NULL) {
-    return NULL;
+  if (req == NULL)
+  {
+    log_crit("http_get(): NULL request object");
   }
 
-  // what are we getting?
-  char* content_type = NULL;
-  char* content = NULL;
-  int content_length = 0;
-  if (strstr(req->uri, ".css"))
+  // endpoints
+  if (strcmp(req->uri, "./") == 0 ||
+      strcmp(req->uri, "./home") == 0)
   {
-    content_type = TEXTCSS;
-    if (content = load_file(req->uri))
-    {
-      content_length = strlen(content);
-    }
-  }
-  else if (strstr(req->uri, ".js"))
-  {
-    content_type = APPJS;
-    if (content = load_file(req->uri))
-    {
-      content_length = strlen(content);
-    }
-  }
-  else if (strstr(req->uri, ".ico"))
-  {
-    struct file_str* ico;
-    content_type = IMGICO;
-    if (ico = load_file_str(req->uri))
-    {
-      content = ico->contents;
-      content_length = ico->len;
-      free(ico);
-    }
-  }
-  else if ((strcmp(req->uri, "./") == 0) ||
-           (strcmp(req->uri, "./home") == 0))
-  {
-    content_type = TEXTHTML;
-    if ((content = get_feed(HOME_FEED, req->client_info)) != NULL)
-    {
-      content_length = strlen(content);
-    }
-  }
-  else if (strcmp(req->uri, "./popular") == 0)
-  {
-    content_type = TEXTHTML;
-    if ((content = get_feed(POPULAR_FEED, req->client_info)) != NULL)
-    {
-      content_length = strlen(content);
-    }
-  }
-  else if (strstr(req->uri, "./u/"))
-  {
-    content_type = TEXTHTML;
-    if (content = get_user(req->uri + 4, req->client_info))
-    {
-      content_length = strlen(content);
-    }
-  }
-  else if (strstr(req->uri, "./c/"))
-  {
-    content_type = TEXTHTML;
-    if (content = get_community(req->uri + 4, req->client_info))
-    {
-      content_length = strlen(content);
-    }
-  }
-  else if (strstr(req->uri, "./p/"))
-  {
-    content_type = TEXTHTML;
-    if (content = get_post(req->uri + 4, req->client_info))
-    {
-      content_length = strlen(content);
-    }
-  }
-  else if (strcmp(req->uri, "./login") == 0)
-  {
-    content_type = TEXTHTML;
-    if (content = get_login(req->client_info, LOGINERR_NONE))
-    {
-      content_length = strlen(content);
-    }
+    return get_feed(HOME_FEED, req->client_info);
   }
 
-  // do we have it?
-  if (content_type == NULL || content == NULL)
+  if (strcmp(req->uri, "./popular") == 0)
   {
-    if (content != NULL)
-    {
-      free(content);
-    }
+    return get_feed(POPULAR_FEED, req->client_info);
+  }
 
-    // get error type
-    enum get_err err = get_error();
+  if (strcmp(req->uri, "./login") == 0)
+  {
+    return get_login(req->client_info, LOGINERR_NONE);
+  }
 
-    // redirect
-    if (err == REDIRECT)
-    {
-      return redirect("/login");
-    }
+  if (req->uri == strstr(req->uri, "./u/"))
+  {
+    return get_user(req->uri+4, req->client_info);
+  }
 
-    // check for 500 error
-    if (get_error() == 1)
-    {
-      return senderr(ERR_INTERNAL);
-    }
+  if (req->uri == strstr(req->uri, "./p/"))
+  {
+    return get_post(req->uri+4, req->client_info);
+  }
 
-    // default to 404
+  if (req->uri == strstr(req->uri, "./c/"))
+  {
+    return get_community(req->uri+4, req->client_info);
+  }
+
+  return get_file(req->uri);
+}
+
+
+struct response* get_file(const char* uri)
+{
+  // no '..' allowed
+  if (strstr(uri, "..") != NULL)
+  {
     return senderr(ERR_NOT_FOUND);
   }
 
-  // prepare response object
+  // get file
+  struct file_str* f;
+  if ((f = load_file_str(uri)) == NULL)
+  {
+    return senderr(ERR_NOT_FOUND);
+  }
+
   struct response* resp = calloc(1, sizeof(struct response));
+  char* content_type;
+
+  // determine file type
+  if (strstr(uri, ".css") != NULL)
+  {
+    content_type = TEXTCSS;
+  }
+  else if (strstr(uri, ".js") != NULL)
+  {
+    content_type = APPJS;
+  }
+  else if (strstr(uri, ".ico") != NULL)
+  {
+    content_type = IMGICO;
+  }
+
+  // build response object
+  char contlenline[80];
+  int contlen = sprintf(contlenline, "Content-Length: %d\n", f->len);
   resp->header = ks_list_new();
   ks_list_add(resp->header, ks_datacont_new(STAT200, KS_CHARP, strlen(STAT200)));
   ks_list_add(resp->header, ks_datacont_new(content_type, KS_CHARP, strlen(content_type)));
- 
-  char contlenline[80];
-  int len = sprintf(contlenline, "Content-Length: %d\n", content_length);
+  ks_list_add(resp->header, ks_datacont_new(contlenline, KS_CHARP, contlen));
 
-  ks_list_add(resp->header, ks_datacont_new(contlenline, KS_CHARP, len));
-  resp->content = content;
-  resp->content_length = content_length;
+  resp->content = f->contents;
+  resp->content_length = f->len;
+
+  free(f);
 
   return resp;
-} // end http_get()
+}
 
 
 void add_nav_info(ks_hashmap* page_data, const struct auth_token* client_info)
@@ -270,20 +228,6 @@ ks_hashmap* get_post_info(const char* post_id)
   ks_list_delete(result);
 
   return post_info;
-}
-
-
-void set_error(enum get_err err)
-{
-  gerr = err;
-}
-
-
-static enum get_err get_error()
-{
-  enum get_err err = gerr;
-  gerr = NO_GET_ERR;
-  return err;
 }
 
 

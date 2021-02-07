@@ -11,6 +11,7 @@
 #include <senderr.h>
 #include <common.h>
 #include <string_map.h>
+#include <get_new.h>
 #include <http_get.h>
 #include <http_post.h>
 
@@ -74,37 +75,12 @@ struct response* http_post(struct request* req)
 }
 
 
-static struct response* bad_login_signup(enum login_error e)
-{
-  // use http_get's get_login()
-  char* content = get_login(NULL, e);
-
-  // prepare response object
-  struct response* resp = calloc(1, sizeof(struct response));
-  resp->header = ks_list_new();
-  ks_list_add(resp->header, ks_datacont_new(STAT200, KS_CHARP, strlen(STAT200)));
-  ks_list_add(resp->header, ks_datacont_new(TEXTHTML, KS_CHARP, strlen(TEXTHTML)));
-
-  // build content-length header line
-  int contlen = strlen(content);
-  char contlenline[80];
-  int len = sprintf(contlenline, "Content-Length: %d\r\n", contlen);
-
-  // add to response object
-  ks_list_add(resp->header, ks_datacont_new(contlenline, KS_CHARP, len));
-  resp->content = content;
-  resp->content_length = contlen;
-
-  return resp;
-}
-
-
 static struct response* post_login(const char* uname, const char* passwd)
 {
   const char* token;
   if (uname == NULL || passwd == NULL || (token = login_user(uname, passwd)) == NULL)
   {
-    return bad_login_signup(LOGINERR_BAD_LOGIN);
+    return get_login(NULL, LOGINERR_BAD_LOGIN);
   }
 
   // build redirect
@@ -125,13 +101,13 @@ static struct response* post_signup(const char* uname, const char* passwd)
   if (uname == NULL || passwd == NULL)
   {
     log_info("Signup failed: null username or password");
-    return bad_login_signup(LOGINERR_EMPTY);
+    return get_login(NULL, LOGINERR_EMPTY);
   }
 
   if ((token = new_user(uname, passwd)) == NULL)
   {
     log_info("Signup failed: username already exists");
-    return bad_login_signup(LOGINERR_UNAME_TAKEN);
+    return get_login(NULL, LOGINERR_UNAME_TAKEN);
   }
 
   // build redirect

@@ -57,7 +57,6 @@ char* build_template(const ks_hashmap* page_data)
   if ((tmplt = load_file(tmplt_path->cp)) == NULL)
   {
     log_err("build_template(): failed to load template file: '%s'", tmplt_path->cp);
-    set_error(INTERNAL);
     return NULL;
   }
 
@@ -137,7 +136,7 @@ char* build_template(const ks_hashmap* page_data)
 
     else
     {
-      log_crit("build_template(): Unknown ks_datacont type found in page data");
+      log_crit("build_template(): Invalid ks_datacont type found in page data");
     }
   }
 

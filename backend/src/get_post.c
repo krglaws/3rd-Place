@@ -4,6 +4,7 @@
 #include <kylestructs.h>
 
 #include <templating.h>
+#include <senderr.h>
 #include <string_map.h>
 #include <log_manager.h>
 #include <load_file.h>
@@ -11,30 +12,6 @@
 #include <sql_manager.h>
 #include <http_get.h>
 #include <get_post.h>
-
-
-static ks_hashmap* get_post_info(const char* post_id)
-{
-  ks_list* result;
-  if ((result = query_posts_by_id(post_id)) == NULL)
-  {
-    return NULL;
-  }
-
-  ks_datacont* row0 = ks_list_get(result, 0);
-
-  if (row0 == NULL)
-  {
-    // post not found
-    ks_list_delete(result);
-  }
-
-  ks_hashmap* post_info = row0->hm;
-  row0->hm = NULL;
-  ks_list_delete(result);
-
-  return post_info;
-}
 
 
 static ks_list* get_post_comments(const char* post_id, const struct auth_token* client_info)
@@ -91,18 +68,18 @@ static ks_list* get_post_comments(const char* post_id, const struct auth_token* 
 }
 
 
-char* get_post(const char* post_id, const struct auth_token* client_info)
+struct response* get_post(const char* post_id, const struct auth_token* client_info)
 {
   if (post_id == NULL || strlen(post_id) == 0)
   {
-    return NULL;
+    return senderr(ERR_NOT_FOUND);
   }
 
   // get post from DB
   ks_hashmap* post_info;
   if ((post_info = get_post_info(post_id)) == NULL)
   {
-    return NULL;
+    return senderr(ERR_NOT_FOUND);
   }
 
   char* upvote_class = UPVOTE_NOTCLICKED_STATE;
@@ -137,9 +114,25 @@ char* get_post(const char* post_id, const struct auth_token* client_info)
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_MAIN);
   add_nav_info(page_data, client_info);
 
+  struct response* resp = calloc(1, sizeof(struct response));
+
   // build template
-  char* html = build_template(page_data);
+  if ((resp->content = build_template(page_data)) == NULL)
+  {
+    free(resp);
+    ks_hashmap_delete(page_data);
+    return senderr(ERR_INTERNAL);
+  }
   ks_hashmap_delete(page_data);
 
-  return html;
+  // prepare response object
+  resp->content_length = strlen(resp->content);
+  char contlenline[80];
+  int contlen = sprintf(contlenline, "Content-Length: %d\r\n", resp->content_length);
+  resp->header = ks_list_new();
+  ks_list_add(resp->header, ks_datacont_new(STAT200, KS_CHARP, strlen(STAT200)));
+  ks_list_add(resp->header, ks_datacont_new(TEXTHTML, KS_CHARP, strlen(TEXTHTML)));
+  ks_list_add(resp->header, ks_datacont_new(contlenline, KS_CHARP, contlen));
+
+  return resp;
 }
