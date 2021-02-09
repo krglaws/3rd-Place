@@ -88,7 +88,7 @@ struct response* get_community(const char* community_name, const struct auth_tok
   ks_list* community_posts;
   if ((community_posts = get_community_posts(community_name, client_info)) == NULL)
   {
-    add_map_value_str(community_info, COMMUNITY_POST_LIST_KEY, " ");
+    add_map_value_str(community_info, COMMUNITY_POST_LIST_KEY, "");
   }
   else
   {

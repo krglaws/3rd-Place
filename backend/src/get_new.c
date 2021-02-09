@@ -26,23 +26,23 @@ struct response* get_login(const struct auth_token* client_info, enum login_erro
     // check for login/signup error
     if (err == LOGINERR_BAD_LOGIN)
     {
-      add_map_value_str(page_content, SIGNUP_ERROR_KEY, " ");
+      add_map_value_str(page_content, SIGNUP_ERROR_KEY, "");
       add_map_value_str(page_content, LOGIN_ERROR_KEY, BAD_LOGIN_MSG);
     }
     else if (err == LOGINERR_UNAME_TAKEN)
     {
       add_map_value_str(page_content, SIGNUP_ERROR_KEY, UNAME_TAKEN_MSG);
-      add_map_value_str(page_content, LOGIN_ERROR_KEY, " ");
+      add_map_value_str(page_content, LOGIN_ERROR_KEY, "");
     }
     else if (err == LOGINERR_EMPTY)
     {
       add_map_value_str(page_content, SIGNUP_ERROR_KEY, EMPTY_INPUT_MSG);
-      add_map_value_str(page_content, LOGIN_ERROR_KEY, " ");
+      add_map_value_str(page_content, LOGIN_ERROR_KEY, "");
     }
     else if (err == LOGINERR_NONE)
     {
-      add_map_value_str(page_content, SIGNUP_ERROR_KEY, " ");
-      add_map_value_str(page_content, LOGIN_ERROR_KEY, " ");
+      add_map_value_str(page_content, SIGNUP_ERROR_KEY, "");
+      add_map_value_str(page_content, LOGIN_ERROR_KEY, "");
     }
     else
     {
@@ -57,7 +57,7 @@ struct response* get_login(const struct auth_token* client_info, enum login_erro
   ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 8);
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_MAIN);
   add_map_value_str(page_data, STYLE_PATH_KEY, CSS_LOGIN);
-  add_map_value_str(page_data, SCRIPT_PATH_KEY, " ");
+  add_map_value_str(page_data, SCRIPT_PATH_KEY, "");
   add_map_value_hm(page_data, PAGE_CONTENT_KEY, page_content);
   add_nav_info(page_data, client_info);
 
@@ -103,7 +103,7 @@ struct response* get_new_post(const char* community_name, const struct auth_toke
   // put page data together
   ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 8);
   add_map_value_str(page_data, STYLE_PATH_KEY, CSS_FORM);
-  add_map_value_str(page_data, SCRIPT_PATH_KEY, " ");
+  add_map_value_str(page_data, SCRIPT_PATH_KEY, "");
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_MAIN);
   add_map_value_hm(page_data, PAGE_CONTENT_KEY, community_info);
   add_nav_info(page_data, client_info);

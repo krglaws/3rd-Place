@@ -211,7 +211,7 @@ static ks_list* query_database(const char** field_table, const char* tmplt, ...)
     for (int j = 0; j < num_fields; j++)
     {
       const char* key_str = field_table[j];
-      const char* value_str = sqlrow[j] ? sqlrow[j] : " ";
+      const char* value_str = sqlrow[j] ? sqlrow[j] : "";
 
       ks_datacont* key = ks_datacont_new(key_str, KS_CHARP, strlen(key_str));
       ks_datacont* value = ks_datacont_new(value_str, KS_CHARP, strlen(value_str));

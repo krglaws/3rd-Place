@@ -166,7 +166,7 @@ struct response* get_user(const char* user_name, const struct auth_token* client
   ks_list* posts;
   if ((posts = get_user_posts(user_name, client_info)) == NULL)
   {
-    add_map_value_str(user_info, USER_POST_LIST_KEY, " ");
+    add_map_value_str(user_info, USER_POST_LIST_KEY, "");
   }
   else
   {
@@ -177,7 +177,7 @@ struct response* get_user(const char* user_name, const struct auth_token* client
   ks_list* comments;
   if ((comments = get_user_comments(user_name, client_info)) == NULL)
   {
-    add_map_value_str(user_info, USER_COMMENT_LIST_KEY, " ");
+    add_map_value_str(user_info, USER_COMMENT_LIST_KEY, "");
   }
   else
   {

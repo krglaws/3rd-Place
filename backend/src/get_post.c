@@ -99,7 +99,7 @@ struct response* get_post(const char* post_id, const struct auth_token* client_i
   ks_list* comments;
   if ((comments = get_post_comments(post_id, client_info)) == NULL)
   {
-    add_map_value_str(post_info, POST_COMMENT_LIST_KEY, " ");
+    add_map_value_str(post_info, POST_COMMENT_LIST_KEY, "");
   }
   else
   {
@@ -110,7 +110,7 @@ struct response* get_post(const char* post_id, const struct auth_token* client_i
   ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 8);
   add_map_value_hm(page_data, PAGE_CONTENT_KEY, post_info);
   add_map_value_str(page_data, STYLE_PATH_KEY, CSS_POST);
-  add_map_value_str(page_data, SCRIPT_PATH_KEY, " ");
+  add_map_value_str(page_data, SCRIPT_PATH_KEY, "");
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_MAIN);
   add_nav_info(page_data, client_info);
 

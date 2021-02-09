@@ -112,7 +112,7 @@ struct response* get_feed(const enum feed_type ft, const struct auth_token* clie
   // add feed list to feed_info map
   if (posts == NULL)
   {
-    add_map_value_str(feed_info, FEED_POST_LIST_KEY, " ");
+    add_map_value_str(feed_info, FEED_POST_LIST_KEY, "");
   }
   else
   {
@@ -123,7 +123,7 @@ struct response* get_feed(const enum feed_type ft, const struct auth_token* clie
   ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 8);
   add_map_value_hm(page_data, PAGE_CONTENT_KEY, feed_info);
   add_map_value_str(page_data, STYLE_PATH_KEY, CSS_FEED);
-  add_map_value_str(page_data, SCRIPT_PATH_KEY, " ");
+  add_map_value_str(page_data, SCRIPT_PATH_KEY, "");
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_MAIN);
   add_nav_info(page_data, client_info);
 
