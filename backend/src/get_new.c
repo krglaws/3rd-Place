@@ -96,16 +96,16 @@ struct response* get_new_post(const char* community_name, const struct auth_toke
   ks_hashmap* community_info;
   if (community_name == NULL || (community_info = get_community_info(community_name)) == NULL)
   {
-    senderr(ERR_NOT_FOUND);
+    return senderr(ERR_NOT_FOUND);
   }
+  add_map_value_str(community_info, TEMPLATE_PATH_KEY, HTML_NEW_POST);
 
   // put page data together
-  add_map_value_str(community_info, TEMPLATE_PATH_KEY, HTML_NEW_POST);
   ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 8);
-  add_map_value_hm(page_data, PAGE_CONTENT_KEY, community_info);
-  add_map_value_str(page_data, STYLE_PATH_KEY, " ");
+  add_map_value_str(page_data, STYLE_PATH_KEY, CSS_FORM);
   add_map_value_str(page_data, SCRIPT_PATH_KEY, " ");
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_MAIN);
+  add_map_value_hm(page_data, PAGE_CONTENT_KEY, community_info);
   add_nav_info(page_data, client_info);
 
   struct response* resp = calloc(1, sizeof(struct response));

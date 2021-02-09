@@ -19,7 +19,7 @@
 #define HTML_COMMUNITY_POST "templates/community/post.html"
 #define HTML_FEED "templates/feed/feed.html"
 #define HTML_FEED_POST "templates/feed/post.html"
-#define HTML_NEW_POST "templates/new/post.hml"
+#define HTML_NEW_POST "templates/new/post.html"
 
 /* paths hereafter need the leading '/' since
    they will be requested by the client browser
@@ -28,6 +28,7 @@
 /* css paths */
 #define CSS_MAIN "/css/main.css"
 #define CSS_LOGIN "/css/login.css"
+#define CSS_FORM "/css/form.css"
 #define CSS_USER "/css/user.css"
 #define CSS_POST "/css/post.css"
 #define CSS_COMMUNITY "/css/community.css"

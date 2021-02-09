@@ -221,23 +221,8 @@ static struct request* parse_request(char* req_buf)
     delete_request(req);
     return NULL;
   }
-
-  // check for query string
-  char* q_begin;
-  if ((q_begin = strstr(token, "?")) != NULL)
-  {
-    // delete '?'
-    *q_begin = '\0';
-    q_begin++;
-    req->query = string_to_map(q_begin, "&", "=");
-  }
-
-  // prep uri string and copy
-  int uri_len = strlen(token);
-  req->uri = malloc(sizeof(char) * (strlen(token) + 2));
-  req->uri[0] = '.'; // prepend '.'
-  memcpy(req->uri+1, token, uri_len);
-  req->uri[uri_len+1] = '\0';
+  char* uri;
+  COPY_STR(uri, token);
 
   // get HTTP version
   if ((token = strtok(NULL, space_del)) == NULL)
@@ -246,6 +231,23 @@ static struct request* parse_request(char* req_buf)
     return NULL;
   }
   COPY_STR(req->http_version, token);
+
+  // check for query string
+  char* q_begin;
+  if ((q_begin = strstr(uri, "?")) != NULL)
+  {
+    //delete '?'
+    *q_begin = '\0';
+    q_begin++;
+    req->query = string_to_map(q_begin, "&", "=");
+  }
+
+  // prep uri string and copy
+  int uri_len = strlen(uri);
+  req->uri = malloc(sizeof(char) * (uri_len + 2));
+  req->uri[0] = '.'; // prepend '.'
+  memcpy(req->uri+1, uri, uri_len);
+  req->uri[uri_len+1] = '\0';
 
   // find end of header
   char* hdr_end;

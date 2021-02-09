@@ -40,14 +40,14 @@ char* build_template(const ks_hashmap* page_data)
   // which is why im calling log_crit here
   if (page_data == NULL)
   {
-    log_crit("build_template(): page data is NULL");
+    log_err("build_template(): page data is NULL");
     return NULL;
   }
 
   const ks_datacont* tmplt_path;
   if ((tmplt_path = get_map_value(page_data, TEMPLATE_PATH_KEY)) == NULL)
   {
-    log_crit("build_template(): page data is missing template path");
+    log_err("build_template(): page data is missing template path");
     return NULL;
   }
 
@@ -91,7 +91,12 @@ char* build_template(const ks_hashmap* page_data)
 
     else if (val_dc->type == KS_HASHMAP)
     {
-      char* val_str = build_template(val_dc->hm);
+      char* val_str;
+      if ((val_str = build_template(val_dc->hm)) == NULL)
+      {
+        free(tmplt);
+        return NULL;
+      }
       int val_len = strlen(val_str);
 
       COPY_INTO_TEMPLATE();
@@ -109,7 +114,12 @@ char* build_template(const ks_hashmap* page_data)
       ks_iterator* iter = ks_iterator_new(val_dc->ls, KS_LIST);
       while ((curr = ks_iterator_get(iter)) != NULL)
       {
-        char* temp_str = build_template(curr->hm);
+        char* temp_str;
+        if ((temp_str = build_template(curr->hm)) == NULL)
+        {
+          free(tmplt);
+          return NULL;
+        }
         int temp_len = strlen(temp_str);
 
         val_str = realloc(val_str, (temp_len + val_len + 1) * sizeof(char));

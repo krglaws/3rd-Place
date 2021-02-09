@@ -44,6 +44,12 @@ struct response* http_get(struct request* req)
     return get_login(req->client_info, LOGINERR_NONE);
   }
 
+  if (strcmp(req->uri, "./new_post") == 0)
+  {
+    const ks_datacont* dc = get_map_value(req->query, "community_name");
+    return get_new_post(dc ? dc->cp : NULL, req->client_info);
+  }
+
   if (req->uri == strstr(req->uri, "./u/"))
   {
     return get_user(req->uri+4, req->client_info);
