@@ -20,6 +20,7 @@
 #define HTML_FEED "templates/feed/feed.html"
 #define HTML_FEED_POST "templates/feed/post.html"
 #define HTML_NEW_POST "templates/new/post.html"
+#define HTML_NEW_COMMENT "templates/new/comment.html"
 
 /* paths hereafter need the leading '/' since
    they will be requested by the client browser

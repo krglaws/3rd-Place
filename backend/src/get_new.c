@@ -130,3 +130,50 @@ struct response* get_new_post(const char* community_name, const struct auth_toke
 
   return resp;
 }
+
+
+struct response* get_new_comment(const char* post_id, const struct auth_token* client_info)
+{
+  if (client_info == NULL)
+  {
+    return redirect("/login");
+  }
+
+  // get post info
+  ks_hashmap* post_info;
+  if (post_id == NULL || (post_info = get_post_info(post_id)) == NULL)
+  {
+    return senderr(ERR_NOT_FOUND);
+  }
+  add_map_value_str(post_info, TEMPLATE_PATH_KEY, HTML_NEW_COMMENT);
+
+  // put page data together
+  ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 8);
+  add_map_value_str(page_data, STYLE_PATH_KEY, CSS_FORM);
+  add_map_value_str(page_data, SCRIPT_PATH_KEY, "");
+  add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_MAIN);
+  add_map_value_hm(page_data, PAGE_CONTENT_KEY, post_info);
+  add_nav_info(page_data, client_info);
+
+  struct response* resp = calloc(1, sizeof(struct response));
+
+  // build template
+  if ((resp->content = build_template(page_data)) == NULL)
+  {
+    free(resp);
+    ks_hashmap_delete(page_data);
+    return senderr(ERR_INTERNAL);
+  }
+  ks_hashmap_delete(page_data);
+
+  // prepare response object
+  resp->content_length = strlen(resp->content);
+  char contlenline[80];
+  int contlen = sprintf(contlenline, "Content-Length: %d\r\n", resp->content_length);
+  resp->header = ks_list_new();
+  ks_list_add(resp->header, ks_datacont_new(STAT200, KS_CHARP, strlen(STAT200)));
+  ks_list_add(resp->header, ks_datacont_new(TEXTHTML, KS_CHARP, strlen(TEXTHTML)));
+  ks_list_add(resp->header, ks_datacont_new(contlenline, KS_CHARP, contlen));
+
+  return resp;
+}
