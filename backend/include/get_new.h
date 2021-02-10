@@ -18,4 +18,6 @@ struct response* get_new_post(const char* community_id, const struct auth_token*
 
 struct response* get_new_comment(const char* post_id, const struct auth_token* client_info);
 
+struct response* get_new_community(const struct auth_token* client_info);
+
 #endif

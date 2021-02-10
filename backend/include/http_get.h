@@ -21,6 +21,7 @@
 #define HTML_FEED_POST "templates/feed/post.html"
 #define HTML_NEW_POST "templates/new/post.html"
 #define HTML_NEW_COMMENT "templates/new/comment.html"
+#define HTML_NEW_COMMUNITY "templates/new/community.html"
 
 /* paths hereafter need the leading '/' since
    they will be requested by the client browser

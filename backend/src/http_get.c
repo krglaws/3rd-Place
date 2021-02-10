@@ -56,6 +56,11 @@ struct response* http_get(struct request* req)
     return get_new_comment(dc ? dc->cp : NULL, req->client_info);
   }
 
+  if (strcmp(req->uri, "./new_community") == 0)
+  {
+    return get_new_community(req->client_info);
+  }
+
   if (req->uri == strstr(req->uri, "./u/"))
   {
     return get_user(req->uri+4, req->client_info);
