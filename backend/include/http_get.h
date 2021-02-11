@@ -1,6 +1,7 @@
 #ifndef _HTTP_GET_H_
 #define _HTTP_GET_H_
 
+#include <stdbool.h>
 #include <common.h>
 #include <auth_manager.h>
 
@@ -19,6 +20,7 @@
 #define HTML_COMMUNITY_POST "templates/community/post.html"
 #define HTML_FEED "templates/feed/feed.html"
 #define HTML_FEED_POST "templates/feed/post.html"
+#define HTML_FEED_COMMUNITY "templates/feed/community.html"
 #define HTML_NEW_POST "templates/new/post.html"
 #define HTML_NEW_COMMENT "templates/new/comment.html"
 #define HTML_NEW_COMMUNITY "templates/new/community.html"
@@ -39,7 +41,6 @@
 /* js paths */
 #define JS_USER "/js/user.js"
 #define JS_COMMUNITY "/js/community.js"
-
 struct response* http_get(struct request* req);
 
 struct response* get_file(const char* uri);
@@ -66,11 +67,14 @@ enum vote_type {
 enum item_type
 {
   POST_ITEM,
-  COMMENT_ITEM
+  COMMENT_ITEM,
+  COMMUNITY_ITEM
 };
 
 /* returns UPVOTE, DOWNVOTE, or NOVOTE for a given post or comment ID and user ID*/
 enum vote_type check_for_vote(enum item_type it, const char* vote_id, const char* user_id);
+
+bool check_for_sub(const char* community_id, const struct auth_token* client_info);
 
 time_t get_item_date(const ks_hashmap* item, enum item_type it);
 

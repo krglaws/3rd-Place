@@ -39,6 +39,11 @@ struct response* http_get(struct request* req)
     return get_feed(POPULAR_FEED, req->client_info);
   }
 
+  if (strcmp(req->uri, "./communities") == 0)
+  {
+    return get_communities(req->client_info);
+  }
+
   if (strcmp(req->uri, "./login") == 0)
   {
     return get_login(req->client_info, LOGINERR_NONE);
@@ -200,6 +205,37 @@ enum vote_type check_for_vote(enum item_type item_type, const char* item_id, con
 } // end check_for_vote()
 
 
+bool check_for_sub(const char* community_id, const struct auth_token* client_info)
+{
+  if (community_id == NULL)
+  {
+    log_err("check_for_sub(): NULL community_id parameter");
+    return false;
+  }
+
+  if (client_info == NULL)
+  {
+    log_err("check_for_sub(): NULL client_info parameter");
+    return false;
+  }
+
+  ks_list* sub_query_result = query_subscriptions_by_community_id_user_id(community_id, client_info->user_id);
+  const ks_datacont* row0 = ks_list_get(sub_query_result, 0);
+  const ks_datacont* row1 = ks_list_get(sub_query_result, 1);
+
+  if (row1 != NULL)
+  {
+    log_crit("check_for_sub(): multiple subscription entries for community_id=%s, user_id=%s", community_id, client_info->user_id);
+  }
+
+  bool subbed = row0 != NULL;
+
+  ks_list_delete(sub_query_result);
+
+  return subbed;
+}
+
+
 ks_hashmap* get_community_info(const char* community_name)
 {
   ks_list* result;
@@ -259,6 +295,10 @@ time_t get_item_date(const ks_hashmap* item, enum item_type it)
   else if (it == COMMENT_ITEM)
   {
     date_str = get_map_value(item, FIELD_COMMENT_DATE_POSTED)->cp;
+  }
+  else if (it == COMMUNITY_ITEM)
+  {
+    date_str = get_map_value(item, FIELD_COMMUNITY_DATE_CREATED)->cp;
   }
   else log_crit("get_item_date(): Invalid item_type param");
 

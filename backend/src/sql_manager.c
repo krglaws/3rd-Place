@@ -289,6 +289,12 @@ ks_list* query_comments_by_post_id(const char* post_id)
 }
 
 
+ks_list* query_all_communities()
+{
+  return query_database(communities_field_table, QUERY_ALL_COMMUNITIES);
+}
+
+
 ks_list* query_communities_by_name(const char* community_name)
 {
   return query_database(communities_field_table, QUERY_COMMUNITIES_BY_NAME, community_name);
@@ -322,6 +328,12 @@ ks_list* query_comment_upvotes_by_post_id_user_id(const char* comment_id, const 
 ks_list* query_comment_downvotes_by_post_id_user_id(const char* comment_id, const char* user_id)
 {
   return query_database(post_downvotes_field_table, QUERY_COMMENT_DOWNVOTES_BY_COMMENT_ID_USER_ID, comment_id, user_id);
+}
+
+
+ks_list* query_subscriptions_by_community_id_user_id(const char* community_id, const char* user_id)
+{
+  return query_database(subscriptions_field_table, QUERY_SUBSCRIPTIONS_BY_COMMUNITY_ID_USER_ID, community_id, user_id);
 }
 
 

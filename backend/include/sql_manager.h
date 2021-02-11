@@ -97,6 +97,7 @@
 #define QUERY_COMMENTS_BY_AUTHOR_NAME "SELECT * FROM comments WHERE author_name = '%s';"
 #define QUERY_COMMENTS_BY_POST_ID "SELECT * FROM comments WHERE post_id = '%s';"
 
+#define QUERY_ALL_COMMUNITIES "SELECT * FROM communities;"
 #define QUERY_COMMUNITIES_BY_NAME "SELECT * FROM communities WHERE name = '%s';"
 
 #define QUERY_SUBSCRIPTIONS_BY_USER_ID "SELECT * FROM subscriptions WHERE user_id = '%s';"
@@ -106,6 +107,7 @@
 
 #define QUERY_COMMENT_UPVOTES_BY_COMMENT_ID_USER_ID "SELECT * FROM comment_up_votes WHERE comment_id = %s AND user_id = %s;"
 #define QUERY_COMMENT_DOWNVOTES_BY_COMMENT_ID_USER_ID "SELECT * FROM comment_down_votes WHERE comment_id = %s AND user_id = %s;"
+#define QUERY_SUBSCRIPTIONS_BY_COMMUNITY_ID_USER_ID "SELECT * FROM subscriptions WHERE community_id = %s AND user_id = %s;"
 
 #define INSERT_NEW_USER "INSERT INTO users (name, password_hash, date_joined) VALUES ('%s', '%s', UNIX_TIMESTAMP());"
 #define INSERT_POST_UPVOTE "INSERT INTO post_up_votes (user_id, post_id) VALUES (%s, %s);"
@@ -141,6 +143,8 @@ ks_list* query_posts_by_author_name(const char* user_name);
 
 ks_list* query_posts_by_community_name(const char* community_name);
 
+ks_list* query_all_communities();
+
 ks_list* query_comments_by_author_name(const char* author_name);
 
 ks_list* query_comments_by_post_id(const char* post_id);
@@ -157,9 +161,12 @@ ks_list* query_comment_upvotes_by_post_id_user_id(const char* comment_id, const 
 
 ks_list* query_comment_downvotes_by_post_id_user_id(const char* comment_id, const char* user_id);
 
+ks_list* query_subscriptions_by_community_id_user_id(const char* community_id, const char* id);
+
 
 /* Insert queries return -1 if the insert statement failed
  */
+
 int insert_new_user(const char* user_name, const char* passwd_hash);
 
 int toggle_post_upvote(const char* post_id, const char* user_id);

@@ -60,7 +60,7 @@
 #define POST_COMMENT_LIST_KEY "POST_COMMENT_LIST"
 
 /* Feed HTML keys */
-#define FEED_POST_LIST_KEY "FEED_POST_LIST"
+#define FEED_ITEM_LIST_KEY "FEED_ITEM_LIST"
 #define FEED_TITLE_KEY "FEED_TITLE"
 
 char* build_template(const ks_hashmap* hm);

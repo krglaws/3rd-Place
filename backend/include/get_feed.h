@@ -11,4 +11,6 @@ enum feed_type
 
 struct response* get_feed(const enum feed_type ft, const struct auth_token* client_info);
 
+struct response* get_communities(const struct auth_token* client_info);
+
 #endif

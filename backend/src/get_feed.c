@@ -112,12 +112,65 @@ struct response* get_feed(const enum feed_type ft, const struct auth_token* clie
   // add feed list to feed_info map
   if (posts == NULL)
   {
-    add_map_value_str(feed_info, FEED_POST_LIST_KEY, "");
+    add_map_value_str(feed_info, FEED_ITEM_LIST_KEY, "");
   }
   else
   {
-    add_map_value_ls(feed_info, FEED_POST_LIST_KEY, posts);
+    add_map_value_ls(feed_info, FEED_ITEM_LIST_KEY, posts);
   }
+
+  // put page data together
+  ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 8);
+  add_map_value_hm(page_data, PAGE_CONTENT_KEY, feed_info);
+  add_map_value_str(page_data, STYLE_PATH_KEY, CSS_FEED);
+  add_map_value_str(page_data, SCRIPT_PATH_KEY, "");
+  add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_MAIN);
+  add_nav_info(page_data, client_info);
+
+  struct response* resp = calloc(1, sizeof(struct response));
+
+  // build template
+  if ((resp->content = build_template(page_data)) == NULL)
+  {
+    free(resp);
+    ks_hashmap_delete(page_data);
+    return senderr(ERR_INTERNAL);
+  }
+  ks_hashmap_delete(page_data);
+
+  // prepare response object
+  resp->content_length = strlen(resp->content);
+  char contlenline[80];
+  int contlen = sprintf(contlenline, "Content-Length: %d\r\n", resp->content_length);
+  resp->header = ks_list_new();
+  ks_list_add(resp->header, ks_datacont_new(STAT200, KS_CHARP, strlen(STAT200)));
+  ks_list_add(resp->header, ks_datacont_new(TEXTHTML, KS_CHARP, strlen(TEXTHTML)));
+  ks_list_add(resp->header, ks_datacont_new(contlenline, KS_CHARP, contlen));
+
+  return resp;
+}
+
+
+struct response* get_communities(const struct auth_token* client_info)
+{
+  // query communities and sort
+  ks_list* communities = query_all_communities();
+  communities = sort_items(communities, COMMUNITY_ITEM);
+
+  // add html template path to each community
+  const ks_datacont* curr;
+  ks_iterator* iter = ks_iterator_new(communities, KS_LIST);
+  while ((curr = ks_iterator_get(iter)) != NULL)
+  {
+    add_map_value_str(curr->hm, TEMPLATE_PATH_KEY, HTML_FEED_COMMUNITY);
+  }
+  ks_iterator_delete(iter);
+
+  // build feed data
+  ks_hashmap* feed_info = ks_hashmap_new(KS_CHARP, 4);
+  add_map_value_str(feed_info, TEMPLATE_PATH_KEY, HTML_FEED);
+  add_map_value_str(feed_info, FEED_TITLE_KEY, "Communities");
+  add_map_value_ls(feed_info, FEED_ITEM_LIST_KEY, communities);
 
   // put page data together
   ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 8);
