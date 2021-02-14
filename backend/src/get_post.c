@@ -76,8 +76,8 @@ struct response* get_post(const char* post_id, const struct auth_token* client_i
   }
 
   // get post from DB
-  ks_hashmap* post_info;
-  if ((post_info = get_post_info(post_id)) == NULL)
+  ks_hashmap* page_data;
+  if ((page_data = get_post_info(post_id)) == NULL)
   {
     return response_error(STAT404);
   }
@@ -91,48 +91,33 @@ struct response* get_post(const char* post_id, const struct auth_token* client_i
     downvote_class = vt == DOWNVOTE ? DOWNVOTE_CLICKED_STATE : downvote_class;
   }
 
-  add_map_value_str(post_info, UPVOTE_CLICKED_KEY, upvote_class);
-  add_map_value_str(post_info, DOWNVOTE_CLICKED_KEY, downvote_class);
-  add_map_value_str(post_info, TEMPLATE_PATH_KEY, HTML_POST);
+  add_map_value_str(page_data, UPVOTE_CLICKED_KEY, upvote_class);
+  add_map_value_str(page_data, DOWNVOTE_CLICKED_KEY, downvote_class);
+  add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_POST);
 
   // get post comments
   ks_list* comments;
   if ((comments = get_post_comments(post_id, client_info)) == NULL)
   {
-    add_map_value_str(post_info, POST_COMMENT_LIST_KEY, "");
+    add_map_value_str(page_data, POST_COMMENT_LIST_KEY, "");
   }
   else
   {
-    add_map_value_ls(post_info, POST_COMMENT_LIST_KEY, comments);
+    add_map_value_ls(page_data, POST_COMMENT_LIST_KEY, comments);
   }
 
   // put page data together
-  ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 8);
-  add_map_value_hm(page_data, PAGE_CONTENT_KEY, post_info);
-  add_map_value_str(page_data, STYLE_PATH_KEY, CSS_POST);
-  add_map_value_str(page_data, SCRIPT_PATH_KEY, "");
-  add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_MAIN);
-  add_nav_info(page_data, client_info);
-
-  struct response* resp = calloc(1, sizeof(struct response));
+  page_data = wrap_page_data(client_info, page_data, CSS_POST, "");
 
   // build template
-  if ((resp->content = build_template(page_data)) == NULL)
+  char* content;
+  if ((content = build_template(page_data)) == NULL)
   {
-    free(resp);
     ks_hashmap_delete(page_data);
     return response_error(STAT500);
   }
   ks_hashmap_delete(page_data);
 
   // prepare response object
-  resp->content_length = strlen(resp->content);
-  char contlenline[80];
-  int contlen = sprintf(contlenline, "Content-Length: %d\r\n", resp->content_length);
-  resp->header = ks_list_new();
-  ks_list_add(resp->header, ks_datacont_new(STAT200, KS_CHARP, strlen(STAT200)));
-  ks_list_add(resp->header, ks_datacont_new(TEXTHTML, KS_CHARP, strlen(TEXTHTML)));
-  ks_list_add(resp->header, ks_datacont_new(contlenline, KS_CHARP, contlen));
-
-  return resp;
+  return response_ok(content);
 }

@@ -70,14 +70,14 @@ struct response* get_feed(const enum feed_type ft, const struct auth_token* clie
     return response_redirect("/popular");
   }
 
-  ks_hashmap* feed_info = ks_hashmap_new(KS_CHARP, 8);
-  add_map_value_str(feed_info, TEMPLATE_PATH_KEY, HTML_FEED);
+  ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 8);
+  add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_FEED);
 
   // get list of posts
   ks_list* posts = NULL;
   if (ft == HOME_FEED)
   {
-    add_map_value_str(feed_info, FEED_TITLE_KEY, "Home");
+    add_map_value_str(page_data, FEED_TITLE_KEY, "Home");
 
     // get list of subscriptions
     ks_list* subs;
@@ -101,7 +101,7 @@ struct response* get_feed(const enum feed_type ft, const struct auth_token* clie
   }
   else
   {
-    add_map_value_str(feed_info, FEED_TITLE_KEY, "All");
+    add_map_value_str(page_data, FEED_TITLE_KEY, "All");
 
     posts = query_all_posts();
 
@@ -109,45 +109,29 @@ struct response* get_feed(const enum feed_type ft, const struct auth_token* clie
   }
   posts = wrap_posts(posts, client_info);
 
-  // add feed list to feed_info map
+  // add feed list to page data map
   if (posts == NULL)
   {
-    add_map_value_str(feed_info, FEED_ITEM_LIST_KEY, "");
+    add_map_value_str(page_data, FEED_ITEM_LIST_KEY, "");
   }
   else
   {
-    add_map_value_ls(feed_info, FEED_ITEM_LIST_KEY, posts);
+    add_map_value_ls(page_data, FEED_ITEM_LIST_KEY, posts);
   }
 
   // put page data together
-  ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 8);
-  add_map_value_hm(page_data, PAGE_CONTENT_KEY, feed_info);
-  add_map_value_str(page_data, STYLE_PATH_KEY, CSS_FEED);
-  add_map_value_str(page_data, SCRIPT_PATH_KEY, "");
-  add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_MAIN);
-  add_nav_info(page_data, client_info);
-
-  struct response* resp = calloc(1, sizeof(struct response));
+  page_data = wrap_page_data(client_info, page_data, CSS_FEED, "");
 
   // build template
-  if ((resp->content = build_template(page_data)) == NULL)
+  char* content;
+  if ((content = build_template(page_data)) == NULL)
   {
-    free(resp);
     ks_hashmap_delete(page_data);
     return response_error(STAT500);
   }
   ks_hashmap_delete(page_data);
 
-  // prepare response object
-  resp->content_length = strlen(resp->content);
-  char contlenline[80];
-  int contlen = sprintf(contlenline, "Content-Length: %d\r\n", resp->content_length);
-  resp->header = ks_list_new();
-  ks_list_add(resp->header, ks_datacont_new(STAT200, KS_CHARP, strlen(STAT200)));
-  ks_list_add(resp->header, ks_datacont_new(TEXTHTML, KS_CHARP, strlen(TEXTHTML)));
-  ks_list_add(resp->header, ks_datacont_new(contlenline, KS_CHARP, contlen));
-
-  return resp;
+  return response_ok(content);
 }
 
 
@@ -167,38 +151,22 @@ struct response* get_communities(const struct auth_token* client_info)
   ks_iterator_delete(iter);
 
   // build feed data
-  ks_hashmap* feed_info = ks_hashmap_new(KS_CHARP, 4);
-  add_map_value_str(feed_info, TEMPLATE_PATH_KEY, HTML_FEED);
-  add_map_value_str(feed_info, FEED_TITLE_KEY, "Communities");
-  add_map_value_ls(feed_info, FEED_ITEM_LIST_KEY, communities);
+  ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 4);
+  add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_FEED);
+  add_map_value_str(page_data, FEED_TITLE_KEY, "Communities");
+  add_map_value_ls(page_data, FEED_ITEM_LIST_KEY, communities);
 
   // put page data together
-  ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 8);
-  add_map_value_hm(page_data, PAGE_CONTENT_KEY, feed_info);
-  add_map_value_str(page_data, STYLE_PATH_KEY, CSS_FEED);
-  add_map_value_str(page_data, SCRIPT_PATH_KEY, "");
-  add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_MAIN);
-  add_nav_info(page_data, client_info);
+  page_data = wrap_page_data(client_info, page_data, CSS_FEED, "");
 
-  struct response* resp = calloc(1, sizeof(struct response));
-
-  // build template
-  if ((resp->content = build_template(page_data)) == NULL)
+  // build content
+  char* content;
+  if ((content = build_template(page_data)) == NULL)
   {
-    free(resp);
     ks_hashmap_delete(page_data);
     return response_error(STAT500);
   }
   ks_hashmap_delete(page_data);
 
-  // prepare response object
-  resp->content_length = strlen(resp->content);
-  char contlenline[80];
-  int contlen = sprintf(contlenline, "Content-Length: %d\r\n", resp->content_length);
-  resp->header = ks_list_new();
-  ks_list_add(resp->header, ks_datacont_new(STAT200, KS_CHARP, strlen(STAT200)));
-  ks_list_add(resp->header, ks_datacont_new(TEXTHTML, KS_CHARP, strlen(TEXTHTML)));
-  ks_list_add(resp->header, ks_datacont_new(contlenline, KS_CHARP, contlen));
-
-  return resp;
+  return response_ok(content);
 }

@@ -129,63 +129,47 @@ struct response* get_user(const char* user_name, const struct auth_token* client
   }
 
   // get user info from DB
-  ks_hashmap* user_info;
-  if ((user_info = get_user_info(user_name)) == NULL)
+  ks_hashmap* page_data;
+  if ((page_data = get_user_info(user_name)) == NULL)
   {
     // user not found
     return NULL;
   }
-  add_map_value_str(user_info, TEMPLATE_PATH_KEY, HTML_USER);
+  add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_USER);
 
   // get user posts
   ks_list* posts;
   if ((posts = get_user_posts(user_name, client_info)) == NULL)
   {
-    add_map_value_str(user_info, USER_POST_LIST_KEY, "");
+    add_map_value_str(page_data, USER_POST_LIST_KEY, "");
   }
   else
   {
-    add_map_value_ls(user_info, USER_POST_LIST_KEY, posts);
+    add_map_value_ls(page_data, USER_POST_LIST_KEY, posts);
   }
 
   // get user comments
   ks_list* comments;
   if ((comments = get_user_comments(user_name, client_info)) == NULL)
   {
-    add_map_value_str(user_info, USER_COMMENT_LIST_KEY, "");
+    add_map_value_str(page_data, USER_COMMENT_LIST_KEY, "");
   }
   else
   {
-    add_map_value_ls(user_info, USER_COMMENT_LIST_KEY, comments);
+    add_map_value_ls(page_data, USER_COMMENT_LIST_KEY, comments);
   }
 
   // put page data together
-  ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 8);
-  add_map_value_hm(page_data, PAGE_CONTENT_KEY, user_info);
-  add_map_value_str(page_data, STYLE_PATH_KEY, CSS_USER);
-  add_map_value_str(page_data, SCRIPT_PATH_KEY, JS_USER);
-  add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_MAIN);
-  add_nav_info(page_data, client_info);
-
-  struct response* resp = calloc(1, sizeof(struct response));
+  page_data = wrap_page_data(client_info, page_data, CSS_USER, JS_USER);
 
   // build template
-  if ((resp->content = build_template(page_data)) == NULL)
+  char* content;
+  if ((content = build_template(page_data)) == NULL)
   {
-    free(resp);
     ks_hashmap_delete(page_data);
     return response_error(STAT500);
   }
   ks_hashmap_delete(page_data);
 
-  // prepare response object
-  resp->content_length = strlen(resp->content);
-  char contlenline[80];
-  int contlen = sprintf(contlenline, "Content-Length: %d\r\n", resp->content_length);
-  resp->header = ks_list_new();
-  ks_list_add(resp->header, ks_datacont_new(STAT200, KS_CHARP, strlen(STAT200)));
-  ks_list_add(resp->header, ks_datacont_new(TEXTHTML, KS_CHARP, strlen(TEXTHTML)));
-  ks_list_add(resp->header, ks_datacont_new(contlenline, KS_CHARP, contlen));
-
-  return resp;
+  return response_ok(content);
 }
