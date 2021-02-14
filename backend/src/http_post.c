@@ -8,10 +8,10 @@
 #include <log_manager.h>
 #include <auth_manager.h>
 #include <sql_manager.h>
-#include <senderr.h>
-#include <common.h>
 #include <string_map.h>
-#include <get_new.h>
+#include <response.h>
+#include <server.h>
+#include <get_form.h>
 #include <http_get.h>
 #include <http_post.h>
 
@@ -51,7 +51,7 @@ struct response* http_post(struct request* req)
       remove_token(req->client_info->token);
     }
 
-    resp = redirect("/home");
+    resp = response_redirect("/home");
   }
 
   else if (strcmp(req->uri, "./vote") == 0)
@@ -68,7 +68,7 @@ struct response* http_post(struct request* req)
 
   if (resp == NULL)
   {
-    return senderr(ERR_NOT_FOUND);
+    return response_error(STAT404);
   }
 
   return resp;
@@ -84,7 +84,7 @@ static struct response* post_login(const char* uname, const char* passwd)
   }
 
   // build redirect
-  struct response* resp = redirect("/home");
+  struct response* resp = response_redirect("/home");
 
   // add token to response
   char token_hdr[128];
@@ -111,7 +111,7 @@ static struct response* post_signup(const char* uname, const char* passwd)
   }
 
   // build redirect
-  struct response* resp = redirect("/home");
+  struct response* resp = response_redirect("/home");
 
   // add token to response
   char token_hdr[128];
@@ -126,12 +126,12 @@ static struct response* post_vote(const char* type, const char* direction, const
 {
   if (client_info == NULL)
   {
-    return redirect("/login");
+    return response_redirect("/login");
   }
 
   if (type == NULL || direction == NULL || id == NULL)
   {
-    return senderr(ERR_BAD_REQ);
+    return response_error(STAT400);
   }
 
   if (strcmp(type, "post") == 0)
@@ -144,7 +144,7 @@ static struct response* post_vote(const char* type, const char* direction, const
     {
       toggle_post_downvote(id, client_info->user_id);
     }
-    else return senderr(ERR_BAD_REQ);
+    else return response_error(STAT400);
   }
   else if (strcmp(type, "comment") == 0)
   {
@@ -156,7 +156,8 @@ static struct response* post_vote(const char* type, const char* direction, const
     {
       toggle_comment_downvote(id, client_info->user_id);
     }
-    else return senderr(ERR_BAD_REQ);
+    else return response_error(STAT400);
+
   }
 
   // prepare 200 response object

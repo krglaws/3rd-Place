@@ -1,5 +1,5 @@
-#ifndef _LOG_MANAGER_H_
-#define _LOG_MANAGER_H_
+#ifndef LOG_MANAGER_H
+#define LOG_MANAGER_H
 
 #include <stdarg.h>
 

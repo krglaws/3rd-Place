@@ -9,6 +9,7 @@
 #include <kylestructs.h>
 
 #include <string_map.h>
+#include <http_get.h>
 #include <log_manager.h>
 #include <sql_manager.h>
 #include <auth_manager.h>
@@ -98,30 +99,6 @@ static void rand_token(char* token_buf)
   {
     token_buf[i] = rand_byte();
   }
-}
-
-
-static ks_hashmap* get_user_info(const char* uname)
-{
-  ks_list* result = query_users_by_name(uname);
-
-  ks_datacont* row0 = ks_list_get(result, 0);
-
-  // check if user exists
-  if (row0 == NULL)
-  {
-    ks_list_delete(result);
-    return NULL;
-  }
-
-  ks_hashmap* user_info = row0->hm;
-
-  // remove reference to user_info so that
-  // ks_list_delete() doesn't delete it.
-  row0->hm = NULL;
-  ks_list_delete(result);
-
-  return user_info;
 }
 
 

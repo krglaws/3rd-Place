@@ -14,10 +14,18 @@ enum login_error {
 
 struct response* get_login(const struct auth_token* client_info, enum login_error err);
 
+struct response* get_edit_user(const struct auth_token* client_info);
+
 struct response* get_new_post(const char* community_id, const struct auth_token* client_info);
+
+struct response* get_edit_post(const char* post_id, const struct auth_token* client_info);
 
 struct response* get_new_comment(const char* post_id, const struct auth_token* client_info);
 
+struct response* get_edit_comment(const char* comment_id, const struct auth_token* client_info);
+
 struct response* get_new_community(const struct auth_token* client_info);
+
+struct response* get_edit_community(const char* community_id, const struct auth_token* client_info);
 
 #endif

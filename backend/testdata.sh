@@ -47,7 +47,6 @@ if [ $? -eq 1 ]; then
   exit;
 fi
 
-
 mysql -uroot <<TEST_COMMENTS
 
 USE $DBNAME;
@@ -110,16 +109,16 @@ mysql -uroot <<TEST_COMMUNITIES
 USE $DBNAME;
 
 # test communities
-INSERT INTO communities (id, name, about, members, date_created)
-  VALUES (1, 'TestCommunity1', 'this is a test community.', 0, UNIX_TIMESTAMP());
-INSERT INTO communities (id, name, about, members, date_created)
-  VALUES (2, 'TestCommunity2', 'this is a test community.', 0, UNIX_TIMESTAMP());
-INSERT INTO communities (id, name, about, members, date_created)
-  VALUES (3, 'TestCommunity3', 'this is a test community.', 0, UNIX_TIMESTAMP());
-INSERT INTO communities (id, name, about, members, date_created)
-  VALUES (4, 'TestCommunity4', 'this is a test community.', 0, UNIX_TIMESTAMP());
-INSERT INTO communities (id, name, about, members, date_created)
-  VALUES (5, 'TestCommunity5', 'this is a test community.', 0, UNIX_TIMESTAMP());
+INSERT INTO communities (id, owner_id, name, about, members, date_created)
+  VALUES (1, 1, 'TestCommunity1', 'this is a test community.', 0, UNIX_TIMESTAMP());
+INSERT INTO communities (id, owner_id, name, about, members, date_created)
+  VALUES (2, 2, 'TestCommunity2', 'this is a test community.', 0, UNIX_TIMESTAMP());
+INSERT INTO communities (id, owner_id, name, about, members, date_created)
+  VALUES (3, 3, 'TestCommunity3', 'this is a test community.', 0, UNIX_TIMESTAMP());
+INSERT INTO communities (id, owner_id, name, about, members, date_created)
+  VALUES (4, 4, 'TestCommunity4', 'this is a test community.', 0, UNIX_TIMESTAMP());
+INSERT INTO communities (id, owner_id, name, about, members, date_created)
+  VALUES (5, 5, 'TestCommunity5', 'this is a test community.', 0, UNIX_TIMESTAMP());
 
 TEST_COMMUNITIES
 

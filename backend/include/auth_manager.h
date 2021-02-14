@@ -1,5 +1,5 @@
-#ifndef _AUTH_MANAGER_H_
-#define _AUTH_MANAGER_H_
+#ifndef AUTH_MANAGER_H
+#define AUTH_MANAGER_H
 
 #include <time.h>
 #include <kylestructs.h>
@@ -45,11 +45,6 @@ static void rand_salt(char* salt_buf);
 /* Generates new token string
  */
 static void rand_token(char* token_buf);
-
-
-/* Grabs user info from database
- */
-static ks_hashmap* get_user_info(const char* uname);
 
 
 /* Called by http_post when a user tries to login.

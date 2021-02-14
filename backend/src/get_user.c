@@ -4,38 +4,13 @@
 #include <kylestructs.h>
 
 #include <string_map.h>
-#include <senderr.h>
+#include <response.h>
 #include <log_manager.h>
 #include <auth_manager.h>
 #include <templating.h>
 #include <http_get.h>
 #include <sql_manager.h>
 #include <get_user.h>
-
-
-static ks_hashmap* get_user_info(const char* user_name)
-{
-  ks_list* result;
-  if ((result = query_users_by_name(user_name)) == NULL)
-  {
-    return NULL;
-  }
-
-  ks_datacont* row0 = ks_list_get(result, 0);
-
-  if (row0 == NULL)
-  {
-    // user not found
-    ks_list_delete(result);
-    return NULL;
-  }
-
-  ks_hashmap* user_info = row0->hm;
-  row0->hm = NULL;
-  ks_list_delete(result);
-
-  return user_info;
-}
 
 
 static ks_list* get_user_posts(const char* user_name, const struct auth_token* client_info)
@@ -199,7 +174,7 @@ struct response* get_user(const char* user_name, const struct auth_token* client
   {
     free(resp);
     ks_hashmap_delete(page_data);
-    return senderr(ERR_INTERNAL);
+    return response_error(STAT500);
   }
   ks_hashmap_delete(page_data);
 

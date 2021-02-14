@@ -1,5 +1,5 @@
-#ifndef _GET_POST_H_
-#define _GET_POST_H_
+#ifndef GET_POST_H
+#define GET_POST_H
 
 #include <kylestructs.h>
 #include <auth_manager.h>

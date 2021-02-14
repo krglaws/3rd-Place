@@ -1,17 +1,16 @@
-#ifndef _HTTP_POST_H_
-#define _HTTP_POST_H_
+#ifndef HTTP_POST_H
+#define HTTP_POST_H
 
-#include <common.h>
+#include <server.h>
+#include <auth_manager.h>
+#include <response.h>
 
+/* used for successful login/signup responses */
 #define COOKIE_TEMPLATE "Set-Cookie: logintoken=%s;Expires=Wed, 1 Jan 2121 00:00:00 GMT\r\n"
 
 
 /* processes post request, returns response object */
 struct response* http_post(struct request* req);
-
-
-/* builds redirect response object */
-//static struct response* redirect(const char* uri);
 
 
 /* attempts login, returns response object containing result */

@@ -1,7 +1,8 @@
-#ifndef _HTTP_PUT_H_
-#define _HTTP_PUT_H_
+#ifndef HTTP_PUT_H
+#define HTTP_PUT_H
 
-#include <common.h>
+#include <server.h>
+#include <response.h>
 
 struct response* http_put(struct request* req);
 

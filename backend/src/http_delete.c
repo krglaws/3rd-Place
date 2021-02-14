@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <kylestructs.h>
 
-#include <common.h>
 #include <http_delete.h>
 
 

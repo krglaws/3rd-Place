@@ -1,0 +1,13 @@
+    <div class="form-container-container">
+      <div class="form-container">
+        <h2><<POST_TITLE>></h2>
+        <h3><<POST_BODY>></h3>
+        <form action="/edit_comment" method="put">
+          <input type="hidden" name="post_id" value="<<COMMENT_POST_ID>>">
+          <input type="hidden" name="comment_id" value="<<COMMENT_ID>>">
+          <label for="body">Edit comment:</label><br>
+          <input id="body" class="form-body" type="text" name="body" value="<<COMMENT_BODY>>"><br>
+          <input type="submit" value="Submit"><br>
+        </form>
+      </div>
+    </div>

@@ -54,10 +54,25 @@ static const char* comments_field_table[COMMENTS_NUM_FIELDS] =
 static const char* communities_field_table[COMMUNITIES_NUM_FIELDS] =
 {
   FIELD_COMMUNITY_ID,
+  FIELD_COMMUNITY_OWNER_ID,
   FIELD_COMMUNITY_NAME,
   FIELD_COMMUNITY_ABOUT,
   FIELD_COMMUNITY_MEMBERS,
   FIELD_COMMUNITY_DATE_CREATED
+};
+
+
+static const char* moderators_field_table[MODERATORS_NUM_FIELDS] =
+{
+  FIELD_MODERATOR_ID,
+  FIELD_MODERATOR_USER_ID,
+  FIELD_MODERATOR_COMMUNITY_ID
+};
+
+
+static const char* administrators_field_table[ADMINISTRATORS_NUM_FIELDS] =
+{
+  FIELD_ADMINISTRATOR_USER_ID
 };
 
 
@@ -277,6 +292,12 @@ ks_list* query_posts_by_community_name(const char* community_name)
 }
 
 
+ks_list* query_comments_by_id(const char* comment_id)
+{
+  return query_database(comments_field_table, QUERY_COMMENTS_BY_ID, comment_id);
+}
+
+
 ks_list* query_comments_by_author_name(const char* author_name)
 {
   return query_database(comments_field_table, QUERY_COMMENTS_BY_AUTHOR_NAME, author_name);
@@ -294,6 +315,15 @@ ks_list* query_all_communities()
   return query_database(communities_field_table, QUERY_ALL_COMMUNITIES);
 }
 
+ks_list* query_moderators_by_community_id_user_id(const char* community_id, const char* user_id)
+{
+  return query_database(moderators_field_table, QUERY_MODERATORS_BY_COMMUNITY_ID_USER_ID, community_id, user_id);
+}
+
+ks_list* query_administrators_by_user_id(const char* user_id)
+{
+  return query_database(administrators_field_table, QUERY_ADMINISTRATORS_BY_USER_ID, user_id);
+}
 
 ks_list* query_communities_by_name(const char* community_name)
 {

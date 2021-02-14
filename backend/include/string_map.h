@@ -1,5 +1,5 @@
-#ifndef _STRING_MAP_H_
-#define _STRING_MAP_H_
+#ifndef STRING_MAP_H
+#define STRING_MAP_H
 
 /* This header includes some useful functions for parsing
  * strings into ks_hashmaps, and also for retrieving values

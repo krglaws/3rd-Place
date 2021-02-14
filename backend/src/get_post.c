@@ -4,7 +4,7 @@
 #include <kylestructs.h>
 
 #include <templating.h>
-#include <senderr.h>
+#include <response.h>
 #include <string_map.h>
 #include <log_manager.h>
 #include <load_file.h>
@@ -72,14 +72,14 @@ struct response* get_post(const char* post_id, const struct auth_token* client_i
 {
   if (post_id == NULL || strlen(post_id) == 0)
   {
-    return senderr(ERR_NOT_FOUND);
+    return response_error(STAT404);
   }
 
   // get post from DB
   ks_hashmap* post_info;
   if ((post_info = get_post_info(post_id)) == NULL)
   {
-    return senderr(ERR_NOT_FOUND);
+    return response_error(STAT404);
   }
 
   char* upvote_class = UPVOTE_NOTCLICKED_STATE;
@@ -121,7 +121,7 @@ struct response* get_post(const char* post_id, const struct auth_token* client_i
   {
     free(resp);
     ks_hashmap_delete(page_data);
-    return senderr(ERR_INTERNAL);
+    return response_error(STAT500);
   }
   ks_hashmap_delete(page_data);
 

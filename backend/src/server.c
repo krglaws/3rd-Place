@@ -8,8 +8,7 @@
 #include <inttypes.h>
 #include <kylestructs.h>
 
-#include <common.h>
-#include <senderr.h>
+#include <response.h>
 #include <string_map.h>
 #include <log_manager.h>
 #include <socket_manager.h>
@@ -248,6 +247,7 @@ static struct request* parse_request(char* req_buf)
   req->uri[0] = '.'; // prepend '.'
   memcpy(req->uri+1, uri, uri_len);
   req->uri[uri_len+1] = '\0';
+  free(uri);
 
   // find end of header
   char* hdr_end;
@@ -326,14 +326,14 @@ static struct response* process_request(const int sock)
   if (req_len > MAXREQUESTSIZE)
   {
     log_info("Bad request from %s (sock no. %d)", ipstr, sock);
-    return senderr(ERR_MSG_TOO_BIG);
+    return response_error(STAT413);
   }
 
   // pass the buffer to parse_request()
   struct request* req;
   if ((req = parse_request(req_buf)) == NULL)
   {
-    return senderr(ERR_BAD_REQ);
+    return response_error(STAT400);
   }
 
   struct response* resp;
@@ -363,7 +363,7 @@ static struct response* process_request(const int sock)
   else
   {
     log_info("Bad request from %s", ipstr);
-    resp = senderr(ERR_BAD_REQ);
+    resp = response_error(STAT400);
   }
 
   delete_request(req);

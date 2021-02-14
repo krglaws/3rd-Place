@@ -1,5 +1,5 @@
-#ifndef _GET_FEED_H_
-#define _GET_FEED_H_
+#ifndef GET_FEED_H
+#define GET_FEED_H
 
 #include <auth_manager.h>
 

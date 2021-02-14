@@ -1,5 +1,5 @@
-#ifndef _SOCKET_MANAGER_H_
-#define _SOCKET_MANAGER_H_
+#ifndef SOCKET_MANAGER_H
+#define SOCKET_MANAGER_H
 
 #include <inttypes.h>
 

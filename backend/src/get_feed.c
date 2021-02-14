@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include <log_manager.h>
-#include <senderr.h>
+#include <response.h>
 #include <auth_manager.h>
 #include <sql_manager.h>
 #include <string_map.h>
@@ -67,7 +67,7 @@ struct response* get_feed(const enum feed_type ft, const struct auth_token* clie
 {
   if (ft == HOME_FEED && client_info == NULL)
   {
-    return redirect("/popular");
+    return response_redirect("/popular");
   }
 
   ks_hashmap* feed_info = ks_hashmap_new(KS_CHARP, 8);
@@ -134,7 +134,7 @@ struct response* get_feed(const enum feed_type ft, const struct auth_token* clie
   {
     free(resp);
     ks_hashmap_delete(page_data);
-    return senderr(ERR_INTERNAL);
+    return response_error(STAT500);
   }
   ks_hashmap_delete(page_data);
 
@@ -187,7 +187,7 @@ struct response* get_communities(const struct auth_token* client_info)
   {
     free(resp);
     ks_hashmap_delete(page_data);
-    return senderr(ERR_INTERNAL);
+    return response_error(STAT500);
   }
   ks_hashmap_delete(page_data);
 

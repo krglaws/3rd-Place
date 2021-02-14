@@ -9,10 +9,10 @@
 #include <sql_manager.h>
 #include <templating.h>
 #include <string_map.h>
-#include <common.h>
+#include <server.h>
 #include <load_file.h>
-#include <senderr.h>
-#include <get_new.h>
+#include <response.h>
+#include <get_form.h>
 #include <get_user.h>
 #include <get_post.h>
 #include <get_community.h>
@@ -20,14 +20,13 @@
 #include <http_get.h>
 
 
-struct response* http_get(struct request* req)
+struct response* http_get(const struct request* req)
 {
   if (req == NULL)
   {
     log_crit("http_get(): NULL request object");
   }
 
-  // endpoints
   if (strcmp(req->uri, "./") == 0 ||
       strcmp(req->uri, "./home") == 0)
   {
@@ -49,10 +48,21 @@ struct response* http_get(struct request* req)
     return get_login(req->client_info, LOGINERR_NONE);
   }
 
+  if (strcmp(req->uri, "./edit_user") == 0)
+  {
+    return get_edit_user(req->client_info);
+  }
+
   if (strcmp(req->uri, "./new_post") == 0)
   {
     const ks_datacont* dc = get_map_value(req->query, "community_name");
     return get_new_post(dc ? dc->cp : NULL, req->client_info);
+  }
+
+  if (strcmp(req->uri, "./edit_post") == 0)
+  {
+    const ks_datacont* dc = get_map_value(req->query, "post_id");
+    return get_edit_post(dc ? dc->cp : NULL, req->client_info);
   }
 
   if (strcmp(req->uri, "./new_comment") == 0)
@@ -61,9 +71,21 @@ struct response* http_get(struct request* req)
     return get_new_comment(dc ? dc->cp : NULL, req->client_info);
   }
 
+  if (strcmp(req->uri, "./edit_comment") == 0)
+  {
+    const ks_datacont* dc = get_map_value(req->query, "comment_id");
+    return get_edit_comment(dc ? dc->cp : NULL, req->client_info);
+  }
+
   if (strcmp(req->uri, "./new_community") == 0)
   {
     return get_new_community(req->client_info);
+  }
+
+  if (strcmp(req->uri, "./edit_community") == 0)
+  {
+    const ks_datacont* dc = get_map_value(req->query, "community_id");
+    return get_edit_community(dc ? dc->cp : NULL, req->client_info);
   }
 
   if (req->uri == strstr(req->uri, "./u/"))
@@ -90,14 +112,14 @@ struct response* get_file(const char* uri)
   // no '..' allowed
   if (strstr(uri, "..") != NULL)
   {
-    return senderr(ERR_NOT_FOUND);
+    return response_error(STAT404);
   }
 
   // get file
   struct file_str* f;
   if ((f = load_file_str(uri)) == NULL)
   {
-    return senderr(ERR_NOT_FOUND);
+    return response_error(STAT404);
   }
 
   struct response* resp = calloc(1, sizeof(struct response));
@@ -284,6 +306,54 @@ ks_hashmap* get_post_info(const char* post_id)
 }
 
 
+ks_hashmap* get_comment_info(const char* comment_id)
+{
+  ks_list* result;
+  if ((result = query_comments_by_id(comment_id)) == NULL)
+  {
+    return NULL;
+  }
+
+  ks_datacont* row0 = ks_list_get(result, 0);
+
+  if (row0 == NULL)
+  {
+    ks_list_delete(result);
+  }
+
+  ks_hashmap* comment_info = row0->hm;
+  row0->hm = NULL;
+  ks_list_delete(result);
+
+  return comment_info;
+}
+
+
+ks_hashmap* get_user_info(const char* user_name)
+{
+  ks_list* result;
+  if ((result = query_users_by_name(user_name)) == NULL)
+  {
+    return NULL;
+  }
+
+  ks_datacont* row0 = ks_list_get(result, 0);
+
+  if (row0 == NULL)
+  {
+    // user not found
+    ks_list_delete(result);
+    return NULL;
+  }
+
+  ks_hashmap* user_info = row0->hm;
+  row0->hm = NULL;
+  ks_list_delete(result);
+
+  return user_info;
+}
+
+
 time_t get_item_date(const ks_hashmap* item, enum item_type it)
 {
   const char* date_str;
@@ -402,4 +472,28 @@ ks_list* merge_items(ks_list* lsA, ks_list* lsB, enum item_type it)
   ks_list_delete(lsB);
 
   return merged;
+}
+
+
+ks_hashmap* wrap_page_data(const struct auth_token* client_info, const ks_hashmap* page_data, const char* css_path, const char* js_path)
+{
+  // client_info can be NULL
+  if (page_data == NULL || css_path == NULL || js_path == NULL)
+  {
+    log_crit("wrap_page_data(): NULL parameter");
+  }
+
+  // create wrapper hashmap
+  ks_hashmap* wrapper = ks_hashmap_new(KS_CHARP, 8);
+
+  // add paths and page data
+  add_map_value_str(wrapper, TEMPLATE_PATH_KEY, HTML_MAIN);
+  add_map_value_str(wrapper, STYLE_PATH_KEY, css_path);
+  add_map_value_str(wrapper, SCRIPT_PATH_KEY, js_path);
+  add_map_value_hm(wrapper, PAGE_CONTENT_KEY, page_data);
+
+  // add nav bar info
+  add_nav_info(wrapper, client_info);
+
+  return wrapper;
 }

@@ -51,11 +51,24 @@ CREATE TABLE IF NOT EXISTS $DBNAME.comments(
 
 CREATE TABLE IF NOT EXISTS $DBNAME.communities(
   id INT NOT NULL AUTO_INCREMENT,
+  owner_id INT NOT NULL,
   name VARCHAR(32) NOT NULL,
   about VARCHAR(512) NOT NULL,
   members INT DEFAULT 0,
   date_created INT NOT NULL,
   PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS $DBNAME.moderators(
+  id INT NOT NULL AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  community_id INT NOT NULL,
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS $DBNAME.administrators(
+  user_id INT NOT NULL,
+  PRIMARY KEY (user_id)
 );
 
 CREATE TABLE IF NOT EXISTS $DBNAME.subscriptions(

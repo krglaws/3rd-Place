@@ -1,5 +1,5 @@
-#ifndef _TEMPLATING_H_
-#define _TEMPLATING_H_
+#ifndef TEMPLATING_H
+#define TEMPLATING_H
 
 #include <kylestructs.h>
 

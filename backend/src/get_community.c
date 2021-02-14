@@ -4,7 +4,7 @@
 #include <kylestructs.h>
 
 #include <templating.h>
-#include <senderr.h>
+#include <response.h>
 #include <string_map.h>
 #include <log_manager.h>
 #include <load_file.h>
@@ -110,7 +110,7 @@ struct response* get_community(const char* community_name, const struct auth_tok
   {
     free(resp);
     ks_hashmap_delete(page_data);
-    return senderr(ERR_INTERNAL);
+    return response_error(STAT500);
   }
   ks_hashmap_delete(page_data);
 
