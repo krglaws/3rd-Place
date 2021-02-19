@@ -305,7 +305,7 @@ static struct response* process_request(const int sock)
 
   // stack allocate request buffer here
   char req_buf[MAXREQUESTSIZE + 1];
-  req_buf[0] = '\0';
+  memset(req_buf, 0, MAXREQUESTSIZE + 1);
 
   // read request into buffer
   int req_len;
