@@ -13,6 +13,23 @@ mysql -uroot <<STORED_PROCEDURES
 DELIMITER $$
 
 
+CREATE PROCEDURE $DBNAME.ToggleSubscribe (IN cid INT, IN uid INT)
+proc_label:BEGIN
+
+  # check if user is already subscribed
+  IF EXISTS (SELECT * FROM subscriptions WHERE community_id = cid AND user_id = uid) THEN
+    DELETE FROM $DBNAME.subscriptions WHERE community_id = cid AND user_id = uid;
+    UPDATE $DBNAME.subscriptions SET members = members - 1 WHERE id = cid;
+
+  ELSE
+    INSERT INTO $DBNAME.subscriptions (user_id, community_id) VALUES (cid, uid);
+    UPDATE $DBNAME.subscriptions SET members = members + 1 WHERE id = cid;
+
+  END IF;
+
+END$$
+
+
 CREATE PROCEDURE $DBNAME.TogglePostUpVote (IN pid INT, IN uid INT)
 proc_label:BEGIN
 
@@ -149,6 +166,24 @@ proc_label:BEGIN
   # update points
   UPDATE $DBNAME.comments SET points = points - 1 WHERE id = cid;
   UPDATE $DBNAME.users SET points = points - 1 WHERE id = @owner_id;
+
+END$$
+
+
+CREATE PROCEDURE $DBNAME.DeleteUser(IN uid INT)
+proc_label:BEGIN
+
+  # remove user
+  DELETE FROM users WHERE id = uid;
+
+  # remove references in posts
+  UPDATE posts SET author_name = "[deleted]", author_id = 0 WHERE author_id = uid;
+
+  # remove references in comments
+  UPDATE comments SET author_name = "[deleted]", author_id = 0 WHERE author_id = uid;
+
+  # remove references in communities
+  UPDATE communities SET owner_name = "[deleted]", owner_id = 0 WHERE author_id = uid;
 
 END$$
 

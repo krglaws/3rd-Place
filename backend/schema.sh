@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS $DBNAME.comments(
 CREATE TABLE IF NOT EXISTS $DBNAME.communities(
   id INT NOT NULL AUTO_INCREMENT,
   owner_id INT NOT NULL,
+  owner_name VARCHAR(16) NOT NULL,
   name VARCHAR(32) NOT NULL,
   about VARCHAR(512) NOT NULL,
   members INT DEFAULT 0,
@@ -74,9 +75,7 @@ CREATE TABLE IF NOT EXISTS $DBNAME.administrators(
 CREATE TABLE IF NOT EXISTS $DBNAME.subscriptions(
   id INT NOT NULL AUTO_INCREMENT,
   user_id INT NOT NULL,
-  user_name VARCHAR(16) NOT NULL,
   community_id INT NOT NULL,
-  community_name VARCHAR(32) NOT NULL,
   PRIMARY KEY (id)
 );
 
@@ -107,6 +106,11 @@ CREATE TABLE IF NOT EXISTS $DBNAME.comment_down_votes(
   comment_id INT NOT NULL,
   PRIMARY KEY (id)
 );
+
+
+# create /u/[deleted]
+INSERT INTO $DB.users (id, name, password_hash, date_joined) VALUES (0, "[deleted]", "00000000", UNIX_TIMESTAMP());
+
 
 CREATE USER IF NOT EXISTS $DBUSER@$DBHOST IDENTIFIED BY '$DBPASS';
 GRANT ALL PRIVILEGES ON $DBNAME.* TO $DBUSER@$DBHOST;
