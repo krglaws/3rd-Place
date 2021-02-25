@@ -67,7 +67,9 @@ ks_hashmap* get_comment_info(const char* comment_id);
 
 ks_hashmap* get_user_info(const char* user_name);
 
-ks_hashmap* get_moderator_info(const char* user_id);
+ks_hashmap* get_moderator_info(const char* community_id, const char* user_id);
+
+ks_hashmap* get_administrator_info(const char* user_id);
 
 #define UPVOTE_CLICKED_STATE "upvote-clicked"
 #define UPVOTE_NOTCLICKED_STATE "upvote-notclicked"

@@ -196,25 +196,7 @@ enum vote_type check_for_vote(enum item_type item_type, const char* item_id, con
   }
 
   ks_datacont* uv0 = ks_list_get(upvote_query_result, 0);
-  ks_datacont* uv1 = ks_list_get(upvote_query_result, 1);
-
   ks_datacont* dv0 = ks_list_get(downvote_query_result, 0);
-  ks_datacont* dv1 = ks_list_get(downvote_query_result, 1);
-
-  // NOTE:
-  // might remove these checks
-  if (uv0 != NULL && dv0 != NULL)
-  {
-    log_crit("check_for_vote(): downvote and upvote present for same %s_id=%s user_id=%s", item_type==POST_ITEM?"post":"comment", item_id, user_id);
-  }
-  if (uv0 != NULL && uv1 != NULL)
-  {
-    log_crit("check_for_vote(): multiple upvotes present for same %s_id=%s user_id=%s", item_type==POST_ITEM?"post":"comment", item_id, user_id);
-  }
-  if (dv0 != NULL && dv1 != NULL)
-  {
-    log_crit("check_for_vote(): multiple downvotes present for same %s_id=%s user_id=%s", item_type==POST_ITEM?"post":"comment", item_id, user_id);
-  }
 
   // determine vote type
   enum vote_type result = uv0 ? UPVOTE : (dv0 ? DOWNVOTE : NOVOTE);
@@ -242,16 +224,7 @@ bool check_for_sub(const char* community_id, const struct auth_token* client_inf
   }
 
   ks_list* sub_query_result = query_subscriptions_by_community_id_user_id(community_id, client_info->user_id);
-  const ks_datacont* row0 = ks_list_get(sub_query_result, 0);
-  const ks_datacont* row1 = ks_list_get(sub_query_result, 1);
-
-  if (row1 != NULL)
-  {
-    log_crit("check_for_sub(): multiple subscription entries for community_id=%s, user_id=%s", community_id, client_info->user_id);
-  }
-
-  bool subbed = row0 != NULL;
-
+  bool subbed = ks_list_get(sub_query_result, 0) != NULL;
   ks_list_delete(sub_query_result);
 
   return subbed;
@@ -267,13 +240,6 @@ ks_hashmap* get_community_info(const char* community_name)
   }
 
   ks_datacont* row0 = ks_list_get(result, 0);
-
-  if (row0 == NULL)
-  {
-    ks_list_delete(result);
-    return NULL;
-  }
-
   ks_hashmap* community_info = row0->hm;
   row0->hm = NULL;
   ks_list_delete(result);
@@ -291,13 +257,6 @@ ks_hashmap* get_post_info(const char* post_id)
   }
 
   ks_datacont* row0 = ks_list_get(result, 0);
-
-  if (row0 == NULL)
-  {
-    // post not found
-    ks_list_delete(result);
-  }
-
   ks_hashmap* post_info = row0->hm;
   row0->hm = NULL;
   ks_list_delete(result);
@@ -315,12 +274,6 @@ ks_hashmap* get_comment_info(const char* comment_id)
   }
 
   ks_datacont* row0 = ks_list_get(result, 0);
-
-  if (row0 == NULL)
-  {
-    ks_list_delete(result);
-  }
-
   ks_hashmap* comment_info = row0->hm;
   row0->hm = NULL;
   ks_list_delete(result);
@@ -338,14 +291,40 @@ ks_hashmap* get_user_info(const char* user_name)
   }
 
   ks_datacont* row0 = ks_list_get(result, 0);
+  ks_hashmap* user_info = row0->hm;
+  row0->hm = NULL;
+  ks_list_delete(result);
 
-  if (row0 == NULL)
+  return user_info;
+}
+
+
+ks_hashmap* get_moderator_info(const char* community_id, const char* user_id)
+{
+  ks_list* result;
+  if ((result = query_moderators_by_community_id_user_id(community_id, user_id)) == NULL)
   {
-    // user not found
-    ks_list_delete(result);
     return NULL;
   }
 
+  ks_datacont* row0 = ks_list_get(result, 0);
+  ks_hashmap* user_info = row0->hm;
+  row0->hm = NULL;
+  ks_list_delete(result);
+
+  return user_info;
+}
+
+
+ks_hashmap* get_administrator_info(const char* user_id)
+{
+  ks_list* result;
+  if ((result = query_administrators_by_user_id(user_id)) == NULL)
+  {
+    return NULL;
+  }
+
+  ks_datacont* row0 = ks_list_get(result, 0);
   ks_hashmap* user_info = row0->hm;
   row0->hm = NULL;
   ks_list_delete(result);
