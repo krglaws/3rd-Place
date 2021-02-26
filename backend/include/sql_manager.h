@@ -28,10 +28,11 @@
 
 
 /* comment sql field names */
-#define COMMENTS_NUM_FIELDS               (9)
+#define COMMENTS_NUM_FIELDS               (10)
 #define FIELD_COMMENT_ID                  "COMMENT_ID"
 #define FIELD_COMMENT_POST_ID             "COMMENT_POST_ID"
 #define FIELD_COMMENT_POST_TITLE          "COMMENT_POST_TITLE"
+#define FIELD_COMMENT_COMMUNITY_ID        "COMMENT_COMMUNITY_ID"
 #define FIELD_COMMENT_COMMUNITY_NAME      "COMMENT_COMMUNITY_NAME"
 #define FIELD_COMMENT_AUTHOR_ID           "COMMENT_AUTHOR_ID"
 #define FIELD_COMMENT_AUTHOR_NAME         "COMMENT_AUTHOR_NAME"
@@ -66,37 +67,35 @@
 #define SUBSCRIPTIONS_NUM_FIELDS     (5)
 #define FIELD_SUB_ID                 "SUB_ID"
 #define FIELD_SUB_USER_ID            "SUB_USER_ID"
-#define FIELD_SUB_USER_NAME          "SUB_USER_NAME"
 #define FIELD_SUB_COMMUNITY_ID       "SUB_COMMUNITY_ID"
-#define FIELD_SUB_COMMUNITY_NAME     "SUB_COMMUNITY_NAME"
 
 
 /* post up vote field names */
-#define POST_UPVOTES_NUM_FIELDS     (3)
-#define FIELD_POST_UPVOTE_ID        "POST_UP_VOTE_ID"
-#define FIELD_POST_UPVOTE_POST_ID   "POST_UP_VOTE_POST_ID"
-#define FIELD_POST_UPVOTE_USER_ID   "POST_UP_VOTE_USER_ID"
+#define POST_UP_VOTES_NUM_FIELDS     (3)
+#define FIELD_POST_UP_VOTE_ID        "POST_UP_VOTE_ID"
+#define FIELD_POST_UP_VOTE_POST_ID   "POST_UP_VOTE_POST_ID"
+#define FIELD_POST_UP_VOTE_USER_ID   "POST_UP_VOTE_USER_ID"
 
 
 /* post down vote field names */
-#define POST_DOWNVOTES_NUM_FIELDS     (3)
-#define FIELD_POST_DOWNVOTE_ID        "POST_DOWN_VOTE_ID"
-#define FIELD_POST_DOWNVOTE_POST_ID   "POST_DOWN_VOTE_POST_ID"
-#define FIELD_POST_DOWNVOTE_USER_ID   "POST_DOWN_VOTE_USER_ID"
+#define POST_DOWN_VOTES_NUM_FIELDS     (3)
+#define FIELD_POST_DOWN_VOTE_ID        "POST_DOWN_VOTE_ID"
+#define FIELD_POST_DOWN_VOTE_POST_ID   "POST_DOWN_VOTE_POST_ID"
+#define FIELD_POST_DOWN_VOTE_USER_ID   "POST_DOWN_VOTE_USER_ID"
 
 
 /* comment up vote field names */
-#define COMMENT_UPVOTES_NUM_FIELDS     (3)
-#define FIELD_COMMENT_UPVOTE_ID        "COMMENT_UP_VOTE_ID"
-#define FIELD_COMMENT_UPVOTE_POST_ID   "COMMENT_UP_VOTE_POST_ID"
-#define FIELD_COMMENT_UPVOTE_USER_ID   "COMMENT_UP_VOTE_USER_ID"
+#define COMMENT_UP_VOTES_NUM_FIELDS     (3)
+#define FIELD_COMMENT_UP_VOTE_ID        "COMMENT_UP_VOTE_ID"
+#define FIELD_COMMENT_UP_VOTE_POST_ID   "COMMENT_UP_VOTE_POST_ID"
+#define FIELD_COMMENT_UP_VOTE_USER_ID   "COMMENT_UP_VOTE_USER_ID"
 
 
 /* comment down vote field names */
-#define COMMENT_DOWNVOTES_NUM_FIELDS     (3)
-#define FIELD_COMMENT_DOWNVOTE_ID        "COMMENT_DOWN_VOTE_ID"
-#define FIELD_COMMENT_DOWNVOTE_POST_ID   "COMMENT_DOWN_VOTE_POST_ID"
-#define FIELD_COMMENT_DOWNVOTE_USER_ID   "COMMENT_DOWN_VOTE_USER_ID"
+#define COMMENT_DOWN_VOTES_NUM_FIELDS     (3)
+#define FIELD_COMMENT_DOWN_VOTE_ID        "COMMENT_DOWN_VOTE_ID"
+#define FIELD_COMMENT_DOWN_VOTE_POST_ID   "COMMENT_DOWN_VOTE_POST_ID"
+#define FIELD_COMMENT_DOWN_VOTE_USER_ID   "COMMENT_DOWN_VOTE_USER_ID"
 
 
 /* query templates */
@@ -105,6 +104,7 @@
 #define QUERY_ALL_POSTS "SELECT* FROM posts;"
 #define QUERY_POSTS_BY_ID "SELECT * FROM posts WHERE id = %s;"
 #define QUERY_POSTS_BY_AUTHOR_NAME "SELECT * FROM posts WHERE author_name = '%s';"
+#define QUERY_POSTS_BY_COMMUNITY_ID "SELECT * FROM posts WHERE community_id = %s;"
 #define QUERY_POSTS_BY_COMMUNITY_NAME "SELECT * FROM posts WHERE community_name = '%s';"
 
 #define QUERY_COMMENTS_BY_ID "SELECT * FROM comments WHERE comment_id = %s;"
@@ -118,25 +118,30 @@
 
 #define QUERY_ADMINISTRATORS_BY_USER_ID "SELECT * FROM administrators WHERE user_id = %s;"
 
+#define QUERY_POST_UP_VOTES_BY_POST_ID_USER_ID "SELECT * FROM post_up_votes WHERE post_id = %s AND user_id = %s;"
+#define QUERY_POST_DOWN_VOTES_BY_POST_ID_USER_ID "SELECT * FROM post_down_votes WHERE post_id = %s AND user_id = %s;"
+
+#define QUERY_COMMENT_UP_VOTES_BY_COMMENT_ID_USER_ID "SELECT * FROM comment_up_votes WHERE comment_id = %s AND user_id = %s;"
+#define QUERY_COMMENT_DOWN_VOTES_BY_COMMENT_ID_USER_ID "SELECT * FROM comment_down_votes WHERE comment_id = %s AND user_id = %s;"
+
+#define QUERY_SUBSCRIPTIONS_BY_COMMUNITY_ID_USER_ID "SELECT * FROM subscriptions WHERE community_id = %s AND user_id = %s;"
 #define QUERY_SUBSCRIPTIONS_BY_USER_ID "SELECT * FROM subscriptions WHERE user_id = %s;"
 
-#define QUERY_POST_UPVOTES_BY_POST_ID_USER_ID "SELECT * FROM post_up_votes WHERE post_id = %s AND user_id = %s;"
-#define QUERY_POST_DOWNVOTES_BY_POST_ID_USER_ID "SELECT * FROM post_down_votes WHERE post_id = %s AND user_id = %s;"
+#define TOGGLE_SUBSCRIBE "CALL ToggleSubscribe(%s, %s);"
+#define TOGGLE_POST_UP_VOTE "CALL TogglePostUpVote(%s, %s);"
+#define TOGGLE_POST_DOWN_VOTE "CALL TogglePostDownVote(%s, %s);"
+#define TOGGLE_COMMENT_UP_VOTE "CALL ToggleCommentUpVote(%s, %s);"
+#define TOGGLE_COMMENT_DOWN_VOTE "CALL ToggleCommentDownVote(%s, %s);"
 
-#define QUERY_COMMENT_UPVOTES_BY_COMMENT_ID_USER_ID "SELECT * FROM comment_up_votes WHERE comment_id = %s AND user_id = %s;"
-#define QUERY_COMMENT_DOWNVOTES_BY_COMMENT_ID_USER_ID "SELECT * FROM comment_down_votes WHERE comment_id = %s AND user_id = %s;"
-#define QUERY_SUBSCRIPTIONS_BY_COMMUNITY_ID_USER_ID "SELECT * FROM subscriptions WHERE community_id = %s AND user_id = %s;"
+#define CREATE_USER "SELECT CreateUser('%s', '%s', '%s');"
+#define CREATE_COMMENT "SELECT CreateComment(%s, %s, %s, '%s');"
+#define CREATE_POST "SELECT CreatePost(%s, %s, '%s', '%s');"
+#define CREATE_COMMUNITY "SELECT CreateCommunity(%s, '%s', '%s');"
 
-#define INSERT_NEW_USER "INSERT INTO users (name, password_hash, date_joined) VALUES ('%s', '%s', UNIX_TIMESTAMP());"
-#define INSERT_POST_UPVOTE "INSERT INTO post_up_votes (user_id, post_id) VALUES (%s, %s);"
-#define INSERT_POST_DOWNVOTE "INSERT INTO post_down_votes (user_id, post_id) VALUES (%s, %s);"
-#define INSERT_COMMENT_UPVOTE "INSERT INTO comment_up_votes (user_id, post_id) VALUES (%s, %s);"
-#define INSERT_COMMENT_DOWNVOTE "INSERT INTO comment_up_votes (user_id, post_id) VALUES (%s, %s);"
-
-#define TOGGLE_POST_UPVOTE "CALL TogglePostUpvote(%s, %s);"
-#define TOGGLE_POST_DOWNVOTE "CALL TogglePostDownvote(%s, %s);"
-#define TOGGLE_COMMENT_UPVOTE "CALL ToggleCommentUpvote(%s, %s);"
-#define TOGGLE_COMMENT_DOWNVOTE "CALL ToggleCommentDOwnvote(%s, %s);"
+#define DELETE_USER "CALL DeleteUser(%s);"
+#define DELETE_COMMENT "CALL DeleteComment(%s);"
+#define DELETE_POST "CALL DeletePost(%s);"
+#define DELETE_COMMUNITY "CALL DeleteCommunity(%s);"
 
 #include <kylestructs.h>
 
@@ -153,7 +158,6 @@ void terminate_sql_manager();
 
 ks_list* query_users_by_name(const char* user_name);
 
-
 ks_list* query_all_posts();
 
 ks_list* query_posts_by_id(const char* id);
@@ -162,17 +166,13 @@ ks_list* query_posts_by_author_name(const char* user_name);
 
 ks_list* query_posts_by_community_name(const char* community_name);
 
-
 ks_list* query_all_communities();
 
 ks_list* query_communities_by_name(const char* community_name);
 
-
 ks_list* query_moderators_by_community_id_user_id(const char* community_id, const char* user_id);
 
-
 ks_list* query_administrators_by_user_id(const char* user_id);
-
 
 ks_list* query_comments_by_id(const char* comment_id);
 
@@ -180,9 +180,7 @@ ks_list* query_comments_by_author_name(const char* author_name);
 
 ks_list* query_comments_by_post_id(const char* post_id);
 
-
 ks_list* query_subscriptions_by_user_id(const char* user_id);
-
 
 ks_list* query_post_upvotes_by_post_id_user_id(const char* post_id, const char* user_id);
 
@@ -192,21 +190,37 @@ ks_list* query_comment_upvotes_by_post_id_user_id(const char* comment_id, const 
 
 ks_list* query_comment_downvotes_by_post_id_user_id(const char* comment_id, const char* user_id);
 
-
 ks_list* query_subscriptions_by_community_id_user_id(const char* community_id, const char* id);
 
+/* Return 0 on success, -1 on failure */
+int sql_toggle_subscribe(const char* community_id, const char* user_id);
 
-/* Insert queries return -1 if the insert statement failed
- */
+int sql_toggle_post_up_vote(const char* post_id, const char* user_id);
 
-int insert_new_user(const char* user_name, const char* passwd_hash);
+int sql_toggle_post_down_vote(const char* post_id, const char* user_id);
 
-int toggle_post_upvote(const char* post_id, const char* user_id);
+int sql_toggle_comment_up_vote(const char* comment_id, const char* user_id);
 
-int toggle_post_downvote(const char* post_id, const char* user_id);
+int sql_toggle_comment_down_vote(const char* comment_id, const char* user_id);
 
-int toggle_comment_upvote(const char* comment_id, const char* user_id);
 
-int toggle_comment_downvote(const char* comment_id, const char* user_id);
+/* Return heap-allocated string ID of the newly created item (free() after use), NULL on failure */
+char* sql_create_user(const char* user_name, const char* passwd_hash, const char* about);
+
+char* sql_create_comment(const char* user_id, const char* post_id, const char* community_id, const char* body);
+
+char* sql_create_post(const char* user_id, const char* community_id, const char* title, const char* body);
+
+char* sql_create_community(const char* user_id, const char* community_name, const char* about);
+
+
+/* Return 0 on success, -1 on failure */
+int sql_delete_user(const char* user_id);
+
+int sql_delete_comment(const char* comment_id);
+
+int sql_delete_post(const char* post_id);
+
+int sql_delete_community(const char* community_id);
 
 #endif
