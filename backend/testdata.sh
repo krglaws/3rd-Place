@@ -6,149 +6,114 @@ mysql -uroot <<TEST_USERS
 USE $DBNAME;
 
 # test users
-INSERT INTO users (id, name, password_hash, about, points, posts, comments, date_joined)
-  VALUES (1, 'testuser1', 'abcd', 'this is test user 1.', 0, 0, 0, UNIX_TIMESTAMP());
-INSERT INTO users (id, name, password_hash, about, points, posts, comments, date_joined)
-  VALUES (2, 'testuser2', 'abcd', 'this is test user 2', 0, 0, 0, UNIX_TIMESTAMP());
-INSERT INTO users (id, name, password_hash, about, points, posts, comments, date_joined)
-  VALUES (3, 'testuser3', 'abcd', 'this is test user 3', 0, 0, 0, UNIX_TIMESTAMP());
-INSERT INTO users (id, name, password_hash, about, points, posts, comments, date_joined)
-  VALUES (4, 'testuser4', 'abcd', 'this is test user 4', 0, 0, 0, UNIX_TIMESTAMP());
-INSERT INTO users (id, name, password_hash, about, points, posts, comments, date_joined)
-  VALUES (5, 'testuser5', 'abcd', 'this is test user 5', 0, 0, 0, UNIX_TIMESTAMP());
+SET @foo = (Select CreateUser("testuser1", "", "this is test user 1"));
+SET @foo = (Select CreateUser("testuser2", "", "this is test user 2"));
+SET @foo = (Select CreateUser("testuser3", "", "this is test user 3"));
 
 TEST_USERS
 
-if [ $? -eq 1 ]; then
+if [ $? -ne 0 ]; then
   echo "Error while loading test users"
-  exit;
+  exit 1;
 fi
 
-mysql -uroot <<TEST_POSTS
-
-USE $DBNAME;
-
-# test posts
-INSERT INTO posts (community_id, community_name, author_id, author_name, title, body, points, date_posted)
-  VALUES (1, 'TestCommunity1', 1, 'testuser1', 'Test Post 1', 'This is a test post.', 0, UNIX_TIMESTAMP());
-INSERT INTO posts (community_id, community_name, author_id, author_name, title, body, points, date_posted)
-  VALUES (2, 'TestCommunity2', 2, 'testuser2', 'Test Post 2', 'This is a test post.', 0, UNIX_TIMESTAMP());
-INSERT INTO posts (community_id, community_name, author_id, author_name, title, body, points, date_posted)
-  VALUES (3, 'TestCommunity3', 3, 'testuser3', 'Test Post 3', 'This is a test post.', 0, UNIX_TIMESTAMP());
-INSERT INTO posts (community_id, community_name, author_id, author_name, title, body, points, date_posted)
-  VALUES (4, 'TestCommunity4', 4, 'testuser4', 'Test Post 4', 'This is a test post.', 0, UNIX_TIMESTAMP());
-INSERT INTO posts (community_id, community_name, author_id, author_name, title, body, points, date_posted)
-  VALUES (5, 'TestCommunity1', 5, 'testuser5', 'Test Post 5', 'This is a test post.', 0, UNIX_TIMESTAMP());
-
-TEST_POSTS
-
-if [ $? -eq 1 ]; then
-  echo "Error while loading test posts"
-  exit;
-fi
-
-mysql -uroot <<TEST_COMMENTS
-
-USE $DBNAME;
-
-# test comments
-INSERT INTO comments (id, post_id, post_title, community_name, author_id, author_name, body, points, date_posted)
-  VALUES (1, 1, 'Test Post 1', 'TestCommunity1', 2, 'testuser2', 'this is a test comment.', 0, UNIX_TIMESTAMP());
-INSERT INTO comments (id, post_id, post_title, community_name, author_id, author_name, body, points, date_posted)
-  VALUES (2, 1, 'Test Post 1', 'TestCommunity1', 3, 'testuser3', 'this is a test comment.', 0, UNIX_TIMESTAMP());
-INSERT INTO comments (id, post_id, post_title, community_name, author_id, author_name, body, points, date_posted)
-  VALUES (3, 1, 'Test Post 1', 'TestCommunity1', 4, 'testuser4', 'this is a test comment.', 0, UNIX_TIMESTAMP());
-INSERT INTO comments (id, post_id, post_title, community_name, author_id, author_name, body, points, date_posted)
-  VALUES (4, 1, 'Test Post 1', 'TestCommunity1', 5, 'testuser5', 'this is a test comment.', 0, UNIX_TIMESTAMP());
-
-INSERT INTO comments (id, post_id, post_title, community_name, author_id, author_name, body, points, date_posted)
-  VALUES (5, 2, 'Test Post 2', 'TestCommunity2', 1, 'testuser1', 'this is a test comment.', 0, UNIX_TIMESTAMP());
-INSERT INTO comments (id, post_id, post_title, community_name, author_id, author_name, body, points, date_posted)
-  VALUES (6, 2, 'Test Post 2', 'TestCommunity2', 2, 'testuser2', 'this is a test comment.', 0, UNIX_TIMESTAMP());
-INSERT INTO comments (id, post_id, post_title, community_name, author_id, author_name, body, points, date_posted)
-  VALUES (7, 2, 'Test Post 2', 'TestCommunity2', 3, 'testuser3', 'this is a test comment.', 0, UNIX_TIMESTAMP());
-INSERT INTO comments (id, post_id, post_title, community_name, author_id, author_name, body, points, date_posted)
-  VALUES (8, 2, 'Test Post 2', 'TestCommunity2', 4, 'testuser4', 'this is a test comment.', 0, UNIX_TIMESTAMP());
-
-INSERT INTO comments (id, post_id, post_title, community_name, author_id, author_name, body, points, date_posted)
-  VALUES (9, 3, 'Test Post 3', 'TestCommunity3', 5, 'testuser5', 'this is a test comment.', 0, UNIX_TIMESTAMP());
-INSERT INTO comments (id, post_id, post_title, community_name, author_id, author_name, body, points, date_posted)
-  VALUES (10, 3, 'Test Post 3', 'TestCommunity3', 1, 'testuser1', 'this is a test comment.', 0, UNIX_TIMESTAMP());
-INSERT INTO comments (id, post_id, post_title, community_name, author_id, author_name, body, points, date_posted)
-  VALUES (11, 3, 'Test Post 3', 'TestCommunity3', 2, 'testuser2', 'this is a test comment.', 0, UNIX_TIMESTAMP());
-INSERT INTO comments (id, post_id, post_title, community_name, author_id, author_name, body, points, date_posted)
-  VALUES (12, 3, 'Test Post 3', 'TestCommunity3', 3, 'testuser3', 'this is a test comment.', 0, UNIX_TIMESTAMP());
-
-INSERT INTO comments (id, post_id, post_title, community_name, author_id, author_name, body, points, date_posted)
-  VALUES (13, 4, 'Test Post 4', 'TestCommunity4', 4, 'testuser4', 'this is a test comment.', 0, UNIX_TIMESTAMP());
-INSERT INTO comments (id, post_id, post_title, community_name, author_id, author_name, body, points, date_posted)
-  VALUES (14, 4, 'Test Post 4', 'TestCommunity4', 5, 'testuser5', 'this is a test comment.', 0, UNIX_TIMESTAMP());
-INSERT INTO comments (id, post_id, post_title, community_name, author_id, author_name, body, points, date_posted)
-  VALUES (15, 4, 'Test Post 4', 'TestCommunity4', 1, 'testuser1', 'this is a test comment.', 0, UNIX_TIMESTAMP());
-INSERT INTO comments (id, post_id, post_title, community_name, author_id, author_name, body, points, date_posted)
-  VALUES (16, 4, 'Test Post 4', 'TestCommunity4', 2, 'testuser2', 'this is a test comment.', 0, UNIX_TIMESTAMP());
-
-INSERT INTO comments (id, post_id, post_title, community_name, author_id, author_name, body, points, date_posted)
-  VALUES (17, 5, 'Test Post 5', 'TestCommunity5', 3, 'testuser3', 'this is a test comment.', 0, UNIX_TIMESTAMP());
-INSERT INTO comments (id, post_id, post_title, community_name, author_id, author_name, body, points, date_posted)
-  VALUES (18, 5, 'Test Post 5', 'TestCommunity5', 4, 'testuser4', 'this is a test comment.', 0, UNIX_TIMESTAMP());
-INSERT INTO comments (id, post_id, post_title, community_name, author_id, author_name, body, points, date_posted)
-  VALUES (19, 5, 'Test Post 5', 'TestCommunity5', 5, 'testuser5', 'this is a test comment.', 0, UNIX_TIMESTAMP());
-INSERT INTO comments (id, post_id, post_title, community_name, author_id, author_name, body, points, date_posted)
-  VALUES (20, 5, 'Test Post 5', 'TestCommunity5', 1, 'testuser1', 'this is a test comment.', 0, UNIX_TIMESTAMP());
-
-TEST_COMMENTS
-
-if [ $? -eq 1 ]; then
-  echo "Error while loading test comments"
-  exit;
-fi
 
 mysql -uroot <<TEST_COMMUNITIES
 
 USE $DBNAME;
 
-# test communities
-INSERT INTO communities (id, owner_id, name, about, members, date_created)
-  VALUES (1, 1, 'TestCommunity1', 'this is a test community.', 0, UNIX_TIMESTAMP());
-INSERT INTO communities (id, owner_id, name, about, members, date_created)
-  VALUES (2, 2, 'TestCommunity2', 'this is a test community.', 0, UNIX_TIMESTAMP());
-INSERT INTO communities (id, owner_id, name, about, members, date_created)
-  VALUES (3, 3, 'TestCommunity3', 'this is a test community.', 0, UNIX_TIMESTAMP());
-INSERT INTO communities (id, owner_id, name, about, members, date_created)
-  VALUES (4, 4, 'TestCommunity4', 'this is a test community.', 0, UNIX_TIMESTAMP());
-INSERT INTO communities (id, owner_id, name, about, members, date_created)
-  VALUES (5, 5, 'TestCommunity5', 'this is a test community.', 0, UNIX_TIMESTAMP());
+SET @foo = (SELECT CreateCommunity(2, "TestCommunity1", "this is a test community"));
+SET @foo = (SELECT CreateCommunity(3, "TestCommunity2", "this is a test community"));
+SET @foo = (SELECT CreateCommunity(4, "TestCommunity3", "this is a test community"));
 
 TEST_COMMUNITIES
 
-if [ $? -eq 1 ]; then
+if [ $? -ne 0 ]; then
   echo "Error while loading test communities"
-  exit;
+  exit 1;
 fi
+
+
+mysql -uroot <<TEST_POSTS
+
+USE $DBNAME;
+
+SET @foo = (SELECT CreatePost(2, 1, "Test Post 1", "This is a test post."));
+SET @foo = (SELECT CreatePost(2, 2, "Test Post 2", "This is a test post."));
+SET @foo = (SELECT CreatePost(2, 3, "Test Post 3", "This is a test post."));
+
+SET @foo = (SELECT CreatePost(3, 1, "Test Post 4", "This is a test post."));
+SET @foo = (SELECT CreatePost(3, 2, "Test Post 5", "This is a test post."));
+SET @foo = (SELECT CreatePost(3, 3, "Test Post 6", "This is a test post."));
+
+SET @foo = (SELECT CreatePost(4, 1, "Test Post 7", "This is a test post."));
+SET @foo = (SELECT CreatePost(4, 2, "Test Post 8", "This is a test post."));
+SET @foo = (SELECT CreatePost(4, 3, "Test Post 9", "This is a test post."));
+
+TEST_POSTS
+
+if [ $? -ne 0 ]; then
+  echo "Error while loading test posts"
+  exit 1;
+fi
+
+
+mysql -uroot <<TEST_COMMENTS
+
+USE $DBNAME;
+
+SET @foo = (SELECT CreateComment(2, 4, 1, "this is a test comment"));
+SET @foo = (SELECT CreateComment(2, 5, 2, "this is a test comment"));
+SET @foo = (SELECT CreateComment(2, 6, 3, "this is a test comment"));
+SET @foo = (SELECT CreateComment(2, 7, 1, "this is a test comment"));
+SET @foo = (SELECT CreateComment(2, 8, 2, "this is a test comment"));
+SET @foo = (SELECT CreateComment(2, 9, 3, "this is a test comment"));
+
+SET @foo = (SELECT CreateComment(3, 7, 1, "this is a test comment"));
+SET @foo = (SELECT CreateComment(3, 8, 2, "this is a test comment"));
+SET @foo = (SELECT CreateComment(3, 9, 3, "this is a test comment"));
+SET @foo = (SELECT CreateComment(3, 1, 1, "this is a test comment"));
+SET @foo = (SELECT CreateComment(3, 2, 2, "this is a test comment"));
+SET @foo = (SELECT CreateComment(3, 3, 3, "this is a test comment"));
+
+SET @foo = (SELECT CreateComment(4, 1, 1, "this is a test comment"));
+SET @foo = (SELECT CreateComment(4, 2, 2, "this is a test comment"));
+SET @foo = (SELECT CreateComment(4, 3, 3, "this is a test comment"));
+SET @foo = (SELECT CreateComment(4, 4, 1, "this is a test comment"));
+SET @foo = (SELECT CreateComment(4, 5, 2, "this is a test comment"));
+SET @foo = (SELECT CreateComment(4, 6, 3, "this is a test comment"));
+
+TEST_COMMENTS
+
+if [ $? -ne 0 ]; then
+  echo "Error while loading test comments"
+  exit 1;
+fi
+
 
 mysql -uroot <<TEST_SUBSCRIPTIONS
 
 USE $DBNAME;
 
-# test subscriptions
-INSERT INTO subscriptions (id, user_id, user_name, community_id, community_name)
-  VALUES (1, 1, 'testuser1', 1, 'TestCommunity1');
-INSERT INTO subscriptions (id, user_id, user_name, community_id, community_name)
-  VALUES (2, 1, 'testuser1', 2, 'TestCommunity2');
-INSERT INTO subscriptions (id, user_id, user_name, community_id, community_name)
-  VALUES (3, 1, 'testuser1', 3, 'TestCommunity3');
-INSERT INTO subscriptions (id, user_id, user_name, community_id, community_name)
-  VALUES (4, 1, 'testuser1', 4, 'TestCommunity4');
-INSERT INTO subscriptions (id, user_id, user_name, community_id, community_name)
-  VALUES (5, 1, 'testuser1', 5, 'TestCommunity5');
+CALL ToggleSubscribe (1, 2);
+CALL ToggleSubscribe (2, 2);
+CALL ToggleSubscribe (3, 2);
+
+CALL ToggleSubscribe (1, 3);
+CALL ToggleSubscribe (2, 3);
+CALL ToggleSubscribe (3, 3);
+
+CALL ToggleSubscribe (1, 4);
+CALL ToggleSubscribe (2, 4);
+CALL ToggleSubscribe (3, 4);
 
 TEST_SUBSCRIPTIONS
 
-if [ $? -eq 1 ]; then
+if [ $? -ne 0 ]; then
   echo "Error while loading test subscriptions"
-  exit;
+  exit 1;
 fi
+
 
 mysql -uroot <<TEST_VOTES
 
@@ -157,45 +122,45 @@ USE $DBNAME;
 # test votes
 
 # testuser1 upvote TestPost1
-CALL TogglePostUpVote(1, 1);
-
-# testuser2 upvote TestPost1
 CALL TogglePostUpVote(1, 2);
 
-# testuser3 upvote TestPost1
+# testuser2 upvote TestPost1
 CALL TogglePostUpVote(1, 3);
 
-# testuser1 downvote TestPost2
-CALL TogglePostDownVote(2, 1);
+# testuser3 upvote TestPost1
+CALL TogglePostUpVote(1, 4);
 
-# testuser2 downvote TestPost2
+# testuser1 downvote TestPost2
 CALL TogglePostDownVote(2, 2);
 
-# testuser3 downvote TestPost2
+# testuser2 downvote TestPost2
 CALL TogglePostDownVote(2, 3);
 
+# testuser3 downvote TestPost2
+CALL TogglePostDownVote(2, 4);
+
 # testuser1 upvote comment 1
-CALL ToggleCommentUpVote(1, 1);
+CALL ToggleCommentUpVote(1, 2);
 
 # testuser2 upvote comment 1
-CALL ToggleCommentUpvote(1, 2);
+CALL ToggleCommentUpvote(1, 3);
 
 # testuser3 upvote comment 1
-CALL ToggleCommentUpVote(1, 3);
+CALL ToggleCommentUpVote(1, 4);
 
 # testuser1 downvote comment 2
-CALL ToggleCommentDownVote(2, 1);
-
-# testuser2 downvote comment 2
 CALL ToggleCommentDownVote(2, 2);
 
-# testuser3 downvote comment 2
+# testuser2 downvote comment 2
 CALL ToggleCommentDownVote(2, 3);
+
+# testuser3 downvote comment 2
+CALL ToggleCommentDownVote(2, 4);
 
 TEST_VOTES
 
-if [ $? -eq 1 ]; then
+if [ $? -ne 0 ]; then
   echo "Error while loading test votes"
-  exit;
+  exit 1;
 fi
 

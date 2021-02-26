@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS $DBNAME.comments(
   id INT NOT NULL AUTO_INCREMENT,
   post_id INT NOT NULL,
   post_title VARCHAR(32) NOT NULL,
+  community_id INT NOT NULL,
   community_name VARCHAR(32) NOT NULL,
   author_id INT NOT NULL,
   author_name VARCHAR(16),
@@ -109,7 +110,7 @@ CREATE TABLE IF NOT EXISTS $DBNAME.comment_down_votes(
 
 
 # create /u/[deleted]
-INSERT INTO $DB.users (id, name, password_hash, date_joined) VALUES (0, "[deleted]", "00000000", UNIX_TIMESTAMP());
+INSERT INTO $DBNAME.users (id, name, password_hash, date_joined) VALUES (1, "[deleted]", "", UNIX_TIMESTAMP());
 
 
 CREATE USER IF NOT EXISTS $DBUSER@$DBHOST IDENTIFIED BY '$DBPASS';
