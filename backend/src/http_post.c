@@ -24,22 +24,22 @@ struct response* http_post(struct request* req)
     log_crit("http_post(): NULL request object");
   }
 
-  struct response* resp = NULL;
-
   // figure out which endpoint
   if (strcmp(req->uri, "./signup") == 0)
   {
     const ks_datacont* uname = get_map_value(req->content, "uname");
     const ks_datacont* passwd = get_map_value(req->content, "passwd");
-    resp = post_signup(uname ? uname->cp : NULL,
-                       passwd ? passwd->cp : NULL);
+    const ks_datacont* about = get_map_value(req->content, "about");
+    return post_signup(uname ? uname->cp : NULL,
+                       passwd ? passwd->cp : NULL,
+                       about ? about->cp : NULL);
   }
 
   else if (strcmp(req->uri, "./login") == 0)
   {
     const ks_datacont* uname = get_map_value(req->content, "uname");
     const ks_datacont* passwd = get_map_value(req->content, "passwd");
-    resp = post_login(uname ? uname->cp : NULL,
+    return post_login(uname ? uname->cp : NULL,
                       passwd ? passwd->cp : NULL);
   }
 
@@ -51,7 +51,7 @@ struct response* http_post(struct request* req)
       remove_token(req->client_info->token);
     }
 
-    resp = response_redirect("/home");
+    return response_redirect("/home");
   }
 
   else if (strcmp(req->uri, "./vote") == 0)
@@ -60,18 +60,13 @@ struct response* http_post(struct request* req)
     const ks_datacont* direction = get_map_value(req->content, "direction");
     const ks_datacont* id = get_map_value(req->content, "id");
 
-    resp = post_vote(type ? type->cp : NULL,
+    return post_vote(type ? type->cp : NULL,
                      direction ? direction->cp : NULL,
                      id ? id->cp : NULL,
                      req->client_info);
   }
 
-  if (resp == NULL)
-  {
-    return response_error(STAT404);
-  }
-
-  return resp;
+  return response_error(STAT404);
 }
 
 
@@ -95,7 +90,7 @@ static struct response* post_login(const char* uname, const char* passwd)
 }
 
 
-static struct response* post_signup(const char* uname, const char* passwd)
+static struct response* post_signup(const char* uname, const char* passwd, const char* about)
 {
   const char* token;
   if (uname == NULL || passwd == NULL)
@@ -104,7 +99,7 @@ static struct response* post_signup(const char* uname, const char* passwd)
     return get_login(NULL, LOGINERR_EMPTY);
   }
 
-  if ((token = new_user(uname, passwd)) == NULL)
+  if ((token = new_user(uname, passwd, about)) == NULL)
   {
     log_info("Signup failed: username already exists");
     return get_login(NULL, LOGINERR_UNAME_TAKEN);
@@ -138,11 +133,11 @@ static struct response* post_vote(const char* type, const char* direction, const
   {
     if (strcmp(direction, "up") == 0)
     {
-      toggle_post_upvote(id, client_info->user_id);
+      sql_toggle_post_up_vote(id, client_info->user_id);
     }
     else if (strcmp(direction, "down") == 0)
     {
-      toggle_post_downvote(id, client_info->user_id);
+      sql_toggle_post_down_vote(id, client_info->user_id);
     }
     else return response_error(STAT400);
   }
@@ -150,14 +145,13 @@ static struct response* post_vote(const char* type, const char* direction, const
   {
     if (strcmp(direction, "up") == 0)
     {
-      toggle_comment_upvote(id, client_info->user_id);
+      sql_toggle_comment_up_vote(id, client_info->user_id);
     }
     else if (strcmp(direction, "down") == 0)
     {
-      toggle_comment_downvote(id, client_info->user_id);
+      sql_toggle_comment_down_vote(id, client_info->user_id);
     }
     else return response_error(STAT400);
-
   }
 
   // prepare 200 response object

@@ -164,6 +164,8 @@ ks_list* query_posts_by_id(const char* id);
 
 ks_list* query_posts_by_author_name(const char* user_name);
 
+ks_list* query_posts_by_community_id(const char* community_id);
+
 ks_list* query_posts_by_community_name(const char* community_name);
 
 ks_list* query_all_communities();

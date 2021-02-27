@@ -293,19 +293,19 @@ struct response* get_edit_community(const char* community_id, const struct auth_
   if (strcmp(client_info->user_id, owner_id) != 0)
   {
     // check if client is moderator of this community
-    ks_list* moderator_info;
-    if ((moderator_info = query_moderators_by_community_id_user_id(community_id, client_info->user_id)) == NULL)
+    ks_hashmap* mod_info;
+    if ((mod_info = get_moderator_info(community_id, client_info->user_id)) == NULL)
     {
       // check if client is an admin
-      ks_list* admin_info;
-      if ((admin_info = query_administrators_by_user_id(client_info->user_id)) == NULL)
+      ks_hashmap* admin_info;
+      if ((admin_info = get_administrator_info(client_info->user_id)) == NULL)
       {
         ks_hashmap_delete(page_data);
         return response_error(STAT403);
       }
-      else ks_list_delete(admin_info);
+      else ks_hashmap_delete(admin_info);
     }
-    else ks_list_delete(moderator_info);
+    else ks_hashmap_delete(mod_info);
   }
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_EDIT_COMMUNITY);
 

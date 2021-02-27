@@ -90,8 +90,8 @@ struct response* get_feed(const enum feed_type ft, const struct auth_token* clie
       ks_iterator* iter = ks_iterator_new(subs, KS_LIST);
       while ((curr = ks_iterator_get(iter)) != NULL)
       {
-        const char* community_name = get_map_value(curr->hm, FIELD_SUB_COMMUNITY_NAME)->cp;
-        ks_list* temp = query_posts_by_community_name(community_name);
+        const char* community_id = get_map_value(curr->hm, FIELD_SUB_COMMUNITY_ID)->cp;
+        ks_list* temp = query_posts_by_community_id(community_id);
         temp = sort_items(temp, POST_ITEM);
         posts = merge_items(posts, temp, POST_ITEM);
       }

@@ -54,7 +54,7 @@ const char* login_user(const char* uname, const char* passwd);
 
 /* Called by http_post when user signs up
  */
-const char* new_user(const char* uname, const char* passwd);
+const char* new_user(const char* uname, const char* passwd, const char* about);
 
 
 /* Creates a new token, either after login or

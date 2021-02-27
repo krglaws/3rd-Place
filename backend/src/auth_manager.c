@@ -158,7 +158,7 @@ const char* login_user(const char* uname, const char* passwd)
 }
 
 
-const char* new_user(const char* uname, const char* passwd)
+const char* new_user(const char* uname, const char* passwd, const char* about)
 {
   if (uname == NULL || passwd == NULL)
   {
@@ -181,11 +181,13 @@ const char* new_user(const char* uname, const char* passwd)
   char* pwhash = crypt(passwd, salt);
 
   // prepare insert query
-  if (insert_new_user(uname, pwhash) == -1)
+  char* user_id;
+  if ((user_id = sql_create_user(uname, pwhash, about)) == NULL)
   {
     log_err("new_user(): failed to create new user");
     return NULL;
   }
+  free(user_id);
 
   const char* token;
   if ((token = new_token(uname)) == NULL)

@@ -365,6 +365,12 @@ ks_list* query_all_communities()
 }
 
 
+ks_list* query_communities_by_name(const char* community_name)
+{
+  return query(communities_field_table, QUERY_COMMUNITIES_BY_NAME, community_name);
+}
+
+
 ks_list* query_moderators_by_community_id_user_id(const char* community_id, const char* user_id)
 {
   return query(moderators_field_table, QUERY_MODERATORS_BY_COMMUNITY_ID_USER_ID, community_id, user_id);
@@ -374,12 +380,6 @@ ks_list* query_moderators_by_community_id_user_id(const char* community_id, cons
 ks_list* query_administrators_by_user_id(const char* user_id)
 {
   return query(administrators_field_table, QUERY_ADMINISTRATORS_BY_USER_ID, user_id);
-}
-
-
-ks_list* query_communities_by_name(const char* community_name)
-{
-  return query(communities_field_table, QUERY_COMMUNITIES_BY_NAME, community_name);
 }
 
 

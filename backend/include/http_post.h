@@ -18,7 +18,7 @@ static struct response* post_login(const char* uname, const char* passwd);
 
 
 /* attempts signup, returns response object containing result */
-static struct response* post_signup(const char* uname, const char* passwd);
+static struct response* post_signup(const char* uname, const char* passwd, const char* about);
 
 
 /* toggles a users vote on post or comment */
