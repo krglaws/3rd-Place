@@ -35,8 +35,8 @@ static ks_list* get_user_posts(const char* user_name, const struct auth_token* c
     add_map_value_str(post_info->hm, TEMPLATE_PATH_KEY, HTML_USER_POST);
 
     // move post points and ID into vote wrapper map
-    const char* post_id = get_map_value(post_info->hm, FIELD_POST_ID)->cp;
-    const char* points = get_map_value(post_info->hm, FIELD_POST_POINTS)->cp;
+    const char* post_id = get_map_value_str(post_info->hm, FIELD_POST_ID);
+    const char* points = get_map_value_str(post_info->hm, FIELD_POST_POINTS);
 
     ks_hashmap* wrapper = ks_hashmap_new(KS_CHARP, 8);
     add_map_value_str(wrapper, TEMPLATE_PATH_KEY, HTML_POST_VOTE_WRAPPER);
@@ -89,8 +89,8 @@ static ks_list* get_user_comments(const char* user_name, const struct auth_token
     add_map_value_str(comment_info->hm, TEMPLATE_PATH_KEY, HTML_USER_COMMENT);
 
     // move comment points and ID into vote wrapper map
-    const char* comment_id = get_map_value(comment_info->hm, FIELD_COMMENT_ID)->cp;
-    const char* points = get_map_value(comment_info->hm, FIELD_COMMENT_POINTS)->cp;
+    const char* comment_id = get_map_value_str(comment_info->hm, FIELD_COMMENT_ID);
+    const char* points = get_map_value_str(comment_info->hm, FIELD_COMMENT_POINTS);
 
     ks_hashmap* wrapper = ks_hashmap_new(KS_CHARP, 8);
     add_map_value_str(wrapper, TEMPLATE_PATH_KEY, HTML_COMMENT_VOTE_WRAPPER);

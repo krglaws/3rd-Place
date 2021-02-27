@@ -150,7 +150,7 @@ struct response* get_edit_post(const char* post_id, const struct auth_token* cli
   }
 
   // make sure client is the author
-  const char* author_id = get_map_value(page_data, FIELD_POST_AUTHOR_ID)->cp;
+  const char* author_id = get_map_value_str(page_data, FIELD_POST_AUTHOR_ID);
   if (strcmp(client_info->user_id, author_id) != 0)
   {
     ks_hashmap_delete(page_data);
@@ -222,7 +222,7 @@ struct response* get_edit_comment(const char* comment_id, const struct auth_toke
   }
 
   // make sure client is the author
-  const char* author_id = get_map_value(page_data, FIELD_COMMENT_AUTHOR_ID)->cp;
+  const char* author_id = get_map_value_str(page_data, FIELD_COMMENT_AUTHOR_ID);
   if (strcmp(client_info->user_id, author_id) != 0)
   {
     ks_hashmap_delete(page_data);
@@ -289,7 +289,7 @@ struct response* get_edit_community(const char* community_id, const struct auth_
   }
 
   // check if client is owner
-  const char* owner_id = get_map_value(page_data, FIELD_COMMUNITY_OWNER_ID)->cp;
+  const char* owner_id = get_map_value_str(page_data, FIELD_COMMUNITY_OWNER_ID);
   if (strcmp(client_info->user_id, owner_id) != 0)
   {
     // check if client is moderator of this community

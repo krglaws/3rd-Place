@@ -117,7 +117,7 @@ const char* login_user(const char* uname, const char* passwd)
   }
 
   // grab user hash from query
-  const char* hash1 = get_map_value(user_info, FIELD_USER_PASSWORD_HASH)->cp;
+  const char* hash1 = get_map_value_str(user_info, FIELD_USER_PASSWORD_HASH);
 
   char salt[3];
   salt[0] = hash1[0];
@@ -205,7 +205,7 @@ static const char* new_token(const char* uname)
 {
   // pull user info from database
   ks_hashmap* user_info = get_user_info(uname);
-  const char* user_id = get_map_value(user_info, FIELD_USER_ID)->cp;
+  const char* user_id = get_map_value_str(user_info, FIELD_USER_ID);
 
   // copy info into auth token
   struct auth_token* new_token = calloc(1, sizeof(struct auth_token));

@@ -134,26 +134,26 @@ void init_sql_manager()
   ks_hashmap* args = string_to_map(config, "\n", "=");
   free(config);
 
-  const ks_datacont* dbhost;
-  if ((dbhost = get_map_value(args, "DBHOST")) == NULL)
+  const char* dbhost;
+  if ((dbhost = get_map_value_str(args, "DBHOST")) == NULL)
   {
     log_crit("init_sql_manager(): missing DBHOST parameter");
   }
 
-  const ks_datacont* dbname;
-  if ((dbname = get_map_value(args, "DBNAME")) == NULL)
+  const char* dbname;
+  if ((dbname = get_map_value_str(args, "DBNAME")) == NULL)
   {
     log_crit("init_sql_manager(): missing DBNAME parameter");
   }
 
-  const ks_datacont* dbuser;
-  if ((dbuser = get_map_value(args, "DBUSER")) == NULL)
+  const char* dbuser;
+  if ((dbuser = get_map_value_str(args, "DBUSER")) == NULL)
   {
     log_crit("init_sql_manager(): missing DBUSER paramter");
   }
 
-  const ks_datacont* dbpass;
-  if ((dbpass = get_map_value(args, "DBPASS")) == NULL)
+  const char* dbpass;
+  if ((dbpass = get_map_value_str(args, "DBPASS")) == NULL)
   {
     log_crit("init_sql_manager(): missing DBPASS parameter");
   }
@@ -166,7 +166,7 @@ void init_sql_manager()
   }
 
   // connect to mysql database
-  if (mysql_real_connect(sqlcon, dbhost->cp, dbuser->cp, dbpass->cp, dbname->cp, 0, NULL, 0) == NULL)
+  if (mysql_real_connect(sqlcon, dbhost, dbuser, dbpass, dbname, 0, NULL, 0) == NULL)
   {
     ks_hashmap_delete(args);
     log_crit("init_sql_manager(): mysql_real_connect(): %s", mysql_error(sqlcon));

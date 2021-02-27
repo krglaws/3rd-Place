@@ -23,11 +23,17 @@ ks_hashmap* string_to_map(char* str, const char* delim1, const char* delim2);
 /* get_map_value():
  * Retrieves a value from a map with a key string.
  * const ks_hashmap* map - the map from which to retrieve a value
- * const char* keystr - the key used to retrieve a value from 'map'
+ * const char* key - the key used to retrieve a value from 'map'
  *
  * returns const ks_datacont*
  */
-const ks_datacont* get_map_value(const ks_hashmap* map, const char* keystr);
+const ks_datacont* get_map_value(const ks_hashmap* map, const char* key);
+
+
+/* get_map_value_str():
+ * Retrieves a string from a map for a given key string
+ */
+const char* get_map_value_str(const ks_hashmap* map, const char* key);
 
 
 /* Various helper functions for adding values to ks_hashmap

@@ -265,20 +265,20 @@ static struct request* parse_request(char* req_buf)
   req->content = string_to_map(hdr_end, "&", "=");
 
   // parse cookies
-  const ks_datacont* cookies;
-  if ((cookies = get_map_value(req->header, "Cookie")) != NULL)
+  const char* cookies;
+  if ((cookies = get_map_value_str(req->header, "Cookie")) != NULL)
   {
     char* cookies_cpy;
-    COPY_STR(cookies_cpy, cookies->cp);
+    COPY_STR(cookies_cpy, cookies);
     req->cookies = string_to_map(cookies_cpy, "; ", "=");
     free(cookies_cpy);
   }
 
   // get client info
-  const ks_datacont* login_token;
-  if ((login_token = get_map_value(req->cookies, "logintoken")) != NULL)
+  const char* login_token;
+  if ((login_token = get_map_value_str(req->cookies, "logintoken")) != NULL)
   {
-    req->client_info = (struct auth_token* ) valid_token(login_token->cp);
+    req->client_info = (struct auth_token* ) valid_token(login_token);
   }
 
   return req;

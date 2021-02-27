@@ -84,6 +84,13 @@ const ks_datacont* get_map_value(const ks_hashmap* hm, const char* key)
 }
 
 
+const char* get_map_value_str(const ks_hashmap* hm, const char* key)
+{
+  const ks_datacont* dc = get_map_value(hm, key);
+  return dc != NULL ? dc->cp : NULL;
+}
+
+
 void add_map_value_str(ks_hashmap* hm, const char* key, const char* val)
 {
   ks_datacont* key_dc = ks_datacont_new(key, KS_CHARP, strlen(key));

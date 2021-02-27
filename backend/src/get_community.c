@@ -35,8 +35,8 @@ static ks_list* get_community_posts(const char* community_name, const struct aut
     add_map_value_str(post_info->hm, TEMPLATE_PATH_KEY, HTML_COMMUNITY_POST);
 
     // move post points and ID into vote wrapper map
-    const char* post_id = get_map_value(post_info->hm, FIELD_POST_ID)->cp;
-    const char* points = get_map_value(post_info->hm, FIELD_POST_POINTS)->cp;
+    const char* post_id = get_map_value_str(post_info->hm, FIELD_POST_ID);
+    const char* points = get_map_value_str(post_info->hm, FIELD_POST_POINTS);
 
     ks_hashmap* wrapper = ks_hashmap_new(KS_CHARP, 8);
     add_map_value_str(wrapper, TEMPLATE_PATH_KEY, HTML_POST_VOTE_WRAPPER);

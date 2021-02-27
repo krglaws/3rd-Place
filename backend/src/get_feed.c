@@ -31,8 +31,8 @@ static ks_list* wrap_posts(ks_list* posts, const struct auth_token* client_info)
     add_map_value_str(post_info->hm, TEMPLATE_PATH_KEY, HTML_FEED_POST);
 
     // move post points and ID into vote wrapper map
-    const char* post_id = get_map_value(post_info->hm, FIELD_POST_ID)->cp;
-    const char* points = get_map_value(post_info->hm, FIELD_POST_POINTS)->cp;
+    const char* post_id = get_map_value_str(post_info->hm, FIELD_POST_ID);
+    const char* points = get_map_value_str(post_info->hm, FIELD_POST_POINTS);
 
     ks_hashmap* wrapper = ks_hashmap_new(KS_CHARP, 8);
     add_map_value_str(wrapper, TEMPLATE_PATH_KEY, HTML_POST_VOTE_WRAPPER);
@@ -90,7 +90,7 @@ struct response* get_feed(const enum feed_type ft, const struct auth_token* clie
       ks_iterator* iter = ks_iterator_new(subs, KS_LIST);
       while ((curr = ks_iterator_get(iter)) != NULL)
       {
-        const char* community_id = get_map_value(curr->hm, FIELD_SUB_COMMUNITY_ID)->cp;
+        const char* community_id = get_map_value_str(curr->hm, FIELD_SUB_COMMUNITY_ID);
         ks_list* temp = query_posts_by_community_id(community_id);
         temp = sort_items(temp, POST_ITEM);
         posts = merge_items(posts, temp, POST_ITEM);

@@ -55,26 +55,26 @@ struct response* http_get(const struct request* req)
 
   if (strcmp(req->uri, "./new_post") == 0)
   {
-    const ks_datacont* dc = get_map_value(req->query, "community_name");
-    return get_new_post(dc ? dc->cp : NULL, req->client_info);
+    const char* community_name = get_map_value_str(req->query, "community_name");
+    return get_new_post(community_name, req->client_info);
   }
 
   if (strcmp(req->uri, "./edit_post") == 0)
   {
-    const ks_datacont* dc = get_map_value(req->query, "post_id");
-    return get_edit_post(dc ? dc->cp : NULL, req->client_info);
+    const char* post_id = get_map_value_str(req->query, "post_id");
+    return get_edit_post(post_id, req->client_info);
   }
 
   if (strcmp(req->uri, "./new_comment") == 0)
   {
-    const ks_datacont* dc = get_map_value(req->query, "post_id");
-    return get_new_comment(dc ? dc->cp : NULL, req->client_info);
+    const char* post_id = get_map_value_str(req->query, "post_id");
+    return get_new_comment(post_id, req->client_info);
   }
 
   if (strcmp(req->uri, "./edit_comment") == 0)
   {
-    const ks_datacont* dc = get_map_value(req->query, "comment_id");
-    return get_edit_comment(dc ? dc->cp : NULL, req->client_info);
+    const char* comment_id = get_map_value_str(req->query, "comment_id");
+    return get_edit_comment(comment_id, req->client_info);
   }
 
   if (strcmp(req->uri, "./new_community") == 0)
@@ -84,8 +84,8 @@ struct response* http_get(const struct request* req)
 
   if (strcmp(req->uri, "./edit_community") == 0)
   {
-    const ks_datacont* dc = get_map_value(req->query, "community_id");
-    return get_edit_community(dc ? dc->cp : NULL, req->client_info);
+    const char* community_id = get_map_value_str(req->query, "community_id");
+    return get_edit_community(community_id, req->client_info);
   }
 
   if (req->uri == strstr(req->uri, "./u/"))
@@ -339,15 +339,15 @@ time_t get_item_date(const ks_hashmap* item, enum item_type it)
 
   if (it == POST_ITEM)
   {
-    date_str = get_map_value(item, FIELD_POST_DATE_POSTED)->cp;
+    date_str = get_map_value_str(item, FIELD_POST_DATE_POSTED);
   }
   else if (it == COMMENT_ITEM)
   {
-    date_str = get_map_value(item, FIELD_COMMENT_DATE_POSTED)->cp;
+    date_str = get_map_value_str(item, FIELD_COMMENT_DATE_POSTED);
   }
   else if (it == COMMUNITY_ITEM)
   {
-    date_str = get_map_value(item, FIELD_COMMUNITY_DATE_CREATED)->cp;
+    date_str = get_map_value_str(item, FIELD_COMMUNITY_DATE_CREATED);
   }
   else log_crit("get_item_date(): Invalid item_type param");
 

@@ -31,26 +31,26 @@ struct response* http_delete(struct request* req)
 
   if (strcmp(req->uri, "./delete_user") == 0)
   {
-    const ks_datacont* user_name = get_map_value(req->query, "user_name");
-    return delete_user(user_name ? user_name->cp : NULL, req->client_info);
+    const char* user_name = get_map_value_str(req->query, "user_name");
+    return delete_user(user_name, req->client_info);
   }
 
   if (strcmp(req->uri, "./delete_post") == 0)
   {
-    const ks_datacont* post_id = get_map_value(req->query, "post_id");
-    return delete_post(post_id ? post_id->cp : NULL, req->client_info);
+    const char* post_id = get_map_value_str(req->query, "post_id");
+    return delete_post(post_id, req->client_info);
   }
 
   if (strcmp(req->uri, "./delete_comment") == 0)
   {
-    const ks_datacont* comment_id = get_map_value(req->query, "comment_id");
-    return delete_post(comment_id ? comment_id->cp : NULL, req->client_info);
+    const char* comment_id = get_map_value_str(req->query, "comment_id");
+    return delete_post(comment_id, req->client_info);
   }
 
   if (strcmp(req->uri, "./delete_community") == 0)
   {
-    const ks_datacont* community_id = get_map_value(req->query, "community_id");
-    return delete_community(community_id ? community_id->cp : NULL, req->client_info);
+    const char* community_id = get_map_value_str(req->query, "community_id");
+    return delete_community(community_id, req->client_info);
   }
 
   return response_error(STAT404);
@@ -85,7 +85,7 @@ static struct response* delete_user(const char* user_name, const struct auth_tok
   }
 
   // remove user from DB
-  const char* user_id = get_map_value(user_info, FIELD_USER_ID)->cp;
+  const char* user_id = get_map_value_str(user_info, FIELD_USER_ID);
   if (sql_delete_user(user_id) != 0)
   {
     log_err("delete_user(): failed on call to sql_delete_user(): user_id=%s", user_id);
@@ -113,14 +113,14 @@ static struct response* delete_post(const char* post_id, const struct auth_token
     // not found
     return response_error(STAT404);
   }
-  const char* author_id = get_map_value(post_info, FIELD_POST_AUTHOR_ID)->cp;
+  const char* author_id = get_map_value_str(post_info, FIELD_POST_AUTHOR_ID);
 
   // check if client user id == author id 
   if (strcmp(author_id, client_info->user_id) != 0)
   {
     // check if client is a moderator
     ks_hashmap* mod_info;
-    const char* community_id = get_map_value(post_info, FIELD_POST_COMMUNITY_ID)->cp;
+    const char* community_id = get_map_value_str(post_info, FIELD_POST_COMMUNITY_ID);
     if ((mod_info = get_moderator_info(community_id, client_info->user_id)) == NULL)
     {
       // check if client is an administrator
@@ -129,7 +129,7 @@ static struct response* delete_post(const char* post_id, const struct auth_token
       {
         // check if client owns this community
         ks_hashmap* community_info = get_community_info(community_id);
-        const char* owner_id = get_map_value(community_info, FIELD_COMMUNITY_OWNER_ID)->cp;
+        const char* owner_id = get_map_value_str(community_info, FIELD_COMMUNITY_OWNER_ID);
         if (strcmp(owner_id, client_info->user_id) != 0)
         {
           // permission denied
@@ -153,7 +153,7 @@ static struct response* delete_post(const char* post_id, const struct auth_token
   }
 
   // build redirect URI
-  const char* community_name = get_map_value(post_info, FIELD_POST_COMMUNITY_NAME)->cp;
+  const char* community_name = get_map_value_str(post_info, FIELD_POST_COMMUNITY_NAME);
   char uri[64];
   sprintf(uri, "/c/%s", community_name);
 
@@ -178,14 +178,14 @@ static struct response* delete_comment(const char* comment_id, const struct auth
     // not found
     return response_error(STAT400);
   }
-  const char* author_id = get_map_value(comment_info, FIELD_COMMENT_AUTHOR_ID)->cp;
+  const char* author_id = get_map_value_str(comment_info, FIELD_COMMENT_AUTHOR_ID);
 
   // check if client user id == author id 
   if (strcmp(author_id, client_info->user_id) != 0)
   {
     // check if client is a moderator
     ks_hashmap* mod_info;
-    const char* community_id = get_map_value(comment_info, FIELD_COMMENT_COMMUNITY_ID)->cp;
+    const char* community_id = get_map_value_str(comment_info, FIELD_COMMENT_COMMUNITY_ID);
     if ((mod_info = get_moderator_info(community_id, client_info->user_id)) == NULL)
     {
       // check if client is an administrator
@@ -194,7 +194,7 @@ static struct response* delete_comment(const char* comment_id, const struct auth
       {
         // check if client owns this community
         ks_hashmap* community_info = get_community_info(community_id);
-        const char* owner_id = get_map_value(community_info, FIELD_COMMUNITY_OWNER_ID)->cp;
+        const char* owner_id = get_map_value_str(community_info, FIELD_COMMUNITY_OWNER_ID);
         if (strcmp(owner_id, client_info->user_id) != 0)
         {
           // permission denied
@@ -218,7 +218,7 @@ static struct response* delete_comment(const char* comment_id, const struct auth
   }
 
   // build redirect URI
-  const char* post_id = get_map_value(comment_info, FIELD_COMMENT_POST_ID)->cp;
+  const char* post_id = get_map_value_str(comment_info, FIELD_COMMENT_POST_ID);
   char uri[32];
   sprintf(uri, "/p/%s", post_id);
 
@@ -243,7 +243,7 @@ static struct response* delete_community(const char* community_name, const struc
     // not found
     return response_error(STAT404);
   }
-  const char* owner_id = get_map_value(community_info, FIELD_COMMUNITY_OWNER_ID)->cp;
+  const char* owner_id = get_map_value_str(community_info, FIELD_COMMUNITY_OWNER_ID);
 
   // verify client has permission
   // check if client user id == author id 
@@ -261,7 +261,7 @@ static struct response* delete_community(const char* community_name, const struc
   }
 
   // remove community from DB
-  const char* community_id = get_map_value(community_info, FIELD_COMMUNITY_ID)->cp;
+  const char* community_id = get_map_value_str(community_info, FIELD_COMMUNITY_ID);
   if (sql_delete_community(community_id) != 0)
   {
     log_err("delete_community(): failed on call to sql_delete_community(): community_id=%s", community_id);

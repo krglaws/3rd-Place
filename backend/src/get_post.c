@@ -36,8 +36,8 @@ static ks_list* get_post_comments(const char* post_id, const struct auth_token* 
     add_map_value_str(comment_info->hm, TEMPLATE_PATH_KEY, HTML_POST_COMMENT);
 
     // move comment points and ID into vote wrapper map
-    const char* comment_id = get_map_value(comment_info->hm, FIELD_COMMENT_ID)->cp;
-    const char* points = get_map_value(comment_info->hm, FIELD_COMMENT_POINTS)->cp;
+    const char* comment_id = get_map_value_str(comment_info->hm, FIELD_COMMENT_ID);
+    const char* points = get_map_value_str(comment_info->hm, FIELD_COMMENT_POINTS);
 
     ks_hashmap* wrapper = ks_hashmap_new(KS_CHARP, 8);
     add_map_value_str(wrapper, TEMPLATE_PATH_KEY, HTML_COMMENT_VOTE_WRAPPER);

@@ -27,27 +27,25 @@ struct response* http_post(struct request* req)
   // figure out which endpoint
   if (strcmp(req->uri, "./signup") == 0)
   {
-    const ks_datacont* uname = get_map_value(req->content, "uname");
-    const ks_datacont* passwd = get_map_value(req->content, "passwd");
-    const ks_datacont* about = get_map_value(req->content, "about");
-    return post_signup(uname ? uname->cp : NULL,
-                       passwd ? passwd->cp : NULL,
-                       about ? about->cp : NULL);
+    const char* uname = get_map_value_str(req->content, "uname");
+    const char* passwd = get_map_value_str(req->content, "passwd");
+    const char* about = get_map_value_str(req->content, "about");
+
+    return post_signup(uname, passwd, about);
   }
 
   else if (strcmp(req->uri, "./login") == 0)
   {
-    const ks_datacont* uname = get_map_value(req->content, "uname");
-    const ks_datacont* passwd = get_map_value(req->content, "passwd");
-    return post_login(uname ? uname->cp : NULL,
-                      passwd ? passwd->cp : NULL);
+    const char* uname = get_map_value_str(req->content, "uname");
+    const char* passwd = get_map_value_str(req->content, "passwd");
+
+    return post_login(uname, passwd);
   }
 
   else if (strcmp(req->uri, "./logout") == 0)
   {
     if (req->client_info)
     {
-      log_info("User '%s' logged out", req->client_info->user_name);
       remove_token(req->client_info->token);
     }
 
@@ -56,14 +54,11 @@ struct response* http_post(struct request* req)
 
   else if (strcmp(req->uri, "./vote") == 0)
   {
-    const ks_datacont* type = get_map_value(req->content, "type");
-    const ks_datacont* direction = get_map_value(req->content, "direction");
-    const ks_datacont* id = get_map_value(req->content, "id");
+    const char* type = get_map_value_str(req->content, "type");
+    const char* direction = get_map_value_str(req->content, "direction");
+    const char* id = get_map_value_str(req->content, "id");
 
-    return post_vote(type ? type->cp : NULL,
-                     direction ? direction->cp : NULL,
-                     id ? id->cp : NULL,
-                     req->client_info);
+    return post_vote(type, direction, id, req->client_info);
   }
 
   return response_error(STAT404);
