@@ -187,44 +187,59 @@ void terminate_sql_manager()
 
 #define QUERYSTRLEN (1024)
 
-/* used for general data retrieval */
-static ks_list* query(const char** field_table, const char* tmplt, ...)
+/* This function submits SELECT statements and returns a result set in the form
+   of a list of hashmaps. */
+static ks_list* sql_select(const char** field_table, const char* tmplt, ...)
 {
   char query[QUERYSTRLEN];
 
+  // build query string
   va_list ap;
   va_start(ap, tmplt);
   vsprintf(query, tmplt, ap);
   va_end(ap);
 
+  // submit query
   if (mysql_query(sqlcon, query) != 0)
   {
-    log_err("query(): mysql_query(): %s", mysql_error(sqlcon));
+    log_err("sql_select(): mysql_query(): %s", mysql_error(sqlcon));
     return NULL;
   }
 
-  MYSQL_RES* result = mysql_store_result(sqlcon);
-
-  if (mysql_errno(sqlcon) != 0)
+  // get result object
+  MYSQL_RES* result;
+  if ((result = mysql_store_result(sqlcon)) == NULL)
   {
-    log_err("query(): mysql_store_result(): %s", mysql_error(sqlcon));
-  }
+    // if result is NULL, something must have gone wrong,
+    // since this function should always expect a result set.
+    // queries like INSERT, or CALL, which don't return result
+    // sets, should use sql_function() or sql_procedure() below.
+    if (mysql_errno(sqlcon) != 0)
+    {
+      log_err("sql_select(): mysql_store_result(): %s", mysql_error(sqlcon));
+    }
 
-  if (result == NULL)
-  {
     return NULL;
   }
 
-  ks_list* rows = ks_list_new();
-  int num_rows = mysql_num_rows(result);
+  int num_rows;
+  if ((num_rows = mysql_num_rows(result)) == 0)
+  {
+    // no rows returned
+    return NULL;
+  }
+
   int num_fields = mysql_num_fields(result);
+  ks_list* rows = ks_list_new();
 
+  // iterate through each row, store into list
   for (int i = 0; i < num_rows; i++)
   {
     char* field;
     ks_hashmap* row = ks_hashmap_new(KS_CHARP, num_fields * 2);
     MYSQL_ROW sqlrow = mysql_fetch_row(result);
 
+    // iterate through each column, store into hashmap
     for (int j = 0; j < num_fields; j++)
     {
       const char* key_str = field_table[j];
@@ -245,16 +260,19 @@ static ks_list* query(const char** field_table, const char* tmplt, ...)
 }
 
 
-/* used for calling stored procedures (or anything that returns no data) */
-static int procedure(const char* tmplt, ...)
+/* This function calls stored procedures in mysql, and returns
+   0 on success, -1 on failure. */
+static int sql_procedure(const char* tmplt, ...)
 {
   char query[QUERYSTRLEN];
 
+  // build query string
   va_list ap;
   va_start(ap, tmplt);
   vsprintf(query, tmplt, ap);
   va_end(ap);
 
+  // submit query
   if (mysql_query(sqlcon, query) != 0)
   {
     log_err("sql_procedure(): mysql_query(): %s", mysql_error(sqlcon));
@@ -265,34 +283,43 @@ static int procedure(const char* tmplt, ...)
 }
 
 
-/* used for calling stored functions (returns a single string, or NULL on error) */
-static char* function(const char* tmplt, ...)
+/* This function calls stored functions that create new entries for
+   users, comments, posts, and other items. This will return the ID
+   of the newly created item as a string, or NULL on failure. */
+static char* sql_function(const char* tmplt, ...)
 {
   char query[QUERYSTRLEN];
 
+  // build query string
   va_list ap;
   va_start(ap, tmplt);
   vsprintf(query, tmplt, ap);
   va_end(ap);
 
+  // submit query
   if (mysql_query(sqlcon, query) != 0)
   {
-    log_err("sql_procedure(): mysql_query(): %s", mysql_error(sqlcon));
+    log_err("sql_function(): mysql_query(): %s", mysql_error(sqlcon));
     return NULL;
   }
 
-  MYSQL_RES* result = mysql_store_result(sqlcon);
-
-  if (mysql_errno(sqlcon) != 0)
+  // get result object
+  MYSQL_RES* result;
+  if ((result = mysql_store_result(sqlcon)) == NULL)
   {
-    log_err("query(): mysql_store_result(): %s", mysql_error(sqlcon));
-  }
-
-  if (result == NULL)
-  {
+    if (mysql_errno(sqlcon) != 0)
+    {
+      log_err("sql_function(): mysql_store_result(): %s", mysql_error(sqlcon));
+    }   
+    else
+    {
+      log_err("sql_function(): an unknown error occured. " \
+              "mysql_store_result() returned NULL with no explaination.");
+    }
     return NULL;
   }
 
+  // grab what should be the only string from result
   MYSQL_ROW sqlrow = mysql_fetch_row(result);
 
   int len = strlen(sqlrow[0]);
@@ -307,191 +334,191 @@ static char* function(const char* tmplt, ...)
 
 ks_list* query_users_by_name(const char* user_name)
 {
-  return query(users_field_table, QUERY_USERS_BY_NAME, user_name);
+  return sql_select(users_field_table, QUERY_USERS_BY_NAME, user_name);
 }
 
 
 ks_list* query_all_posts()
 {
-  return query(posts_field_table, QUERY_ALL_POSTS);
+  return sql_select(posts_field_table, QUERY_ALL_POSTS);
 }
 
 
 ks_list* query_posts_by_id(const char* id)
 {
-  return query(posts_field_table, QUERY_POSTS_BY_ID, id);
+  return sql_select(posts_field_table, QUERY_POSTS_BY_ID, id);
 }
 
 
 ks_list* query_posts_by_author_name(const char* author_name)
 {
-  return query(posts_field_table, QUERY_POSTS_BY_AUTHOR_NAME, author_name);
+  return sql_select(posts_field_table, QUERY_POSTS_BY_AUTHOR_NAME, author_name);
 }
 
 
 ks_list* query_posts_by_community_id(const char* community_id)
 {
-  return query(posts_field_table, QUERY_POSTS_BY_COMMUNITY_ID, community_id);
+  return sql_select(posts_field_table, QUERY_POSTS_BY_COMMUNITY_ID, community_id);
 }
 
 
 ks_list* query_posts_by_community_name(const char* community_name)
 {
-  return query(posts_field_table, QUERY_POSTS_BY_COMMUNITY_NAME, community_name);
+  return sql_select(posts_field_table, QUERY_POSTS_BY_COMMUNITY_NAME, community_name);
 }
 
 
 ks_list* query_comments_by_id(const char* comment_id)
 {
-  return query(comments_field_table, QUERY_COMMENTS_BY_ID, comment_id);
+  return sql_select(comments_field_table, QUERY_COMMENTS_BY_ID, comment_id);
 }
 
 
 ks_list* query_comments_by_author_name(const char* author_name)
 {
-  return query(comments_field_table, QUERY_COMMENTS_BY_AUTHOR_NAME, author_name);
+  return sql_select(comments_field_table, QUERY_COMMENTS_BY_AUTHOR_NAME, author_name);
 }
 
 
 ks_list* query_comments_by_post_id(const char* post_id)
 {
-  return query(comments_field_table, QUERY_COMMENTS_BY_POST_ID, post_id);
+  return sql_select(comments_field_table, QUERY_COMMENTS_BY_POST_ID, post_id);
 }
 
 
 ks_list* query_all_communities()
 {
-  return query(communities_field_table, QUERY_ALL_COMMUNITIES);
+  return sql_select(communities_field_table, QUERY_ALL_COMMUNITIES);
 }
 
 
 ks_list* query_communities_by_name(const char* community_name)
 {
-  return query(communities_field_table, QUERY_COMMUNITIES_BY_NAME, community_name);
+  return sql_select(communities_field_table, QUERY_COMMUNITIES_BY_NAME, community_name);
 }
 
 
 ks_list* query_moderators_by_community_id_user_id(const char* community_id, const char* user_id)
 {
-  return query(moderators_field_table, QUERY_MODERATORS_BY_COMMUNITY_ID_USER_ID, community_id, user_id);
+  return sql_select(moderators_field_table, QUERY_MODERATORS_BY_COMMUNITY_ID_USER_ID, community_id, user_id);
 }
 
 
 ks_list* query_administrators_by_user_id(const char* user_id)
 {
-  return query(administrators_field_table, QUERY_ADMINISTRATORS_BY_USER_ID, user_id);
+  return sql_select(administrators_field_table, QUERY_ADMINISTRATORS_BY_USER_ID, user_id);
 }
 
 
 ks_list* query_subscriptions_by_user_id(const char* user_id)
 {
-  return query(subscriptions_field_table, QUERY_SUBSCRIPTIONS_BY_USER_ID, user_id);
+  return sql_select(subscriptions_field_table, QUERY_SUBSCRIPTIONS_BY_USER_ID, user_id);
 }
 
 
 ks_list* query_post_upvotes_by_post_id_user_id(const char* post_id, const char* user_id)
 {
-  return query(post_upvotes_field_table, QUERY_POST_UP_VOTES_BY_POST_ID_USER_ID, post_id, user_id);
+  return sql_select(post_upvotes_field_table, QUERY_POST_UP_VOTES_BY_POST_ID_USER_ID, post_id, user_id);
 }
 
 
 ks_list* query_post_downvotes_by_post_id_user_id(const char* post_id, const char* user_id)
 {
-  return query(post_downvotes_field_table, QUERY_POST_DOWN_VOTES_BY_POST_ID_USER_ID, post_id, user_id);
+  return sql_select(post_downvotes_field_table, QUERY_POST_DOWN_VOTES_BY_POST_ID_USER_ID, post_id, user_id);
 }
 
 
 ks_list* query_comment_upvotes_by_post_id_user_id(const char* comment_id, const char* user_id)
 {
-  return query(comment_downvotes_field_table, QUERY_COMMENT_UP_VOTES_BY_COMMENT_ID_USER_ID, comment_id, user_id);
+  return sql_select(comment_downvotes_field_table, QUERY_COMMENT_UP_VOTES_BY_COMMENT_ID_USER_ID, comment_id, user_id);
 }
 
 
 ks_list* query_comment_downvotes_by_post_id_user_id(const char* comment_id, const char* user_id)
 {
-  return query(post_downvotes_field_table, QUERY_COMMENT_DOWN_VOTES_BY_COMMENT_ID_USER_ID, comment_id, user_id);
+  return sql_select(post_downvotes_field_table, QUERY_COMMENT_DOWN_VOTES_BY_COMMENT_ID_USER_ID, comment_id, user_id);
 }
 
 
 ks_list* query_subscriptions_by_community_id_user_id(const char* community_id, const char* user_id)
 {
-  return query(subscriptions_field_table, QUERY_SUBSCRIPTIONS_BY_COMMUNITY_ID_USER_ID, community_id, user_id);
+  return sql_select(subscriptions_field_table, QUERY_SUBSCRIPTIONS_BY_COMMUNITY_ID_USER_ID, community_id, user_id);
 }
 
 
 int sql_toggle_subscribe(const char* community_id, const char* user_id)
 {
-  return procedure(TOGGLE_SUBSCRIBE, community_id, user_id);
+  return sql_procedure(TOGGLE_SUBSCRIBE, community_id, user_id);
 }
 
 
 int sql_toggle_post_up_vote(const char* post_id, const char* user_id)
 {
-  return procedure(TOGGLE_POST_UP_VOTE, post_id, user_id);
+  return sql_procedure(TOGGLE_POST_UP_VOTE, post_id, user_id);
 }
 
 
 int sql_toggle_post_down_vote(const char* post_id, const char* user_id)
 {
-  return procedure(TOGGLE_POST_DOWN_VOTE, post_id, user_id);
+  return sql_procedure(TOGGLE_POST_DOWN_VOTE, post_id, user_id);
 }
 
 
 int sql_toggle_comment_up_vote(const char* comment_id, const char* user_id)
 {
-  return procedure(TOGGLE_COMMENT_UP_VOTE, comment_id, user_id);
+  return sql_procedure(TOGGLE_COMMENT_UP_VOTE, comment_id, user_id);
 }
 
 
 int sql_toggle_comment_down_vote(const char* comment_id, const char* user_id)
 {
-  return procedure(TOGGLE_COMMENT_DOWN_VOTE, comment_id, user_id);
+  return sql_procedure(TOGGLE_COMMENT_DOWN_VOTE, comment_id, user_id);
 }
 
 
 char* sql_create_user(const char* user_name, const char* passwd_hash, const char* about)
 {
-  return function(CREATE_USER, user_name, passwd_hash, about);
+  return sql_function(CREATE_USER, user_name, passwd_hash, about);
 }
 
 
 char* sql_create_comment(const char* user_id, const char* post_id, const char* community_id, const char* body)
 {
-  return function(CREATE_COMMENT, user_id, post_id, community_id, body);
+  return sql_function(CREATE_COMMENT, user_id, post_id, community_id, body);
 }
 
 
 char* sql_create_post(const char* user_id, const char* community_id, const char* title, const char* body)
 {
-  return function(CREATE_POST, user_id, community_id, title, body);
+  return sql_function(CREATE_POST, user_id, community_id, title, body);
 }
 
 
 char* sql_create_community(const char* user_id, const char* community_name, const char* about)
 {
-  return function(CREATE_COMMUNITY, user_id, community_name, about);
+  return sql_function(CREATE_COMMUNITY, user_id, community_name, about);
 }
 
 
 int sql_delete_user(const char* user_id)
 {
-  return procedure(DELETE_USER, user_id);
+  return sql_procedure(DELETE_USER, user_id);
 }
 
 
 int sql_delete_comment(const char* comment_id)
 {
-  return procedure(DELETE_COMMENT, comment_id);
+  return sql_procedure(DELETE_COMMENT, comment_id);
 }
 
 
 int sql_delete_post(const char* post_id)
 {
-  return procedure(DELETE_POST, post_id);
+  return sql_procedure(DELETE_POST, post_id);
 }
 
 
 int sql_delete_community(const char* community_id)
 {
-  return procedure(DELETE_COMMUNITY, community_id);
+  return sql_procedure(DELETE_COMMUNITY, community_id);
 }
