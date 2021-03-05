@@ -97,63 +97,16 @@
 #define FIELD_COMMENT_DOWN_VOTE_POST_ID   "COMMENT_DOWN_VOTE_POST_ID"
 #define FIELD_COMMENT_DOWN_VOTE_USER_ID   "COMMENT_DOWN_VOTE_USER_ID"
 
-
-/* query templates */
-#define QUERY_USERS_BY_NAME "SELECT * FROM users WHERE name = '%s';"
-
-#define QUERY_ALL_POSTS "SELECT* FROM posts;"
-#define QUERY_POSTS_BY_ID "SELECT * FROM posts WHERE id = %s;"
-#define QUERY_POSTS_BY_AUTHOR_NAME "SELECT * FROM posts WHERE author_name = '%s';"
-#define QUERY_POSTS_BY_COMMUNITY_ID "SELECT * FROM posts WHERE community_id = %s;"
-#define QUERY_POSTS_BY_COMMUNITY_NAME "SELECT * FROM posts WHERE community_name = '%s';"
-
-#define QUERY_COMMENTS_BY_ID "SELECT * FROM comments WHERE comment_id = %s;"
-#define QUERY_COMMENTS_BY_AUTHOR_NAME "SELECT * FROM comments WHERE author_name = '%s';"
-#define QUERY_COMMENTS_BY_POST_ID "SELECT * FROM comments WHERE post_id = %s;"
-
-#define QUERY_ALL_COMMUNITIES "SELECT * FROM communities;"
-#define QUERY_COMMUNITIES_BY_NAME "SELECT * FROM communities WHERE name = '%s';"
-
-#define QUERY_MODERATORS_BY_COMMUNITY_ID_USER_ID "SELECT * FROM moderators WHERE community_id = %s AND user_id = %s;"
-
-#define QUERY_ADMINISTRATORS_BY_USER_ID "SELECT * FROM administrators WHERE user_id = %s;"
-
-#define QUERY_POST_UP_VOTES_BY_POST_ID_USER_ID "SELECT * FROM post_up_votes WHERE post_id = %s AND user_id = %s;"
-#define QUERY_POST_DOWN_VOTES_BY_POST_ID_USER_ID "SELECT * FROM post_down_votes WHERE post_id = %s AND user_id = %s;"
-
-#define QUERY_COMMENT_UP_VOTES_BY_COMMENT_ID_USER_ID "SELECT * FROM comment_up_votes WHERE comment_id = %s AND user_id = %s;"
-#define QUERY_COMMENT_DOWN_VOTES_BY_COMMENT_ID_USER_ID "SELECT * FROM comment_down_votes WHERE comment_id = %s AND user_id = %s;"
-
-#define QUERY_SUBSCRIPTIONS_BY_COMMUNITY_ID_USER_ID "SELECT * FROM subscriptions WHERE community_id = %s AND user_id = %s;"
-#define QUERY_SUBSCRIPTIONS_BY_USER_ID "SELECT * FROM subscriptions WHERE user_id = %s;"
-
-#define TOGGLE_SUBSCRIBE "CALL ToggleSubscribe(%s, %s);"
-#define TOGGLE_POST_UP_VOTE "CALL TogglePostUpVote(%s, %s);"
-#define TOGGLE_POST_DOWN_VOTE "CALL TogglePostDownVote(%s, %s);"
-#define TOGGLE_COMMENT_UP_VOTE "CALL ToggleCommentUpVote(%s, %s);"
-#define TOGGLE_COMMENT_DOWN_VOTE "CALL ToggleCommentDownVote(%s, %s);"
-
-#define CREATE_USER "SELECT CreateUser('%s', '%s', '%s');"
-#define CREATE_COMMENT "SELECT CreateComment(%s, %s, %s, '%s');"
-#define CREATE_POST "SELECT CreatePost(%s, %s, '%s', '%s');"
-#define CREATE_COMMUNITY "SELECT CreateCommunity(%s, '%s', '%s');"
-
-#define DELETE_USER "CALL DeleteUser(%s);"
-#define DELETE_COMMENT "CALL DeleteComment(%s);"
-#define DELETE_POST "CALL DeletePost(%s);"
-#define DELETE_COMMUNITY "CALL DeleteCommunity(%s);"
-
 #include <kylestructs.h>
 
 void init_sql_manager();
 
 void terminate_sql_manager();
 
-
 /* The following functions return lists of hashmaps.
  * Each index in the list is a hashmap which represents
- * a table row. Each map maps the field name (a string)
- * to the field value.
+ * a table row. Each maps the field name (a string)
+ * to a field value (also a string).
  */
 
 ks_list* query_users_by_name(const char* user_name);
