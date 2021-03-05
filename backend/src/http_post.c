@@ -16,6 +16,18 @@
 #include <http_post.h>
 
 
+/* attempts login, returns response object containing result */
+static struct response* post_login(const char* uname, const char* passwd);
+
+/* attempts signup, returns response object containing result */
+static struct response* post_signup(const char* uname, const char* passwd, const char* about);
+
+/* toggles a users vote on post or comment */
+static struct response* post_vote(const char* type, const char* direction, const char* id, const struct auth_token* client_info);
+
+static struct response* post_comment(const char* post_id, const char* community_id, const char* body, const struct auth_token* client_info);
+
+
 struct response* http_post(struct request* req)
 {
   // should never be NULL
@@ -59,6 +71,23 @@ struct response* http_post(struct request* req)
     const char* id = get_map_value_str(req->content, "id");
 
     return post_vote(type, direction, id, req->client_info);
+  }
+
+  else if (strcmp(req->uri, "./new_comment") == 0)
+  {
+    const char* post_id = get_map_value_str(req->content, "post_id");
+    const char* community_id = get_map_value_str(req->content, "community_id");
+    const char* body = get_map_value_str(req->content, "body");
+
+    return post_comment(post_id, community_id, body, req->client_info);
+  }
+
+  else if (strcmp(req->uri, "./new_post") == 0)
+  {
+  }
+
+  else if (strcmp(req->uri, "./new_community") == 0)
+  {
   }
 
   return response_error(STAT404);
@@ -158,4 +187,20 @@ static struct response* post_vote(const char* type, const char* direction, const
   ks_list_add(resp->header, ks_datacont_new(contlen, KS_CHARP, strlen(contlen)));
 
   return resp;
+}
+
+
+static struct response* post_comment(const char* post_id, const char* community_id, const char* body, const struct auth_token* client_info)
+{
+  if (client_info == NULL)
+  {
+    return response_redirect("/login");
+  }
+
+  if (post_id == NULL || community_id == NULL)
+  {
+    
+  }
+
+  return NULL;
 }

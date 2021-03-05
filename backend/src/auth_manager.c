@@ -15,6 +15,12 @@
 #include <auth_manager.h>
 
 
+static char rand_byte();
+static void rand_salt(char* salt_buf);
+static void rand_token(char* token_buf);
+static const char* new_token(const char* uname);
+static const char* get_token(const char* uname);
+
 /* ks_list of login tokens */
 static struct token_entry* head = NULL;
 

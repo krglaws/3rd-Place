@@ -4,12 +4,6 @@
 #include <kylestructs.h>
 #include <auth_manager.h>
 
-char* fill_post_info(char* template, const char* post_id, const struct auth_token* client_info);
-
-char* fill_post_comment_template(char* template, const ks_list* comment_info, const struct auth_token* client_info);
-
-char* fill_post_comments(char* template, const char* post_id, const struct auth_token* client_info);
-
 struct response* get_post(const char* post_id, const struct auth_token* client_info);
 
 #endif

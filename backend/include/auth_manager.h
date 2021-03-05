@@ -32,21 +32,6 @@ void init_auth_manager();
 void terminate_auth_manager();
 
 
-/* returns a random base-64 character
- */
-static char rand_byte();
-
-
-/* Generates a random 2-character salt
- */
-static void rand_salt(char* salt_buf);
-
-
-/* Generates new token string
- */
-static void rand_token(char* token_buf);
-
-
 /* Called by http_post when a user tries to login.
  */
 const char* login_user(const char* uname, const char* passwd);
@@ -55,18 +40,6 @@ const char* login_user(const char* uname, const char* passwd);
 /* Called by http_post when user signs up
  */
 const char* new_user(const char* uname, const char* passwd, const char* about);
-
-
-/* Creates a new token, either after login or
- * signup.
- */
-static const char* new_token(const char* uname);
-
-
-/* Attempts to retrieve an existing token when user logs
- * in. Useful if user already has a token in token_list
- */
-static const char* get_token(const char* uname);
 
 
 /* Called by http_post when user logs out.
