@@ -10,6 +10,12 @@
 #include <sql_manager.h>
 
 
+static int sql_exec(MYSQL_STMT* stmt, va_list* ap);
+static ks_list* sql_select(const struct table_info* table_info, MYSQL_STMT* stmt, ...);
+static int sql_procedure(MYSQL_STMT* stmt, ...);
+static char* sql_function(MYSQL_STMT* stmt, ...);
+
+
 /*******************************/
 /* Output value buffer lengths
  *
@@ -43,15 +49,15 @@
 // processing.
 struct table_info
 {
-  int num_fields;
   const char** field_table;
   const int* field_lengths;
 };
 
+
 /********************/
 /* users table info */
 
-const char* users_field_table[USERS_NUM_FIELDS] =
+static const char* users_field_table[USERS_NUM_FIELDS] =
 {
   FIELD_USER_ID,
   FIELD_USER_NAME,
@@ -63,7 +69,7 @@ const char* users_field_table[USERS_NUM_FIELDS] =
   FIELD_USER_DATE_JOINED
 };
 
-const int users_field_lengths[USERS_NUM_FIELDS] =
+static const int users_field_lengths[USERS_NUM_FIELDS] =
 {
   INT_BUF_LEN,
   USER_NAME_BUF_LEN,
@@ -77,7 +83,6 @@ const int users_field_lengths[USERS_NUM_FIELDS] =
  
 static const struct table_info users_table_info = 
 {
-  USERS_NUM_FIELDS,
   users_field_table,
   users_field_lengths
 };
@@ -86,29 +91,21 @@ static const struct table_info users_table_info =
 static MYSQL_STMT* stmt_query_users_by_name;
 ks_list* query_users_by_name(const char* user_name)
 {
-  return sql_select(users_field_table, QUERY_USERS_BY_NAME, user_name);
+  return sql_select(&users_table_info, stmt_query_users_by_name, user_name);
 }
 
 static MYSQL_STMT* stmt_create_user;
 char* sql_create_user(const char* user_name, const char* passwd_hash, const char* about)
 {
-  return sql_function(CREATE_USER, user_name, passwd_hash, about);
+  return sql_function(stmt_create_user, user_name, passwd_hash, about);
 }
 
 static MYSQL_STMT* stmt_delete_user;
 int sql_delete_user(const char* user_id)
 {
-  return sql_procedure(
+  return sql_procedure(stmt_delete_user, user_id);
 }
 
-static void init_user_query_data()
-{
-  stmt_query_users_by_name = build_prepared_statment(sqlcon, "SELECT * FROM users WHERE name = ?;");
-  stmt_create_user = build_prepared_statemtnt(sqlcon, "SELECT CreateUser(?, ?, ?);");
-  stmt_delete_user = build_prepared_statemtnt(sqlcon, "CALL DeleteUser(?);");
-
-  users_output_buffer[
-}
 
 /********************/
 /* posts table info */
@@ -126,52 +123,65 @@ static const char* posts_field_table[POSTS_NUM_FIELDS] =
   FIELD_POST_DATE_POSTED
 };
 
-#define QUERY_ALL_POSTS "SELECT * FROM posts;"
-static MYSQL_STMT* stmt_query_all_posts;
+static const int posts_field_lengths[POSTS_NUM_FIELDS] =
+{
+  INT_BUF_LEN,
+  INT_BUF_LEN,
+  COMMUNITY_NAME_BUF_LEN,
+  INT_BUF_LEN,
+  USER_NAME_BUF_LEN,
+  POST_TITLE_BUF_LEN,
+  POST_BODY_BUF_LEN,
+  INT_BUF_LEN,
+  INT_BUF_LEN
+};
 
+static const struct table_info posts_table_info =
+{
+  posts_field_table,
+  posts_field_lengths
+};
+
+static MYSQL_STMT* stmt_query_all_posts;
 ks_list* query_all_posts()
 {
-  return sql_select(posts_field_table, QUERY_ALL_POSTS);
+  return sql_select(&posts_table_info, stmt_query_all_posts);
 }
 
-#define QUERY_POSTS_BY_ID "SELECT * FROM posts WHERE id = %s;"
 static MYSQL_STMT* stmt_query_posts_by_id;
-
 ks_list* query_posts_by_id(const char* id)
 {
-  return sql_select(posts_field_table, QUERY_POSTS_BY_ID, id);
+  return sql_select(&posts_table_info, stmt_query_posts_by_id, id);
 }
 
-#define QUERY_POSTS_BY_AUTHOR_NAME "SELECT * FROM posts WHERE author_name = '%s';"
 static MYSQL_STMT* stmt_query_posts_by_author_name;
-
 ks_list* query_posts_by_author_name(const char* author_name)
 {
-  return sql_select(posts_field_table, QUERY_POSTS_BY_AUTHOR_NAME, author_name);
+  return sql_select(&posts_table_info, stmt_query_posts_by_author_name, author_name);
 }
 
-#define QUERY_POSTS_BY_COMMUNITY_ID "SELECT * FROM posts WHERE community_id = %s;"
 static MYSQL_STMT* stmt_query_posts_by_community_id;
-
 ks_list* query_posts_by_community_id(const char* community_id)
 {
-  return sql_select(posts_field_table, QUERY_POSTS_BY_COMMUNITY_ID, community_id);
+  return sql_select(&posts_table_info, stmt_query_posts_by_id, community_id);
 }
 
-#define QUERY_POSTS_BY_COMMUNITY_NAME "SELECT * FROM posts WHERE community_name = '%s';"
 static MYSQL_STMT* stmt_query_posts_by_community_name;
-
 ks_list* query_posts_by_community_name(const char* community_name)
 {
-  return sql_select(posts_field_table, QUERY_POSTS_BY_COMMUNITY_NAME, community_name);
+  return sql_select(posts_table_info, stmt_query_posts_by_community_name, community_name);
 }
 
-#define CREATE_POST "SELECT CreatePost(%s, %s, '%s', '%s');"
 static MYSQL_STMT* stmt_create_post;
-
 char* sql_create_post(const char* user_id, const char* community_id, const char* title, const char* body)
 {
-  return sql_function(CREATE_POST, user_id, community_id, title, body);
+  return sql_function(stmt_create_post, user_id, community_id, title, body);
+}
+
+static MYSQL_STMT* stmt_delete_post;
+int sql_delete_post(const char* post_id)
+{
+  return sql_procedure(stmt_delete_post, post_id);
 }
 
 
@@ -192,38 +202,55 @@ static const char* comments_field_table[COMMENTS_NUM_FIELDS] =
   FIELD_COMMENT_DATE_POSTED
 };
 
-#define QUERY_COMMENTS_BY_ID "SELECT * FROM comments WHERE comment_id = %s;"
-static MYSQL_STMT* stmt_query_comments_by_id;
+static const int comments_field_lengths[COMMENTS_NUM_FIELDS] =
+{
+  INT_BUF_LEN,
+  INT_BUF_LEN,
+  POST_TITLE_BUF_LEN,
+  INT_BUF_LEN,
+  COMMUNITY_NAME_BUF_LEN,
+  INT_BUF_LEN,
+  USER_NAME_BUF_LEN,
+  COMMENT_BODY_BUF_LEN,
+  INT_BUF_LEN,
+  INT_BUF_LEN,
+};
 
+static const struct table_info comments_table_info =
+{
+  comments_field_table,
+  comments_field_lengths
+};
+
+static MYSQL_STMT* stmt_query_comments_by_id;
 ks_list* query_comments_by_id(const char* comment_id)
 {
-  return sql_select(comments_field_table, QUERY_COMMENTS_BY_ID, comment_id);
+  return sql_select(&comments_table_info, stmt_query_comments_by_id, comment_id);
 }
 
-#define QUERY_COMMENTS_BY_AUTHOR_NAME "SELECT * FROM comments WHERE author_name = '%s';"
 static MYSQL_STMT* stmt_query_comments_by_author_name;
-
 ks_list* query_comments_by_author_name(const char* author_name)
 {
-  return sql_select(comments_field_table, QUERY_COMMENTS_BY_AUTHOR_NAME, author_name);
+  return sql_select(&comments_field_table, stmt_query_comments_by_author_name, author_name);
 }
 
-#define QUERY_COMMENTS_BY_POST_ID "SELECT * FROM comments WHERE post_id = %s;"
 static MYSQL_STMT* stmt_query_comments_by_post_id;
-
 ks_list* query_comments_by_post_id(const char* post_id)
 {
-  return sql_select(comments_field_table, QUERY_COMMENTS_BY_POST_ID, post_id);
+  return sql_select(&comments_table_info, stmt_query_comments_by_post_id, post_id);
 }
 
-#define CREATE_COMMENT "SELECT CreateComment(%s, %s, %s, '%s');"
 static MYSQL_STMT* stmt_create_comment;
-
 char* sql_create_comment(const char* user_id, const char* post_id, const char* community_id, const char* body)
 {
-  return sql_function(CREATE_COMMENT, user_id, post_id, community_id, body);
+  return sql_function(stmt_create_comment, user_id, post_id, community_id, body);
 }
 
+static MYSQL_STMT* stmt_delete_comment;
+int sql_delete_comment(const char* comment_id)
+{
+  return sql_procedure(stmt_delete_comment, comment_id);
+}
 
 
 /**************************/
@@ -239,24 +266,48 @@ static const char* communities_field_table[COMMUNITIES_NUM_FIELDS] =
   FIELD_COMMUNITY_DATE_CREATED
 };
 
-#define QUERY_ALL_COMMUNITIES "SELECT * FROM communities;"
-static MYSQL_STMT* stmt_query_all_communities;
+static const int communities_field_lengths[COMMUNITIES_NUM_FIELDS] =
+{
+  INT_BUF_LEN,
+  INT_BUF_LEN,
+  COMMUNITY_NAME_BUF_LEN,
+  COMMUNITY_ABOUT_BUF_LEN,
+  INT_BUF_LEN,
+  INT_BUF_LEN
+};
 
+static const struct table_info communities_table_info =
+{
+  communities_field_table,
+  communities_field_lengths
+};
+
+static MYSQL_STMT* stmt_query_all_communities;
 ks_list* query_all_communities()
 {
-  return sql_select(communities_field_table, QUERY_ALL_COMMUNITIES);
+  return sql_select(&communities_table_info, stmt_query_all_communities);
 }
 
-#define QUERY_COMMUNITIES_BY_NAME "SELECT * FROM communities WHERE name = '%s';"
 static MYSQL_STMT* stmt_query_communities_by_name;
-
 ks_list* query_communities_by_name(const char* community_name)
 {
-  return sql_select(communities_field_table, QUERY_COMMUNITIES_BY_NAME, community_name);
+  return sql_select(&communities_field_table, stmt_query_communities_by_name, community_name);
+}
+
+static MYSQL_STMT* stmt_create_community;
+char* sql_create_community(const char* user_id, const char* community_name, const char* about)
+{
+  return sql_function(stmt_create_community, user_id, community_name, about);
+}
+
+static MYSQL_STMT* stmt_delete_community;
+int sql_delete_community(const char* community_id)
+{
+  return sql_procedure(stmt_delete_community, community_id);
 }
 
 
-/**************************/
+/*************************/
 /* moderators table info */
 
 static const char* moderators_field_table[MODERATORS_NUM_FIELDS] =
@@ -266,12 +317,35 @@ static const char* moderators_field_table[MODERATORS_NUM_FIELDS] =
   FIELD_MODERATOR_COMMUNITY_ID
 };
 
-#define QUERY_MODERATORS_BY_COMMUNITY_ID_USER_ID "SELECT * FROM moderators WHERE community_id = %s AND user_id = %s;"
-static MYSQL_STMT* stmt_query_moderators_by_community_id_user_id;
+static const int moderators_field_lengths[MODERATORS_NUM_FIELDS] =
+{
+  INT_BUF_LEN,
+  INT_BUF_LEN,
+  INT_BUF_LEN
+};
 
+static const struct table_info moderators_table_info =
+{
+  moderators_field_table,
+  moderators_field_lengths
+};
+
+static MYSQL_STMT* stmt_query_moderators_by_community_id_user_id;
 ks_list* query_moderators_by_community_id_user_id(const char* community_id, const char* user_id)
 {
-  return sql_select(moderators_field_table, QUERY_MODERATORS_BY_COMMUNITY_ID_USER_ID, community_id, user_id);
+  return sql_select(&moderators_table_info, stmt_query_moderators_by_community_id_user_id, community_id, user_id);
+}
+
+static MYSQL_STMT* stmt_create_moderator;
+char* sql_create_moderator(const char* user_id, const char* community_id)
+{
+  return sql_select(&moderators_table, stmt_create_moderator, user_id, community_id);
+}
+
+static MYSQL_STMT* stmt_delete_moderator;
+int sql_delete_moderator(const char* user_id, const char* community_id)
+{
+  return sql_procedure(stmt_delete_moderator, user_id, community_id);
 }
 
 
@@ -283,12 +357,27 @@ static const char* administrators_field_table[ADMINISTRATORS_NUM_FIELDS] =
   FIELD_ADMINISTRATOR_USER_ID
 };
 
-#define QUERY_ADMINISTRATORS_BY_USER_ID "SELECT * FROM administrators WHERE user_id = %s;"
-static MYSQL_STMT* stmt_query_administrators_by_user_id(const char* user_id);
+static const int administrators_field_lenths[ADMINISTRATORS_NUM_FIELDS] =
+{
+  INT_BUF_LEN
+};
 
+static const struct table_info administrators_table_info =
+{
+  administrators_field_table,
+  administrators_field_lengths
+};
+
+static MYSQL_STMT* stmt_query_administrators_by_user_id;
 ks_list* query_administrators_by_user_id(const char* user_id)
 {
-  return sql_select(administrators_field_table, QUERY_ADMINISTRATORS_BY_USER_ID, user_id);
+  return sql_select(&administrators_table_info, stmt_query_administrators_by_user_id, user_id);
+}
+
+static MYSQL_STMT* stmt_create_administrator;
+char* sql_create_administrator(const char* user_id)
+{
+  return sql_select(stmt_create_administrator, user_id);
 }
 
 
@@ -302,133 +391,161 @@ static const char* subscriptions_field_table[SUBSCRIPTIONS_NUM_FIELDS] =
   FIELD_SUB_COMMUNITY_ID
 };
 
-#define QUERY_SUBSCRIPTIONS_BY_COMMUNITY_ID_USER_ID "SELECT * FROM subscriptions WHERE community_id = %s AND user_id = %s;"
-static MYSQL_STMT* stmt_query_subscriptions_by_community_id_user_id;
+static const int subscriptions_field_lengths[SUBSCRIPTIONS_NUM_FIELDS] =
+{
+  INT_BUF_LEN,
+  INT_BUF_LEN,
+  INT_BUF_LEN
+};
 
+static const struct table_info moderators_table_info =
+{
+  subscriptions_field_table,
+  subscriptions_field_lengths
+};
+
+static MYSQL_STMT* stmt_query_subscriptions_by_community_id_user_id;
 ks_list* query_subscriptions_by_community_id_user_id(const char* community_id, const char* user_id)
 {
-  return sql_select(subscriptions_field_table, QUERY_SUBSCRIPTIONS_BY_COMMUNITY_ID_USER_ID, community_id, user_id);
+  return sql_select(&subscriptions_field_table, stmt_query_subscriptions_by_community_id_user_id, community_id, user_id);
 }
 
-#define QUERY_SUBSCRIPTIONS_BY_USER_ID "SELECT * FROM subscriptions WHERE user_id = %s;"
 static MYSQL_STMT* stmt_query_subscriptions_by_user_id;
-
 ks_list* query_subscriptions_by_user_id(const char* user_id)
 {
-  return sql_select(subscriptions_field_table, QUERY_SUBSCRIPTIONS_BY_USER_ID, user_id);
+  return sql_select(&subscriptions_field_table, stmt_query_subscriptions_by_user_id, user_id);
 }
 
-#define TOGGLE_SUBSCRIBE "CALL ToggleSubscribe(%s, %s);"
-static MYSQL_STMT* stmt_toggle_subscribe;
-
+static MYSQL_STMT* stmt_toggle_subscription;
 int sql_toggle_subscribe(const char* community_id, const char* user_id)
 {
-  return sql_procedure(TOGGLE_SUBSCRIBE, community_id, user_id);
+  return sql_procedure(&subscriptions_field_table, stmt_toggle_subscription, community_id, user_id);
 }
+
+
+// all vote tables have the same field lengths
+static const int votes_field_lengths[3] =
+{
+  INT_BUF_LEN,
+  INT_BUF_LEN,
+  INT_BUF_LEN
+};
 
 
 /*****************/
 /* post up votes */
 
-static const char* post_upvotes_field_table[POST_UP_VOTES_NUM_FIELDS] =
+static const char* post_up_votes_field_table[POST_UP_VOTES_NUM_FIELDS] =
 {
   FIELD_POST_UP_VOTE_ID,
   FIELD_POST_UP_VOTE_POST_ID,
   FIELD_POST_UP_VOTE_USER_ID
 };
 
-#define QUERY_POST_UP_VOTES_BY_POST_ID_USER_ID "SELECT * FROM post_up_votes WHERE post_id = %s AND user_id = %s;"
-static MYSQL_STMT* stmt_query_post_upvotes_by_post_id_user_id(const char* post_id, const char* user_id);
-
-ks_list* query_post_upvotes_by_post_id_user_id(const char* post_id, const char* user_id)
+static const struct table_info post_up_votes_table_info =
 {
-  return sql_select(post_upvotes_field_table, QUERY_POST_UP_VOTES_BY_POST_ID_USER_ID, post_id, user_id);
+  post_up_votes_field_table,
+  votes_field_lengths
+};
+
+static MYSQL_STMT* stmt_query_post_up_votes_by_post_id_user_id;
+ks_list* query_post_up_votes_by_post_id_user_id(const char* post_id, const char* user_id)
+{
+  return sql_select(&post_up_votes_table_info, stmt_query_post_up, post_id, user_id);
 }
 
-#define TOGGLE_POST_UP_VOTE "CALL TogglePostUpVote(%s, %s);"
 static MYSQL_STMT* stmt_toggle_post_up_vote;
-
 int sql_toggle_post_up_vote(const char* post_id, const char* user_id)
 {
-  return sql_procedure(TOGGLE_POST_UP_VOTE, post_id, user_id);
+  return sql_procedure(stmt_toggle_post_up_vote, post_id, user_id);
 }
 
 
 /*******************/
 /* post down votes */
 
-static const char* post_downvotes_field_table[POST_DOWN_VOTES_NUM_FIELDS] =
+static const char* post_down_votes_field_table[POST_DOWN_VOTES_NUM_FIELDS] =
 {
   FIELD_POST_DOWN_VOTE_ID,
   FIELD_POST_DOWN_VOTE_POST_ID,
   FIELD_POST_DOWN_VOTE_USER_ID
 };
 
-#define QUERY_POST_DOWN_VOTES_BY_POST_ID_USER_ID "SELECT * FROM post_down_votes WHERE post_id = %s AND user_id = %s;"
-static MYSQL_STMT* stmt_query_post_downvotes_by_post_id_user_id(const char* post_id, const char* user_id);
-
-ks_list* query_post_downvotes_by_post_id_user_id(const char* post_id, const char* user_id)
+static const struct table_info post_down_votes_table_info =
 {
-  return sql_select(post_downvotes_field_table, QUERY_POST_DOWN_VOTES_BY_POST_ID_USER_ID, post_id, user_id);
+  post_down_votes_field_table,
+  votes_field_lengths
+};
+
+static MYSQL_STMT* stmt_query_post_down_votes_by_post_id_user_id(const char* post_id, const char* user_id);
+ks_list* query_post_down_votes_by_post_id_user_id(const char* post_id, const char* user_id)
+{
+  return sql_select(&post_down_votes_field_table, stmt_query_post_down_votes_by_post_id_user_id, post_id, user_id);
 }
 
-#define TOGGLE_POST_DOWN_VOTE "CALL TogglePostDownVote(%s, %s);"
 static MYSQL_STMT* stmt_toggle_post_down_vote;
-
 int sql_toggle_post_down_vote(const char* post_id, const char* user_id)
 {
-  return sql_procedure(TOGGLE_POST_DOWN_VOTE, post_id, user_id);
+  return sql_procedure(stmt_toggle_post_down_vote, post_id, user_id);
 }
 
 
 /********************/
 /* comment up votes */
 
-static const char* comment_upvotes_field_table[COMMENT_UP_VOTES_NUM_FIELDS] =
+static const char* comment_up_votes_field_table[COMMENT_UP_VOTES_NUM_FIELDS] =
 {
   FIELD_COMMENT_UP_VOTE_ID,
   FIELD_COMMENT_UP_VOTE_POST_ID,
   FIELD_COMMENT_UP_VOTE_USER_ID
 };
 
-#define QUERY_COMMENT_UP_VOTES_BY_COMMENT_ID_USER_ID "SELECT * FROM comment_up_votes WHERE comment_id = %s AND user_id = %s;"
-static MYSQL_STMT* stmt_query_comment_upvotes_by_post_id_user_id(const char* comment_id, const char* user_id);
-
-ks_list* query_comment_upvotes_by_post_id_user_id(const char* comment_id, const char* user_id)
+static const struct table_info comment_up_votes_table_info =
 {
-  return sql_select(comment_downvotes_field_table, QUERY_COMMENT_UP_VOTES_BY_COMMENT_ID_USER_ID, comment_id, user_id);
+  comment_up_votes_field_table,
+  votes_field_lengths
+};
+
+static MYSQL_STMT* stmt_query_comment_up_votes_by_post_id_user_id(const char* comment_id, const char* user_id);
+ks_list* query_comment_up_votes_by_post_id_user_id(const char* comment_id, const char* user_id)
+{
+  return sql_select(&comment_down_votes_field_table, QUERY_COMMENT_UP_VOTES_BY_COMMENT_ID_USER_ID, comment_id, user_id);
 }
 
-#define TOGGLE_COMMENT_UP_VOTE "CALL ToggleCommentUpVote(%s, %s);"
 static MYSQL_STMT* stmt_toggle_comment_up_vote;
-
-int sql_toggle_comment_down_vote(const char* comment_id, const char* user_id)
+int sql_toggle_comment_up_vote(const char* comment_id, const char* user_id)
 {
-  return sql_procedure(TOGGLE_COMMENT_DOWN_VOTE, comment_id, user_id);
+  return sql_procedure(stmt_toggle_comment_up_vote, comment_id, user_id);
 }
 
 
 /**********************/
 /* comment down votes */
 
-static const char* comment_downvotes_field_table[COMMENT_DOWN_VOTES_NUM_FIELDS] =
+static const char* comment_down_votes_field_table[COMMENT_DOWN_VOTES_NUM_FIELDS] =
 {
   FIELD_COMMENT_DOWN_VOTE_ID,
   FIELD_COMMENT_DOWN_VOTE_POST_ID,
   FIELD_COMMENT_DOWN_VOTE_USER_ID
 };
 
-#define QUERY_COMMENT_DOWN_VOTES_BY_COMMENT_ID_USER_ID "SELECT * FROM comment_down_votes WHERE comment_id = %s AND user_id = %s;"
-static MYSQL_STMT* stmt_query_comment_downvotes_by_post_id_user_id;
-
-ks_list* query_comment_downvotes_by_post_id_user_id(const char* comment_id, const char* user_id)
+static const struct table_info comment_down_votes_table_info =
 {
-  return sql_select(post_downvotes_field_table, QUERY_COMMENT_DOWN_VOTES_BY_COMMENT_ID_USER_ID, comment_id, user_id);
+  comment_up_votes_field_table,
+  votes_field_lengths
+};
+
+static MYSQL_STMT* stmt_query_comment_down_votes_by_post_id_user_id;
+ks_list* query_comment_down_votes_by_post_id_user_id(const char* comment_id, const char* user_id)
+{
+  return sql_select(&comment_down_votes_field_table, stmt_query_comment_down_votes_by_post_id_user_id, comment_id, user_id);
 }
 
-#define TOGGLE_COMMENT_DOWN_VOTE "CALL ToggleCommentDownVote(%s, %s);"
-
-
+static MYSQL_STMT* stmt_toggle_comment_up_vote;
+int sql_toggle_comment_down_vote(const char* comment_id, const char* user_id)
+{
+  return sql_procedure(stmt_toggle_comment_down_vote, comment_id, user_id);
+}
 
 
 static MYSQL* sqlcon;
@@ -510,7 +627,12 @@ void init_sql_manager()
   // build prepared statements
 
   // users
+  stmt_query_users_by_name = build_prepared_statment(sqlcon, "SELECT * FROM users WHERE name = ?;");
+  stmt_create_user = build_prepared_statemtnt(sqlcon, "SELECT CreateUser(?, ?, ?);");
+  stmt_delete_user = build_prepared_statemtnt(sqlcon, "CALL DeleteUser(?);");
+
   // posts
+  stmt_query_all_posts = build_prepared_statement(sqlcon, "SELECT * FROM posts;");
   stmt_query_posts_by_id = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE id = ?;");
   stmt_query_posts_by_author_name = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE author_name = ?;");
   stmt_query_posts_by_community_id = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE community_id = ?;");
@@ -533,7 +655,7 @@ void init_sql_manager()
   // moderators
   stmt_query_moderators_by_community_id_user_id = build_prepared_statement(sqlcon, "SELECT * FROM moderators WHERE community_id = ? AND user_id = ?;");
   stmt_create_moderator = build_prepared_statement(sqlcon, "INSERT INTO moderators (user_id, community_id) VALUES (?, ?);");
-  stmt_delete_moderator = build_prepared_statement(sqlcon, "DELETE FROM moderators WHERE user_id = ?;");
+  stmt_delete_moderator = build_prepared_statement(sqlcon, "DELETE FROM moderators WHERE community_id = ? AND user_id = ?;");
 
   // administrators
   stmt_query_administrators_by_user_id, build_prepared_statement(sqlcon, "SELECT * FROM administrators WHERE user_id = ?;");
@@ -571,6 +693,7 @@ void terminate_sql_manager()
   mysql_stmt_close(stmt_delete_user);
 
   // posts
+  mysql_stmt_close(stmt_query_all_posts);
   mysql_stmt_close(stmt_query_posts_by_id);
   mysql_stmt_close(stmt_query_posts_by_author_name);
   mysql_stmt_close(stmt_query_posts_by_community_id);
@@ -618,7 +741,6 @@ void terminate_sql_manager()
   mysql_stmt_close(stmt_toggle_comment_down_vote);
 
   // close mysql connection
-
   mysql_close(sqlcon);
   mysql_server_end();
 }
@@ -680,13 +802,13 @@ static ks_list* sql_select(const struct table_info* table_info, MYSQL_STMT* stmt
   va_start(ap, stmt);
   int num_rows = sql_exec(stmt, ap);
   va_end(ap);
-  int num_cols = mysql_stmt_field_count(stmt);
 
   if (num_rows == -1)
   {
     log_err("sql_select(): failed on call to sql_exec()");
     return NULL;
   }
+  int num_cols = mysql_stmt_field_count(stmt);
 
   // prepare output buffers
   MYSQL_BIND output[num_cols];
@@ -726,12 +848,14 @@ static ks_list* sql_select(const struct table_info* table_info, MYSQL_STMT* stmt
     ks_list_add(result, ks_datacont_new(row, KS_HASHMAP, table_info->num_fields));
 
     // load values into output buffer
-    if (mysql_stmt_fetch(stmt) == 1)
+    if (mysql_stmt_fetch(stmt) != 0)
     {
-      log_crit("sql_select(): mysql_stmt_fetch(): %s", mysql_stmt_error(stmt));
+      log_err("sql_select(): mysql_stmt_fetch(): %s", mysql_stmt_error(stmt));
+      ks_list_delete(result);
+      goto free_buffers;
     }
 
-    for (int j = 0; j < table_info->num_fields; j++)
+    for (int j = 0; j < num_cols; j++)
     {
       const char* key_str = table_info->field_table[i];
       int key_len = strlen(key_str);
@@ -758,88 +882,54 @@ free_buffers:
 
 /* This function calls stored procedures in mysql, and returns
    0 on success, -1 on failure. */
-static int sql_procedure(const char* tmplt, ...)
+static int sql_procedure(MYSQL_STMT* stmt, ...)
 {
+  // submit query to mysql
+  va_list ap;
+  va_start(ap, stmt);
+  int res = sql_exec(stmt, ap);
+  va_end(ap);
+
+  return res == 0 ? 0 : -1;
 }
 
 
 /* This function calls stored functions that create new entries for
    users, comments, posts, and other items. This will return the ID
    of the newly created item as a string, or NULL on failure. */
-static char* sql_function(const char* tmplt, ...)
+static char* sql_function(MYSQL_STMT* stmt, ...)
 {
-  char query[QUERYSTRLEN];
-
-  // build query string
+  // submit query to mysql
   va_list ap;
-  va_start(ap, tmplt);
-  vsprintf(query, tmplt, ap);
+  va_start(ap, stmt);
+  int res = sql_exec(stmt, ap);
   va_end(ap);
 
-  // submit query
-  if (mysql_query(sqlcon, query) != 0)
+  int length;
+  int is_null;
+  int error;
+  MYSQL_BIND bind;
+  memset(bind, 0, sizeof(bind));
+
+  bind.buffer_type = MYSQL_TYPE_STRING;
+  bind.buffer = malloc(sizeof(char) * INT_BUF_LEN);
+  bind.is_null = &is_null;
+  bind.length = &length;
+  bind.error = &error;
+
+  if (mysql_stmt_bind_result(stmt, output) != 0)
   {
-    log_err("sql_function(): mysql_query(): %s", mysql_error(sqlcon));
+    log_err("sql_function(): mysql_stmt_bind_result(): %s", mysql_stmt_error(stmt));
+    free(bind.buffer);
     return NULL;
   }
 
-  // get result object
-  MYSQL_RES* result;
-  if ((result = mysql_store_result(sqlcon)) == NULL)
+  if (mysql_stmt_fetch(stmt) != 0)
   {
-    if (mysql_errno(sqlcon) != 0)
-    {
-      log_err("sql_function(): mysql_store_result(): %s", mysql_error(sqlcon));
-    }   
-    else
-    {
-      log_err("sql_function(): an unknown error occured. " \
-              "mysql_store_result() returned NULL with no explaination.");
-    }
+    log_err("sql_function(): mysql_stmt_fetch(): %s", mysql_stmt_error(stmt));
+    free(bind.buffer);
     return NULL;
   }
 
-  // grab what should be the only string from result
-  MYSQL_ROW sqlrow = mysql_fetch_row(result);
-
-  int len = strlen(sqlrow[0]);
-  char* str = malloc(len + 1);
-  memcpy(str, sqlrow[0], len + 1);
-
-  mysql_free_result(result);
-
-  return str;
-}
-
-
-
-
-
-char* sql_create_community(const char* user_id, const char* community_name, const char* about)
-{
-  return sql_function(CREATE_COMMUNITY, user_id, community_name, about);
-}
-
-
-int sql_delete_user(const char* user_id)
-{
-  return sql_procedure(DELETE_USER, user_id);
-}
-
-
-int sql_delete_comment(const char* comment_id)
-{
-  return sql_procedure(DELETE_COMMENT, comment_id);
-}
-
-
-int sql_delete_post(const char* post_id)
-{
-  return sql_procedure(DELETE_POST, post_id);
-}
-
-
-int sql_delete_community(const char* community_id)
-{
-  return sql_procedure(DELETE_COMMUNITY, community_id);
+  return bind.buffer;
 }

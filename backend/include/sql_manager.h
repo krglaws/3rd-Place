@@ -178,4 +178,8 @@ int sql_delete_post(const char* post_id);
 
 int sql_delete_community(const char* community_id);
 
+int sql_delete_moderator(const char* community_id, const char* user_id);
+
+int sql_delete_administrator(const char* user_id);
+
 #endif
