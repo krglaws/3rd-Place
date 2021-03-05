@@ -177,33 +177,33 @@ void add_nav_info(ks_hashmap* page_data, const struct auth_token* client_info)
 
 enum vote_type check_for_vote(enum item_type item_type, const char* item_id, const char* user_id)
 {
-  ks_list* upvote_query_result;
-  ks_list* downvote_query_result;
+  ks_list* up_vote_query_result;
+  ks_list* down_vote_query_result;
 
   // are we looking for post votes or comment votes?
   if (item_type == POST_ITEM)
   {
-    upvote_query_result = query_post_upvotes_by_post_id_user_id(item_id, user_id);
-    downvote_query_result = query_post_downvotes_by_post_id_user_id(item_id, user_id);
+    up_vote_query_result = query_post_up_votes_by_post_id_user_id(item_id, user_id);
+    down_vote_query_result = query_post_down_votes_by_post_id_user_id(item_id, user_id);
   }
   else if (item_type == COMMENT_ITEM)
   {
-    upvote_query_result = query_comment_upvotes_by_post_id_user_id(item_id, user_id);
-    downvote_query_result = query_comment_downvotes_by_post_id_user_id(item_id, user_id);
+    up_vote_query_result = query_comment_up_votes_by_comment_id_user_id(item_id, user_id);
+    down_vote_query_result = query_comment_down_votes_by_comment_id_user_id(item_id, user_id);
   }
   else {
     log_crit("check_for_vote(): invalid item_type argument");
   }
 
-  ks_datacont* uv0 = ks_list_get(upvote_query_result, 0);
-  ks_datacont* dv0 = ks_list_get(downvote_query_result, 0);
+  ks_datacont* uv0 = ks_list_get(up_vote_query_result, 0);
+  ks_datacont* dv0 = ks_list_get(down_vote_query_result, 0);
 
   // determine vote type
   enum vote_type result = uv0 ? UPVOTE : (dv0 ? DOWNVOTE : NOVOTE);
 
   // cleanup query results
-  ks_list_delete(upvote_query_result);
-  ks_list_delete(downvote_query_result);
+  ks_list_delete(up_vote_query_result);
+  ks_list_delete(down_vote_query_result);
 
   return result;
 } // end check_for_vote()

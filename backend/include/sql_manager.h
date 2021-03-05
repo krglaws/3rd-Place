@@ -42,9 +42,10 @@
 
 
 /* community sql field names */
-#define COMMUNITIES_NUM_FIELDS          (6)
+#define COMMUNITIES_NUM_FIELDS          (7)
 #define FIELD_COMMUNITY_ID              "COMMUNITY_ID"
 #define FIELD_COMMUNITY_OWNER_ID        "COMMUNITY_OWNER_ID"
+#define FIELD_COMMUNITY_OWNER_NAME      "COMMUNITY_OWNER_NAME"
 #define FIELD_COMMUNITY_NAME            "COMMUNITY_NAME"
 #define FIELD_COMMUNITY_ABOUT           "COMMUNITY_ABOUT"
 #define FIELD_COMMUNITY_MEMBERS         "COMMUNITY_MEMBERS"
@@ -137,13 +138,13 @@ ks_list* query_comments_by_post_id(const char* post_id);
 
 ks_list* query_subscriptions_by_user_id(const char* user_id);
 
-ks_list* query_post_upvotes_by_post_id_user_id(const char* post_id, const char* user_id);
+ks_list* query_post_up_votes_by_post_id_user_id(const char* post_id, const char* user_id);
 
-ks_list* query_post_downvotes_by_post_id_user_id(const char* post_id, const char* user_id);
+ks_list* query_post_down_votes_by_post_id_user_id(const char* post_id, const char* user_id);
 
-ks_list* query_comment_upvotes_by_post_id_user_id(const char* comment_id, const char* user_id);
+ks_list* query_comment_up_votes_by_comment_id_user_id(const char* comment_id, const char* user_id);
 
-ks_list* query_comment_downvotes_by_post_id_user_id(const char* comment_id, const char* user_id);
+ks_list* query_comment_down_votes_by_comment_id_user_id(const char* comment_id, const char* user_id);
 
 ks_list* query_subscriptions_by_community_id_user_id(const char* community_id, const char* id);
 
