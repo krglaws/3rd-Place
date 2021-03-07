@@ -98,6 +98,26 @@
 #define FIELD_COMMENT_DOWN_VOTE_POST_ID   "COMMENT_DOWN_VOTE_POST_ID"
 #define FIELD_COMMENT_DOWN_VOTE_USER_ID   "COMMENT_DOWN_VOTE_USER_ID"
 
+
+/*******************************/
+/* buffer lengths
+ *
+ * the following
+ * macros are equal to the maximum permitted
+ * number of chars per value, plus one to
+ * make room for the NULL terminator char.
+ */
+
+#define INT_BUF_LEN (12)
+#define USER_NAME_BUF_LEN (17)
+#define USER_PASSWD_BUF_LEN (129)
+#define USER_ABOUT_BUF_LEN (257)
+#define POST_TITLE_BUF_LEN (33)
+#define POST_BODY_BUF_LEN (513)
+#define COMMENT_BODY_BUF_LEN (513)
+#define COMMUNITY_NAME_BUF_LEN (33)
+#define COMMUNITY_ABOUT_BUF_LEN (513)
+
 #include <kylestructs.h>
 
 void init_sql_manager();
