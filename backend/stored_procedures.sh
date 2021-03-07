@@ -6,6 +6,9 @@ eval $(cat ./db.config)
 
 mysql -uroot <<STORED_PROCEDURES
 
+# allow non-deterministic functions
+SET GLOBAL log_bin_trust_function_creators = 1;
+
 ###################
 # stored procedures
 ###################
@@ -18,7 +21,7 @@ DELIMITER $$
 # Toggle* procedures
 ###################
 
-CREATE PROCEDURE ToggleSubscribe (IN cid INT, IN uid INT)
+CREATE PROCEDURE ToggleSubscription (IN cid INT, IN uid INT) NOT DETERMINISTIC
 BEGIN
 
   # check if user is already subscribed
@@ -33,7 +36,7 @@ BEGIN
 END;$$
 
 
-CREATE PROCEDURE TogglePostUpVote (IN pid INT, IN uid INT)
+CREATE PROCEDURE TogglePostUpVote (IN pid INT, IN uid INT) NOT DETERMINISTIC
 proc_label:BEGIN
 
   # get post author id
@@ -71,7 +74,7 @@ proc_label:BEGIN
 END;$$
 
 
-CREATE PROCEDURE TogglePostDownVote (IN pid INT, IN uid INT)
+CREATE PROCEDURE TogglePostDownVote (IN pid INT, IN uid INT) NOT DETERMINISTIC
 proc_label:BEGIN
 
   # get post author id
@@ -109,7 +112,7 @@ proc_label:BEGIN
 END;$$
 
 
-CREATE PROCEDURE ToggleCommentUpVote(IN cid INT, IN uid INT)
+CREATE PROCEDURE ToggleCommentUpVote(IN cid INT, IN uid INT) NOT DETERMINISTIC
 proc_label:BEGIN
 
   # get comment author id
@@ -147,7 +150,7 @@ proc_label:BEGIN
 END;$$
 
 
-CREATE PROCEDURE ToggleCommentDownVote(IN cid INT, IN uid INT)
+CREATE PROCEDURE ToggleCommentDownVote(IN cid INT, IN uid INT) NOT DETERMINISTIC
 proc_label:BEGIN
 
   # get comment author id
@@ -274,7 +277,7 @@ END;$$
 # Delete procedures
 ###################
 
-CREATE PROCEDURE DeleteUser(IN uid INT)
+CREATE PROCEDURE DeleteUser(IN uid INT) NOT DETERMINISTIC
 BEGIN
 
   # unsubscribe from all communities
@@ -313,7 +316,7 @@ BEGIN
       LEAVE get_sub;
     END IF;
 
-    CALL ToggleSubscribe(uid, community_id);
+    CALL ToggleSubscription(uid, community_id);
 
   END LOOP get_sub;
 
@@ -322,7 +325,7 @@ BEGIN
 END;$$
 
 
-CREATE PROCEDURE DeleteComment (IN cid INT)
+CREATE PROCEDURE DeleteComment (IN cid INT) NOT DETERMINISTIC
 BEGIN
 
   # grab author id
@@ -338,7 +341,7 @@ BEGIN
 END;$$
 
 
-CREATE PROCEDURE DeletePost (IN pid INT)
+CREATE PROCEDURE DeletePost (IN pid INT) NOT DETERMINISTIC
 BEGIN
 
   # grab author id
@@ -358,7 +361,7 @@ BEGIN
 END;$$
 
 
-CREATE PROCEDURE DeleteCommunity (IN cid INT)
+CREATE PROCEDURE DeleteCommunity (IN cid INT) NOT DETERMINISTIC
 proc_label:BEGIN
 
   DECLARE id INT;

@@ -95,17 +95,17 @@ mysql -uroot <<TEST_SUBSCRIPTIONS
 
 USE $DBNAME;
 
-CALL ToggleSubscribe (1, 2);
-CALL ToggleSubscribe (2, 2);
-CALL ToggleSubscribe (3, 2);
+CALL ToggleSubscription (1, 2);
+CALL ToggleSubscription (2, 2);
+CALL ToggleSubscription (3, 2);
 
-CALL ToggleSubscribe (1, 3);
-CALL ToggleSubscribe (2, 3);
-CALL ToggleSubscribe (3, 3);
+CALL ToggleSubscription (1, 3);
+CALL ToggleSubscription (2, 3);
+CALL ToggleSubscription (3, 3);
 
-CALL ToggleSubscribe (1, 4);
-CALL ToggleSubscribe (2, 4);
-CALL ToggleSubscribe (3, 4);
+CALL ToggleSubscription (1, 4);
+CALL ToggleSubscription (2, 4);
+CALL ToggleSubscription (3, 4);
 
 TEST_SUBSCRIPTIONS
 
