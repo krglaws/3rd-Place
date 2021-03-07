@@ -3,6 +3,9 @@
 #include <ctype.h>
 #include <kylestructs.h>
 
+#include <load_file.h>
+#include <string_map.h>
+#include <log_manager.h>
 #include <sql_manager.h>
 
 
@@ -30,14 +33,14 @@ int init_validator()
     log_crit("init_validator(): failed to open file '%s'", html_code_path);
   }
 
-  html_code_map = string_to_map(html_encoding_file, "\n", ": ");
+  html_code_map = string_to_map(html_code_file, "\n", ": ");
   free(html_code_file);
 }
 
 
-static int url_decode(char* dest, char* src)
+static int url_decode(char* dest, const char* src)
 {
-  char* c;
+  const char* c;
   char key[4];
 
   while (src[0] != '\0')
@@ -45,7 +48,7 @@ static int url_decode(char* dest, char* src)
     if (src[0] == '%' && src[1] != '\0' && src[2] == '\0')
     {
       memcpy(key, src, 3);
-      if ((c = get_map_value_str(url_code_map, key)) == '\0')
+      if ((c = get_map_value_str(url_code_map, key)) == NULL)
       {
         // invalid encoding
         return -1;
@@ -54,7 +57,6 @@ static int url_decode(char* dest, char* src)
       *dest = *c;
       dest++;
       src += 3;
-      free(c);
     }
     else if (src[0] == '+')
     {
@@ -62,7 +64,7 @@ static int url_decode(char* dest, char* src)
       dest++;
       src++;
     }
-    else if(is_alnum(src[0]) || src[0] == '*' || src[0] == '-' || src[0] == '_')
+    else if(isalnum(src[0]) || src[0] == '*' || src[0] == '-' || src[0] == '_')
     {
       *dest = *src;
       dest++;

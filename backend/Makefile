@@ -12,7 +12,7 @@ default: all
 VALIDATORDEP := $(SRC)/validator.c
 VALIDATORTARG := $(BIN)/validator.o
 
-$(VALIDATORDEP): $(VALIDATORDEP)
+$(VALIDATORTARG): $(VALIDATORDEP)
 	$(CC) -c $< -o $@ $(CFLAGS) $(DEBUG)
 
 
