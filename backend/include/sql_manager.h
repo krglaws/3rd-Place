@@ -108,15 +108,43 @@
  * make room for the NULL terminator char.
  */
 
+// I think '&amp;' is the longest
+#define MAX_ENCODE_LEN (5)
+
 #define INT_BUF_LEN (12)
-#define USER_NAME_BUF_LEN (17)
+
+#define MAX_USER_NAME_LEN (16)
+#define MIN_USER_NAME_LEN (3)
+#define USER_NAME_BUF_LEN (MAX_USER_NAME_LEN + 1)
+
+#define MAX_PASSWD_LEN (72)
+#define MIN_PASSWD_LEN (8)
+// maximum output length by crypt()
 #define USER_PASSWD_BUF_LEN (129)
-#define USER_ABOUT_BUF_LEN (257)
-#define POST_TITLE_BUF_LEN (33)
-#define POST_BODY_BUF_LEN (513)
-#define COMMENT_BODY_BUF_LEN (513)
-#define COMMUNITY_NAME_BUF_LEN (33)
-#define COMMUNITY_ABOUT_BUF_LEN (513)
+
+#define MAX_USER_ABOUT_LEN (256)
+#define MIN_USER_ABOUT_LEN (0)
+#define USER_ABOUT_BUF_LEN ((MAX_ENCODE_LEN * (MAX_USER_ABOUT_LEN)) + 1)
+
+#define MAX_POST_TITLE_LEN (32)
+#define MIN_POST_TITLE_LEN (1)
+#define POST_TITLE_BUF_LEN ((MAX_ENCODE_LEN * MAX_POST_TITLE_LEN) + 1)
+
+#define MAX_POST_BODY_LEN (512)
+#define MIN_POST_BODY_LEN (0)
+#define POST_BODY_BUF_LEN ((MAX_ENCODE_LEN * MAX_POST_BODY_LEN) + 1)
+
+#define MAX_COMMENT_BODY_LEN (256)
+#define MIN_COMMENT_BODY_LEN (1)
+#define COMMENT_BODY_BUF_LEN ((MAX_ENCODE_LEN * MAX_COMMENT_BODY_LEN) + 1)
+
+#define MAX_COMMUNITY_NAME_LEN (32)
+#define MIN_COMMUNITY_NAME_LEN (3)
+#define COMMUNITY_NAME_BUF_LEN ((MAX_ENCODE_LEN * MAX_COMMUNITY_NAME_LEN) + 1)
+
+#define MAX_COMMUNITY_ABOUT_LEN (512)
+#define MIN_COMMUNITY_ABOUT_LEN (0)
+#define COMMUNITY_ABOUT_BUF_LEN ((MAX_ENCODE_LEN * MAX_COMMUNITY_ABOUT_LEN) + 1)
 
 #include <kylestructs.h>
 
@@ -167,6 +195,7 @@ ks_list* query_comment_up_votes_by_comment_id_user_id(const char* comment_id, co
 ks_list* query_comment_down_votes_by_comment_id_user_id(const char* comment_id, const char* user_id);
 
 ks_list* query_subscriptions_by_community_id_user_id(const char* community_id, const char* id);
+
 
 /* Return 0 on success, -1 on failure */
 int sql_toggle_subscribe(const char* community_id, const char* user_id);
