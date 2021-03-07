@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <mysql.h>
 #include <kylestructs.h>
 
@@ -835,13 +836,13 @@ static ks_list* sql_select(const struct table_info* table_info, MYSQL_STMT* stmt
   MYSQL_BIND output[num_cols];
   memset(output, 0, sizeof(output));
 
-  my_bool is_null[num_cols];
+  bool is_null[num_cols];
   memset(is_null, 0, sizeof(is_null));
 
   unsigned long length[num_cols];
   memset(length, 0, sizeof(length));
 
-  my_bool error[num_cols];
+  bool error[num_cols];
   memset(error, 0, sizeof(error));
 
   for (int i = 0; i < num_cols; i++)
@@ -940,8 +941,8 @@ static char* sql_function(MYSQL_STMT* stmt, ...)
   va_end(ap);
 
   unsigned long length;
-  my_bool is_null;
-  my_bool error;
+  bool is_null;
+  bool error;
   MYSQL_BIND bind;
   memset(&bind, 0, sizeof(bind));
 
