@@ -24,24 +24,29 @@ struct response* get_login(const struct auth_token* client_info, enum login_erro
     add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_LOGIN);
 
     // check for login/signup error
-    if (err == LOGINERR_BAD_LOGIN)
+    if (err == LOGINERR_NONE)
+    {
+      add_map_value_str(page_data, SIGNUP_ERROR_KEY, "");
+      add_map_value_str(page_data, LOGIN_ERROR_KEY, "");
+    }
+    else if (err == LOGINERR_BAD_LOGIN)
     {
       add_map_value_str(page_data, SIGNUP_ERROR_KEY, "");
       add_map_value_str(page_data, LOGIN_ERROR_KEY, BAD_LOGIN_MSG);
     }
-    else if (err == LOGINERR_UNAME_TAKEN)
+    else if (err == SIGNUPERR_UNAME_TAKEN)
     {
       add_map_value_str(page_data, SIGNUP_ERROR_KEY, UNAME_TAKEN_MSG);
       add_map_value_str(page_data, LOGIN_ERROR_KEY, "");
     }
-    else if (err == LOGINERR_EMPTY)
+    else if (err == SIGNUPERR_INVALID_UNAME)
     {
-      add_map_value_str(page_data, SIGNUP_ERROR_KEY, EMPTY_INPUT_MSG);
+      add_map_value_str(page_data, SIGNUP_ERROR_KEY, INVALID_UNAME_MSG);
       add_map_value_str(page_data, LOGIN_ERROR_KEY, "");
     }
-    else if (err == LOGINERR_NONE)
+    else if (err == SIGNUPERR_INVALID_PASSWD)
     {
-      add_map_value_str(page_data, SIGNUP_ERROR_KEY, "");
+      add_map_value_str(page_data, SIGNUP_ERROR_KEY, INVALID_PASSWD_MSG);
       add_map_value_str(page_data, LOGIN_ERROR_KEY, "");
     }
     else

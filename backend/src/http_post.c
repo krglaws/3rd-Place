@@ -8,6 +8,7 @@
 #include <log_manager.h>
 #include <auth_manager.h>
 #include <sql_manager.h>
+#include <validator.h>
 #include <string_map.h>
 #include <response.h>
 #include <server.h>
@@ -16,13 +17,10 @@
 #include <http_post.h>
 
 
-/* attempts login, returns response object containing result */
 static struct response* post_login(const char* uname, const char* passwd);
 
-/* attempts signup, returns response object containing result */
 static struct response* post_signup(const char* uname, const char* passwd, const char* about);
 
-/* toggles a users vote on post or comment */
 static struct response* post_vote(const char* type, const char* direction, const char* id, const struct auth_token* client_info);
 
 static struct response* post_comment(const char* post_id, const char* community_id, const char* body, const struct auth_token* client_info);
@@ -97,7 +95,8 @@ struct response* http_post(struct request* req)
 static struct response* post_login(const char* uname, const char* passwd)
 {
   const char* token;
-  if (uname == NULL || passwd == NULL || (token = login_user(uname, passwd)) == NULL)
+  char passwd_decoded[MAX_PASSWD_LEN + 1];
+  if (uname == NULL || passwd == NULL || !valid_passwd(passwd_decoded, passwd) || (token = login_user(uname, passwd_decoded)) == NULL)
   {
     return get_login(NULL, LOGINERR_BAD_LOGIN);
   }
@@ -116,17 +115,24 @@ static struct response* post_login(const char* uname, const char* passwd)
 
 static struct response* post_signup(const char* uname, const char* passwd, const char* about)
 {
-  const char* token;
-  if (uname == NULL || passwd == NULL)
+  // check user name
+  if (uname == NULL || !valid_user_name(uname))
   {
-    log_info("Signup failed: null username or password");
-    return get_login(NULL, LOGINERR_EMPTY);
+    return get_login(NULL, SIGNUPERR_INVALID_UNAME);
   }
 
+  // check password
+  char passwd_decoded[MAX_PASSWD_LEN + 1];
+  if (passwd == NULL || !valid_passwd(passwd_decoded, passwd))
+  {
+    return get_login(NULL, SIGNUPERR_INVALID_PASSWD);
+  }
+
+  // create new user
+  const char* token;
   if ((token = new_user(uname, passwd, about)) == NULL)
   {
-    log_info("Signup failed: username already exists");
-    return get_login(NULL, LOGINERR_UNAME_TAKEN);
+    return get_login(NULL, SIGNUPERR_UNAME_TAKEN);
   }
 
   // build redirect

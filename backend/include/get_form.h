@@ -4,13 +4,15 @@
 enum login_error {
   LOGINERR_NONE,
   LOGINERR_BAD_LOGIN,
-  LOGINERR_EMPTY,
-  LOGINERR_UNAME_TAKEN
+  SIGNUPERR_UNAME_TAKEN,
+  SIGNUPERR_INVALID_UNAME,
+  SIGNUPERR_INVALID_PASSWD
 };
 
 #define BAD_LOGIN_MSG "<p>Bad Login</p>"
 #define UNAME_TAKEN_MSG "<p>Username Already Exists</p>"
-#define EMPTY_INPUT_MSG "<p>Empty username or password</p>"
+#define INVALID_UNAME_MSG "<p>Invalid Username</p>"
+#define INVALID_PASSWD_MSG "<p>Invalid Password</p>"
 
 struct response* get_login(const struct auth_token* client_info, enum login_error err);
 
