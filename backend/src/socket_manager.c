@@ -9,6 +9,7 @@
 
 static const int reload_socket_set();
 static const int get_active_socket();
+static void terminate_socket_manager();
 
 static int server_socket = 0;
 
@@ -58,11 +59,13 @@ void init_socket_manager(const struct in6_addr* server_addr, const uint16_t serv
     log_crit("init_socket_manager(): inet_ntop(): %s", strerror(errno));
   }
 
+  atexit(&terminate_socket_manager);
+
   log_info("Listening on address %s, port %d...", ipstr, ntohs(server_port));
 }
 
 
-void terminate_socket_manager()
+static void terminate_socket_manager()
 {
   log_info("Terminating Socket Manager...");
 

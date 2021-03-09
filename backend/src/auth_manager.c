@@ -20,6 +20,7 @@ static void rand_salt(char* salt_buf);
 static void rand_token(char* token_buf);
 static const char* new_token(const char* uname);
 static const char* get_token(const char* uname);
+static void terminate_auth_manager();
 
 /* ks_list of login tokens */
 static struct token_entry* head = NULL;
@@ -56,10 +57,12 @@ void init_auth_manager()
   }
 
   token_list = ks_list_new();
+
+  atexit(&terminate_auth_manager);
 }
 
 
-void terminate_auth_manager()
+static void terminate_auth_manager()
 {
   log_info("Terminating Auth Manager...");
 

@@ -24,6 +24,7 @@ static int sql_exec(MYSQL_STMT* stmt, va_list ap);
 static ks_list* sql_select(const struct table_info* table_info, MYSQL_STMT* stmt, ...);
 static int sql_procedure(MYSQL_STMT* stmt, ...);
 static char* sql_function(MYSQL_STMT* stmt, ...);
+static void terminate_sql_manager();
 
 
 /********************/
@@ -687,10 +688,12 @@ void init_sql_manager()
   stmt_query_comment_down_votes_by_comment_id_user_id = build_prepared_statement(sqlcon, "SELECT * FROM comment_down_votes WHERE comment_id = ? AND user_id = ?;");
   stmt_toggle_comment_up_vote = build_prepared_statement(sqlcon, "CALL ToggleCommentUpVote(?, ?);");
   stmt_toggle_comment_down_vote = build_prepared_statement(sqlcon, "CALL ToggleCommentDownVote(?, ?);");
+
+  atexit(&terminate_sql_manager);
 }
 
 
-void terminate_sql_manager()
+static void terminate_sql_manager()
 {
   log_info("Terminating SQL Manager...");
 

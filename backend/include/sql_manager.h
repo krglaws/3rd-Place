@@ -150,8 +150,6 @@
 
 void init_sql_manager();
 
-void terminate_sql_manager();
-
 /* The following functions return lists of hashmaps.
  * Each index in the list is a hashmap which represents
  * a table row. Each maps the field name (a string)

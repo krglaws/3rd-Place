@@ -27,11 +27,6 @@ struct auth_token
 void init_auth_manager();
 
 
-/* Closes /dev/urandom, deletes token_list
- */
-void terminate_auth_manager();
-
-
 /* Called by http_post when a user tries to login.
  */
 const char* login_user(const char* uname, const char* passwd);

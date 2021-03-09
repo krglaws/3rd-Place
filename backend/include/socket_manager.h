@@ -8,10 +8,6 @@
 void init_socket_manager(const struct in6_addr* server_addr, const uint16_t server_port, const int max_clients);
 
 
-/* Closes all sockets. */
-void terminate_socket_manager();
-
-
 /* Fills ipstr with the ip address belonging to sock */
 int get_socket_ip(const int sock, char* ipstr, const int iplen);
 

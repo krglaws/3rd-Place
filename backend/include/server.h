@@ -36,10 +36,6 @@ struct options
 };
 
 
-/* Called when SIGTERM or SIGINT are received */
-void terminate_server(const int signum);
-
-
 /* struct containing stripped down request info */
 struct request
 {

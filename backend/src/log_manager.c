@@ -8,6 +8,10 @@
 #include <log_manager.h>
 
 
+static void log_all(const char* logtype, const char* fmt, va_list ap);
+static void terminate_log_manager();
+
+
 // this is the output file for all logs
 // which can be configured via CLI args
 static FILE* logfile = NULL;
@@ -56,24 +60,25 @@ static void log_all(const char* logtype, const char* fmt, va_list ap)
 
 void init_log_manager(const char* path)
 {
+
   if (path == NULL)
   {
     logfile = stdout;
-    log_info("Log Manager Initialized.");
-    return;
   }
 
-  if ((logfile = fopen(path, "a")) == NULL)
+  else if ((logfile = fopen(path, "a")) == NULL)
   {
     fprintf(stderr, "init_logger(): failed to open log file '%s'\n", path);
     exit(EXIT_FAILURE);
   }
 
+  atexit(&terminate_log_manager);
+
   log_info("Log Manager Initialized.");
 }
 
 
-void terminate_log_manager()
+static void terminate_log_manager()
 {
   log_info("Terminating Log Manager...");
   fclose(logfile);

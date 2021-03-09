@@ -16,10 +16,6 @@
 void init_log_manager(const char* path);
 
 
-/* Closes the output file */
-void terminate_log_manager();
-
-
 /* Used for logging basic server info */
 void log_info(const char* fmt, ...);
 

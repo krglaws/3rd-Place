@@ -29,6 +29,9 @@ static void delete_options(struct options* opts);
 /* Initializes services, signal handling, and sets up server socket */
 static void init_server(struct options* opts);
 
+/* Called when SIGTERM or SIGINT are received */
+static void terminate_server(const int signum);
+
 /* Parses the raw request data into a request struct */
 static struct request* parse_request(char* req_buf);
 static void delete_request(struct request* req);
@@ -169,17 +172,8 @@ static void init_server(struct options* opts)
 }
 
 
-void terminate_server(const int signum)
+static void terminate_server(const int signum)
 {
-  // terminate services
-  terminate_socket_manager();
-
-  terminate_sql_manager();
-
-  terminate_auth_manager();
-
-  terminate_log_manager();
-
   if (signum == SIGINT)
   {
     // assuming we received SIGINT (Ctrl-C) from terminal
