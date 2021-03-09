@@ -7,6 +7,8 @@
 #include <log_manager.h>
 #include <socket_manager.h>
 
+static const int reload_socket_set();
+static const int get_active_socket();
 
 static int server_socket = 0;
 
