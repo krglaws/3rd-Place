@@ -1,12 +1,9 @@
 #include <string.h>
-#include <stdbool.h>
 #include <ctype.h>
 #include <kylestructs.h>
 
-#include <load_file.h>
-#include <string_map.h>
-#include <log_manager.h>
 #include <sql_manager.h>
+#include <validator.h>
 
 
 // used for converting percent encoded chars to ASCII
@@ -14,8 +11,8 @@ static short get_hex_char_val(char c);
 static char hex_to_char(const char* hex);
 static int url_decode(char* dest, const char* src);
 
-static bool valid_content(char* dest, const char* src, int min_len, int max_len);
-static bool valid_name(const char* name, int min_len, int max_len);
+static enum validation_result valid_content(char* dest, const char* src, int min_len, int max_len);
+static enum validation_result valid_name(const char* name, int min_len, int max_len);
 
 // encodes content into HTML-friendly form
 static void html_encode(char* dest, char* src);
@@ -65,8 +62,15 @@ static char hex_to_char(const char* hex)
 }
 
 
+/* Returns the length of the decoded string,
+   -1 if an invalid encoding was found. */
 static int url_decode(char* dest, const char* src)
 {
+  if (src == NULL)
+  {
+    return 0;
+  }
+
   char c;
   int i = 0, j = 0;
   while (src[i] != '\0')
@@ -132,19 +136,19 @@ static void html_encode(char* dest, char* src)
 }
 
 
-bool valid_passwd(char* dest, const char* src)
+enum validation_result valid_passwd(char* dest, const char* src)
 {
   // caller must allocate buffer for
   // decoded password string
   int len;
   if ((len = url_decode(dest, src)) == -1)
   {
-    return false;
+    return VALRES_INV_ENC;
   }
 
   if (len < MIN_PASSWD_LEN)
   {
-    return false;
+    return VALRES_TOO_SHORT;
   }
 
   // at least 1 upper, 1 lower, 1 digit
@@ -156,7 +160,7 @@ bool valid_passwd(char* dest, const char* src)
 
     if (len > MAX_PASSWD_LEN)
     {
-      return false;
+      return VALRES_TOO_LONG;
     }
 
     if (isupper(c))
@@ -175,90 +179,111 @@ bool valid_passwd(char* dest, const char* src)
     }
   }
 
-  return upper && lower && number;
+  if (!(upper && lower && number))
+  {
+    return VALRES_UNMET;
+  }
+
+  return VALRES_OK;
 }
 
 
-static bool valid_name(const char* name, int min_len, int max_len)
+static enum validation_result valid_name(const char* name, int min_len, int max_len)
 {
+  if (name == NULL && min_len > 0)
+  {
+    return VALRES_TOO_SHORT;
+  }
+
   // no need to decode since valid name strings
   // do not contain chars that would be encoded
-
   char c;
   int len = 0;
   while ((c = name[len++]) != '\0')
   {
     if (len > max_len)
     {
-      return false;
+      return VALRES_TOO_LONG;
     }
 
     if (!(isalnum(c) || c == '_'))
     {
-      return false;
+      return VALRES_INV_CHAR;
     }
   }
 
-  return len >= min_len;
+  if (len < min_len)
+  {
+    return VALRES_TOO_SHORT;
+  }
+
+  return VALRES_OK;
 }
 
 
-bool valid_user_name(const char* user_name)
+enum validation_result valid_user_name(const char* user_name)
 {
   return valid_name(user_name, MIN_USER_NAME_LEN, MAX_USER_NAME_LEN);
 }
 
 
-bool valid_community_name(const char* community_name)
+enum validation_result valid_community_name(const char* community_name)
 {
   return valid_name(community_name, MIN_COMMUNITY_NAME_LEN, MAX_COMMUNITY_NAME_LEN);
 }
 
 
-static bool valid_content(char* dest, const char* src, int min_len, int max_len)
+static enum validation_result valid_content(char* dest, const char* src, int min_len, int max_len)
 {
   // decoded string will always be <= src length
   int len;
   char tmp[max_len+1];
   if ((len = url_decode(tmp, src)) == -1)
   {
-    return false;
+    return VALRES_INV_ENC;
   }
 
-  if (len > max_len || len < min_len)
+  if (len > max_len)
   {
-    return false;
+    return VALRES_TOO_LONG;
+  }
+
+  if (len < min_len)
+  {
+    return VALRES_TOO_SHORT;
   }
 
   html_encode(dest, tmp);
+
+  return VALRES_OK;
 }
 
 
-bool valid_user_about(char* dest, const char* src)
+enum validation_result valid_user_about(char* dest, const char* src)
 {
   return valid_content(dest, src, MIN_USER_ABOUT_LEN, MAX_USER_ABOUT_LEN);
 }
 
 
-bool valid_community_about(char* dest, const char* src)
+enum validation_result valid_community_about(char* dest, const char* src)
 {
   return valid_content(dest, src, MIN_COMMUNITY_ABOUT_LEN, MAX_COMMUNITY_ABOUT_LEN);
 }
 
 
-bool valid_comment_body(char* dest, const char* src)
+enum validation_result valid_comment_body(char* dest, const char* src)
 {
   return valid_content(dest, src, MIN_COMMENT_BODY_LEN, MAX_COMMENT_BODY_LEN);
 }
 
 
-bool valid_post_body(char* dest, const char* src)
+enum validation_result valid_post_body(char* dest, const char* src)
 {
   return valid_content(dest, src, MIN_POST_BODY_LEN, MAX_POST_BODY_LEN);
 }
 
 
-bool valid_post_title(char* dest, const char* src)
+enum validation_result valid_post_title(char* dest, const char* src)
 {
   return valid_content(dest, src, MIN_POST_TITLE_LEN, MAX_POST_TITLE_LEN);
 }
