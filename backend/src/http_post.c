@@ -17,12 +17,9 @@
 #include <http_post.h>
 
 
-static struct response* post_login(const char* uname, const char* passwd);
-
-static struct response* post_signup(const char* uname, const char* passwd, const char* about);
-
+static struct response* post_login(const char* uname, const char* passwd, const struct auth_token* client_info);
+static struct response* post_signup(const char* uname, const char* passwd, const char* about, const struct auth_token* client_info);
 static struct response* post_vote(const char* type, const char* direction, const char* id, const struct auth_token* client_info);
-
 static struct response* post_comment(const char* post_id, const char* community_id, const char* body, const struct auth_token* client_info);
 
 
@@ -41,7 +38,7 @@ struct response* http_post(struct request* req)
     const char* passwd = get_map_value_str(req->content, "passwd");
     const char* about = get_map_value_str(req->content, "about");
 
-    return post_signup(uname, passwd, about);
+    return post_signup(uname, passwd, about, req->client_info);
   }
 
   else if (strcmp(req->uri, "./login") == 0)
@@ -49,7 +46,7 @@ struct response* http_post(struct request* req)
     const char* uname = get_map_value_str(req->content, "uname");
     const char* passwd = get_map_value_str(req->content, "passwd");
 
-    return post_login(uname, passwd);
+    return post_login(uname, passwd, req->client_info);
   }
 
   else if (strcmp(req->uri, "./logout") == 0)
@@ -92,12 +89,22 @@ struct response* http_post(struct request* req)
 }
 
 
-static struct response* post_login(const char* uname, const char* passwd)
+static struct response* post_login(const char* uname, const char* passwd, const struct auth_token* client_info)
 {
+  if (client_info != NULL)
+  {
+    // this will pull up the "you are already logged in" message
+    return response_redirect("/login");
+  }
+
   const char* token;
   char passwd_decoded[MAX_PASSWD_LEN + 1];
-  if (uname == NULL || passwd == NULL || !valid_passwd(passwd_decoded, passwd) || (token = login_user(uname, passwd_decoded)) == NULL)
+
+  if (uname == NULL || passwd == NULL ||
+      valid_passwd(passwd_decoded, passwd) != VALRES_OK ||
+      (token = login_user(uname, passwd_decoded)) == NULL)
   {
+    // no need to indicate exactly why login failed
     return get_login(NULL, LOGINERR_BAD_LOGIN);
   }
 
@@ -113,19 +120,51 @@ static struct response* post_login(const char* uname, const char* passwd)
 }
 
 
-static struct response* post_signup(const char* uname, const char* passwd, const char* about)
+static struct response* post_signup(const char* uname, const char* passwd, const char* about, const struct auth_token* client_info)
 {
-  // check user name
-  if (uname == NULL || !valid_user_name(uname))
+  if (client_info != NULL)
   {
-    return get_login(NULL, SIGNUPERR_INVALID_UNAME);
+    // this will pull up the "you are already logged in" message
+    return response_redirect("/login");
   }
 
-  // check password
-  char passwd_decoded[MAX_PASSWD_LEN + 1];
-  if (passwd == NULL || !valid_passwd(passwd_decoded, passwd))
+  enum validation_result uname_valid = valid_user_name(uname);
+  switch (uname_valid)
   {
-    return get_login(NULL, SIGNUPERR_INVALID_PASSWD);
+    case VALRES_OK:
+      break;
+    case VALRES_TOO_SHORT:
+      // SIGNUPERR_UNAME_TOO_SHORT
+      return get_login(NULL, );
+    case VALRES_TOO_LONG:
+      // SIGNUPERR_UNAME_TOO_LONG
+      return get_login(NULL, );
+    case VALRES_INV_CHAR:
+      // SIGNUPERR_UNAME_INV_CHAR
+      return get_login(NULL, );
+    default:
+      log_crit("post_signup(): unexpected validation result value for username: %d", uname_valid);
+  }
+
+  enum validation_result passwd_valid = valid_user_name(passwd);
+  switch (passwd_valid)
+  {
+    case VALRES_OK:
+      break;
+    case VALRES_TOO_SHORT:
+      // SIGNUPERR_PASSWD_TOO_SHORT
+      return get_login(NULL, );
+    case VALRES_TOO_LONG:
+      // SIGNUPERR_PASSWD_TOO_LONG
+      return get_login(NULL, );
+    case VALRES_UNMET:
+      // SIGNUPERR_PASSWD_UNMET
+      return get_login(NULL, );
+    case VALRES_INV_ENC:
+      // SIGNUPERR_INV_ENC
+      return get_login(NULL, );
+    default:
+      log_crit("post_signup(): unexpected validation result value for username: %d", passwd_valid);
   }
 
   // create new user
@@ -156,7 +195,7 @@ static struct response* post_vote(const char* type, const char* direction, const
 
   if (type == NULL || direction == NULL || id == NULL)
   {
-    return response_error(STAT400);
+    return response_error(STAT404);
   }
 
   if (strcmp(type, "post") == 0)
