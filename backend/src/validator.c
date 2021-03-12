@@ -11,8 +11,8 @@ static short get_hex_char_val(char c);
 static char hex_to_char(const char* hex);
 static int url_decode(char* dest, const char* src);
 
-static enum validation_result valid_content(char* dest, const char* src, int min_len, int max_len);
-static enum validation_result valid_name(const char* name, int min_len, int max_len);
+static enum validation_result validate_content(char* dest, const char* src, int min_len, int max_len);
+static enum validation_result validate_name(const char* name, int min_len, int max_len);
 
 // encodes content into HTML-friendly form
 static void html_encode(char* dest, char* src);
@@ -136,7 +136,7 @@ static void html_encode(char* dest, char* src)
 }
 
 
-enum validation_result valid_passwd(char* dest, const char* src)
+enum validation_result validate_passwd(char* dest, const char* src)
 {
   // caller must allocate buffer for
   // decoded password string
@@ -188,7 +188,7 @@ enum validation_result valid_passwd(char* dest, const char* src)
 }
 
 
-static enum validation_result valid_name(const char* name, int min_len, int max_len)
+static enum validation_result validate_name(const char* name, int min_len, int max_len)
 {
   if (name == NULL && min_len > 0)
   {
@@ -221,19 +221,19 @@ static enum validation_result valid_name(const char* name, int min_len, int max_
 }
 
 
-enum validation_result valid_user_name(const char* user_name)
+enum validation_result validate_user_name(const char* user_name)
 {
-  return valid_name(user_name, MIN_USER_NAME_LEN, MAX_USER_NAME_LEN);
+  return validate_name(user_name, MIN_USER_NAME_LEN, MAX_USER_NAME_LEN);
 }
 
 
-enum validation_result valid_community_name(const char* community_name)
+enum validation_result validate_community_name(const char* community_name)
 {
-  return valid_name(community_name, MIN_COMMUNITY_NAME_LEN, MAX_COMMUNITY_NAME_LEN);
+  return validate_name(community_name, MIN_COMMUNITY_NAME_LEN, MAX_COMMUNITY_NAME_LEN);
 }
 
 
-static enum validation_result valid_content(char* dest, const char* src, int min_len, int max_len)
+static enum validation_result validate_content(char* dest, const char* src, int min_len, int max_len)
 {
   // decoded string will always be <= src length
   int len;
@@ -259,31 +259,31 @@ static enum validation_result valid_content(char* dest, const char* src, int min
 }
 
 
-enum validation_result valid_user_about(char* dest, const char* src)
+enum validation_result validate_user_about(char* dest, const char* src)
 {
-  return valid_content(dest, src, MIN_USER_ABOUT_LEN, MAX_USER_ABOUT_LEN);
+  return validate_content(dest, src, MIN_USER_ABOUT_LEN, MAX_USER_ABOUT_LEN);
 }
 
 
-enum validation_result valid_community_about(char* dest, const char* src)
+enum validation_result validate_community_about(char* dest, const char* src)
 {
-  return valid_content(dest, src, MIN_COMMUNITY_ABOUT_LEN, MAX_COMMUNITY_ABOUT_LEN);
+  return validate_content(dest, src, MIN_COMMUNITY_ABOUT_LEN, MAX_COMMUNITY_ABOUT_LEN);
 }
 
 
-enum validation_result valid_comment_body(char* dest, const char* src)
+enum validation_result validate_comment_body(char* dest, const char* src)
 {
-  return valid_content(dest, src, MIN_COMMENT_BODY_LEN, MAX_COMMENT_BODY_LEN);
+  return validate_content(dest, src, MIN_COMMENT_BODY_LEN, MAX_COMMENT_BODY_LEN);
 }
 
 
-enum validation_result valid_post_body(char* dest, const char* src)
+enum validation_result validate_post_body(char* dest, const char* src)
 {
-  return valid_content(dest, src, MIN_POST_BODY_LEN, MAX_POST_BODY_LEN);
+  return validate_content(dest, src, MIN_POST_BODY_LEN, MAX_POST_BODY_LEN);
 }
 
 
-enum validation_result valid_post_title(char* dest, const char* src)
+enum validation_result validate_post_title(char* dest, const char* src)
 {
-  return valid_content(dest, src, MIN_POST_TITLE_LEN, MAX_POST_TITLE_LEN);
+  return validate_content(dest, src, MIN_POST_TITLE_LEN, MAX_POST_TITLE_LEN);
 }
