@@ -62,26 +62,26 @@ mysql -uroot <<TEST_COMMENTS
 
 USE $DBNAME;
 
-SET @foo = (SELECT CreateComment(2, 4, 1, "this is a test comment"));
-SET @foo = (SELECT CreateComment(2, 5, 2, "this is a test comment"));
-SET @foo = (SELECT CreateComment(2, 6, 3, "this is a test comment"));
-SET @foo = (SELECT CreateComment(2, 7, 1, "this is a test comment"));
-SET @foo = (SELECT CreateComment(2, 8, 2, "this is a test comment"));
-SET @foo = (SELECT CreateComment(2, 9, 3, "this is a test comment"));
+SET @foo = (SELECT CreateComment(2, 4, "this is a test comment"));
+SET @foo = (SELECT CreateComment(2, 5, "this is a test comment"));
+SET @foo = (SELECT CreateComment(2, 6, "this is a test comment"));
+SET @foo = (SELECT CreateComment(2, 7, "this is a test comment"));
+SET @foo = (SELECT CreateComment(2, 8, "this is a test comment"));
+SET @foo = (SELECT CreateComment(2, 9, "this is a test comment"));
 
-SET @foo = (SELECT CreateComment(3, 7, 1, "this is a test comment"));
-SET @foo = (SELECT CreateComment(3, 8, 2, "this is a test comment"));
-SET @foo = (SELECT CreateComment(3, 9, 3, "this is a test comment"));
-SET @foo = (SELECT CreateComment(3, 1, 1, "this is a test comment"));
-SET @foo = (SELECT CreateComment(3, 2, 2, "this is a test comment"));
-SET @foo = (SELECT CreateComment(3, 3, 3, "this is a test comment"));
+SET @foo = (SELECT CreateComment(3, 7, "this is a test comment"));
+SET @foo = (SELECT CreateComment(3, 8, "this is a test comment"));
+SET @foo = (SELECT CreateComment(3, 9, "this is a test comment"));
+SET @foo = (SELECT CreateComment(3, 1, "this is a test comment"));
+SET @foo = (SELECT CreateComment(3, 2, "this is a test comment"));
+SET @foo = (SELECT CreateComment(3, 3, "this is a test comment"));
 
-SET @foo = (SELECT CreateComment(4, 1, 1, "this is a test comment"));
-SET @foo = (SELECT CreateComment(4, 2, 2, "this is a test comment"));
-SET @foo = (SELECT CreateComment(4, 3, 3, "this is a test comment"));
-SET @foo = (SELECT CreateComment(4, 4, 1, "this is a test comment"));
-SET @foo = (SELECT CreateComment(4, 5, 2, "this is a test comment"));
-SET @foo = (SELECT CreateComment(4, 6, 3, "this is a test comment"));
+SET @foo = (SELECT CreateComment(4, 1, "this is a test comment"));
+SET @foo = (SELECT CreateComment(4, 2, "this is a test comment"));
+SET @foo = (SELECT CreateComment(4, 3, "this is a test comment"));
+SET @foo = (SELECT CreateComment(4, 4, "this is a test comment"));
+SET @foo = (SELECT CreateComment(4, 5, "this is a test comment"));
+SET @foo = (SELECT CreateComment(4, 6, "this is a test comment"));
 
 TEST_COMMENTS
 

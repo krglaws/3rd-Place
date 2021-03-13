@@ -210,7 +210,7 @@ int sql_toggle_comment_down_vote(const char* comment_id, const char* user_id);
 /* Return heap-allocated string ID of the newly created item (free() after use), NULL on failure */
 char* sql_create_user(const char* user_name, const char* passwd_hash, const char* about);
 
-char* sql_create_comment(const char* user_id, const char* post_id, const char* community_id, const char* body);
+char* sql_create_comment(const char* user_id, const char* post_id, const char* body);
 
 char* sql_create_post(const char* user_id, const char* community_id, const char* title, const char* body);
 

@@ -214,9 +214,9 @@ ks_list* query_comments_by_post_id(const char* post_id)
 }
 
 static MYSQL_STMT* stmt_create_comment = NULL;
-char* sql_create_comment(const char* user_id, const char* post_id, const char* community_id, const char* body)
+char* sql_create_comment(const char* user_id, const char* post_id, const char* body)
 {
-  return sql_function(stmt_create_comment, user_id, post_id, community_id, body);
+  return sql_function(stmt_create_comment, user_id, post_id, body);
 }
 
 static MYSQL_STMT* stmt_delete_comment = NULL;

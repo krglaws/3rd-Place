@@ -204,19 +204,20 @@ BEGIN
 END;$$
 
 
-CREATE FUNCTION CreateComment(uid INT, pid INT, cid INT, body VARCHAR(512))
+CREATE FUNCTION CreateComment(uid INT, pid INT, body VARCHAR(512))
 RETURNS INT
 BEGIN
 
   DECLARE user_name VARCHAR(16);
   DECLARE post_title VARCHAR(32);
   DECLARE cname VARCHAR(32);
+  DECLARE cid INT;
 
   # get user name
   SELECT name INTO user_name FROM users WHERE id = uid;
 
-  # get post title and community name
-  SELECT title, community_name INTO post_title, cname FROM posts WHERE id = pid;
+  # get post title, community name, and community ID
+  SELECT title, community_name, community_id INTO post_title, cname, cid FROM posts WHERE id = pid;
 
   # update user comment count
   UPDATE users SET comments = comments + 1 WHERE id = uid;
