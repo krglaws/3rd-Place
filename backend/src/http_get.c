@@ -45,47 +45,47 @@ struct response* http_get(const struct request* req)
 
   if (strcmp(req->uri, "./login") == 0)
   {
-    return get_login(req->client_info, LOGINERR_NONE);
+    return get_login(USER_FORM_ERR_NONE, req->client_info);
   }
 
   if (strcmp(req->uri, "./edit_user") == 0)
   {
-    return get_edit_user(req->client_info);
+    return get_edit_user(USER_FORM_ERR_NONE, req->client_info);
   }
 
   if (strcmp(req->uri, "./new_post") == 0)
   {
-    const char* community_name = get_map_value_str(req->query, "community_name");
-    return get_new_post(community_name, req->client_info);
+    const char* community_id = get_map_value_str(req->query, "community_id");
+    return get_new_post(community_id, POST_FORM_ERR_NONE, req->client_info);
   }
 
   if (strcmp(req->uri, "./edit_post") == 0)
   {
     const char* post_id = get_map_value_str(req->query, "post_id");
-    return get_edit_post(post_id, req->client_info);
+    return get_edit_post(post_id, POST_FORM_ERR_NONE, req->client_info);
   }
 
   if (strcmp(req->uri, "./new_comment") == 0)
   {
     const char* post_id = get_map_value_str(req->query, "post_id");
-    return get_new_comment(post_id, req->client_info);
+    return get_new_comment(post_id, COMMENT_FORM_ERR_NONE, req->client_info);
   }
 
   if (strcmp(req->uri, "./edit_comment") == 0)
   {
     const char* comment_id = get_map_value_str(req->query, "comment_id");
-    return get_edit_comment(comment_id, req->client_info);
+    return get_edit_comment(comment_id, COMMENT_FORM_ERR_NONE, req->client_info);
   }
 
   if (strcmp(req->uri, "./new_community") == 0)
   {
-    return get_new_community(req->client_info);
+    return get_new_community(COMMUNITY_FORM_ERR_NONE, req->client_info);
   }
 
   if (strcmp(req->uri, "./edit_community") == 0)
   {
     const char* community_id = get_map_value_str(req->query, "community_id");
-    return get_edit_community(community_id, req->client_info);
+    return get_edit_community(community_id, COMMUNITY_FORM_ERR_NONE, req->client_info);
   }
 
   if (req->uri == strstr(req->uri, "./u/"))
