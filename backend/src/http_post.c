@@ -271,7 +271,7 @@ static struct response* post_comment(const char* post_id, const char* body, cons
 
   // make sure post exists
   ks_hashmap* post_info;
-  if ((post_info = get_post_info(post_id)) == NULL)
+  if ((post_info = query_post_by_id(post_id)) == NULL)
   {
     return response_error(STAT404);
   }
@@ -320,7 +320,7 @@ static struct response* post_post(const char* community_name, const char* post_t
 
   // make sure community exists
   ks_hashmap* community_info;
-  if ((community_info = get_community_info(community_name)) == NULL)
+  if ((community_info = query_community_by_name(community_name)) == NULL)
   {
     return response_error(STAT404);
   }

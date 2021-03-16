@@ -130,7 +130,7 @@ struct response* get_user(const char* user_name, const struct auth_token* client
 
   // get user info from DB
   ks_hashmap* page_data;
-  if ((page_data = get_user_info(user_name)) == NULL)
+  if ((page_data = query_user_by_name(user_name)) == NULL)
   {
     // user not found
     return NULL;

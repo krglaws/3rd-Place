@@ -119,7 +119,7 @@ void add_socket(int sock)
     return;
   }
 
-  log_info("Connected to %s (socket no. %d)", ipstr, sock);
+  log_info("Connected to %s (socket number %d)", ipstr, sock);
 
   ks_list_add(socket_list, ks_datacont_new(&sock, KS_INT, 1));
 }
@@ -130,7 +130,7 @@ void remove_socket(int sock)
   ks_datacont* dc = ks_datacont_new(&sock, KS_INT, 1);
   if (ks_list_remove_by(socket_list, dc) == -1)
   {
-    log_err("remove_socket(): socket no. %d does not exist", sock);
+    log_err("remove_socket(): socket number %d does not exist", sock);
     return;
   }
   ks_datacont_delete(dc);
@@ -139,13 +139,13 @@ void remove_socket(int sock)
   if (get_socket_ip(sock, ipstr, sizeof(ipstr)) == -1)
   {
     log_err("remove_socket(): failed on call to get_socket_ip()");
-    log_info("Connection to [UNKNOWN] closed (socket no. %d)", sock);
+    log_info("Connection to [UNKNOWN] closed (socket number %d)", sock);
     close(sock);
     return;
   }
 
   close(sock);
-  log_info("Connection to %s closed (socket no. %d)", ipstr, sock);
+  log_info("Connection to %s closed (socket number %d)", ipstr, sock);
 }
 
 
@@ -163,7 +163,7 @@ static const int reload_socket_set()
   {
     FD_SET(curr->i, &socket_set);
 
-    // find maximum socket no.
+    // find maximum socket number
     if (max < curr->i)
     {
       max = curr->i;

@@ -65,7 +65,7 @@ static struct response* delete_user(const char* user_name, const struct auth_tok
   }
 
   ks_hashmap* user_info;
-  if (user_name == NULL || (user_info = get_user_info(user_name)) == NULL)
+  if (user_name == NULL || (user_info = query_user_by_name(user_name)) == NULL)
   {
     // not found
     return response_error(STAT404);
@@ -75,7 +75,7 @@ static struct response* delete_user(const char* user_name, const struct auth_tok
   if (strcmp(user_name, client_info->user_name) != 0)
   {
     ks_hashmap* admin_info;
-    if ((admin_info = get_administrator_info(client_info->user_id)) == NULL)
+    if ((admin_info = query_administrator_by_user_id(client_info->user_id)) == NULL)
     {
       // permission denied
       ks_hashmap_delete(user_info);
@@ -108,7 +108,7 @@ static struct response* delete_post(const char* post_id, const struct auth_token
 
   // get post info
   ks_hashmap* post_info;
-  if (post_id == NULL || (post_info = get_post_info(post_id)) == NULL)
+  if (post_id == NULL || (post_info = query_post_by_id(post_id)) == NULL)
   {
     // not found
     return response_error(STAT404);
@@ -121,14 +121,14 @@ static struct response* delete_post(const char* post_id, const struct auth_token
     // check if client is a moderator
     ks_hashmap* mod_info;
     const char* community_id = get_map_value_str(post_info, FIELD_POST_COMMUNITY_ID);
-    if ((mod_info = get_moderator_info(community_id, client_info->user_id)) == NULL)
+    if ((mod_info = query_moderator_by_community_id_user_id(community_id, client_info->user_id)) == NULL)
     {
       // check if client is an administrator
       ks_hashmap* admin_info;
-      if ((admin_info = get_administrator_info(client_info->user_id)) == NULL)
+      if ((admin_info = query_administrator_by_user_id(client_info->user_id)) == NULL)
       {
         // check if client owns this community
-        ks_hashmap* community_info = get_community_info(community_id);
+        ks_hashmap* community_info = query_community_by_id(community_id);
         const char* owner_id = get_map_value_str(community_info, FIELD_COMMUNITY_OWNER_ID);
         if (strcmp(owner_id, client_info->user_id) != 0)
         {
@@ -173,7 +173,7 @@ static struct response* delete_comment(const char* comment_id, const struct auth
 
   // get comment info
   ks_hashmap* comment_info;
-  if (comment_id == NULL || (comment_info = get_comment_info(comment_id)) == NULL)
+  if (comment_id == NULL || (comment_info = query_comment_by_id(comment_id)) == NULL)
   {
     // not found
     return response_error(STAT400);
@@ -186,14 +186,14 @@ static struct response* delete_comment(const char* comment_id, const struct auth
     // check if client is a moderator
     ks_hashmap* mod_info;
     const char* community_id = get_map_value_str(comment_info, FIELD_COMMENT_COMMUNITY_ID);
-    if ((mod_info = get_moderator_info(community_id, client_info->user_id)) == NULL)
+    if ((mod_info = query_moderator_by_community_id_user_id(community_id, client_info->user_id)) == NULL)
     {
       // check if client is an administrator
       ks_hashmap* admin_info;
-      if ((admin_info = get_administrator_info(client_info->user_id)) == NULL)
+      if ((admin_info = query_administrator_by_user_id(client_info->user_id)) == NULL)
       {
         // check if client owns this community
-        ks_hashmap* community_info = get_community_info(community_id);
+        ks_hashmap* community_info = query_community_by_id(community_id);
         const char* owner_id = get_map_value_str(community_info, FIELD_COMMUNITY_OWNER_ID);
         if (strcmp(owner_id, client_info->user_id) != 0)
         {
@@ -238,7 +238,7 @@ static struct response* delete_community(const char* community_name, const struc
 
   // get community info
   ks_hashmap* community_info;
-  if (community_name == NULL || (community_info = get_community_info(community_name)) == NULL)
+  if (community_name == NULL || (community_info = query_community_by_name(community_name)) == NULL)
   {
     // not found
     return response_error(STAT404);
@@ -251,7 +251,7 @@ static struct response* delete_community(const char* community_name, const struc
   {
     // check if client is an administrator
     ks_hashmap* admin_info;
-    if ((admin_info = get_administrator_info(client_info->user_id)) == NULL)
+    if ((admin_info = query_administrator_by_user_id(client_info->user_id)) == NULL)
     {
       // permission denied
       ks_hashmap_delete(community_info);

@@ -61,10 +61,38 @@ static const struct table_info users_table_info =
 };
 
 // user queries and their prepared statements
-static MYSQL_STMT* stmt_query_users_by_name = NULL;
-ks_list* query_users_by_name(const char* user_name)
+static MYSQL_STMT* stmt_query_user_by_id = NULL;
+ks_hashmap* query_user_by_id(const char* user_id)
 {
-  return sql_select(&users_table_info, stmt_query_users_by_name, user_name);
+  ks_list* ls;
+  if ((ls = sql_select(&users_table_info, stmt_query_user_by_id, user_id)) == NULL)
+  {
+    return NULL;
+  }
+
+  ks_datacont* dc = ks_list_get(ls, 0);
+  ks_hashmap* row0 = dc->hm;
+  dc->hm = NULL;
+  ks_list_delete(ls);
+
+  return row0;
+}
+
+static MYSQL_STMT* stmt_query_user_by_name = NULL;
+ks_hashmap* query_user_by_name(const char* user_name)
+{
+  ks_list* ls;
+  if ((ls = sql_select(&users_table_info, stmt_query_user_by_name, user_name)) == NULL)
+  {
+    return NULL;
+  }
+
+  ks_datacont* dc = ks_list_get(ls, 0);
+  ks_hashmap* row0 = dc->hm;
+  dc->hm = NULL;
+  ks_list_delete(ls);
+
+  return row0;
 }
 
 static MYSQL_STMT* stmt_create_user = NULL;
@@ -115,16 +143,27 @@ static const struct table_info posts_table_info =
   posts_field_lengths
 };
 
+static MYSQL_STMT* stmt_query_post_by_id = NULL;
+ks_hashmap* query_post_by_id(const char* id)
+{
+  ks_list* ls;
+  if ((ls = sql_select(&posts_table_info, stmt_query_post_by_id, id)) == NULL)
+  {
+    return NULL;
+  }
+
+  ks_datacont* dc = ks_list_get(ls, 0);
+  ks_hashmap* row0 = dc->hm;
+  dc->hm = NULL;
+  ks_list_delete(ls);
+
+  return row0;
+}
+
 static MYSQL_STMT* stmt_query_all_posts = NULL;
 ks_list* query_all_posts()
 {
   return sql_select(&posts_table_info, stmt_query_all_posts);
-}
-
-static MYSQL_STMT* stmt_query_posts_by_id = NULL;
-ks_list* query_posts_by_id(const char* id)
-{
-  return sql_select(&posts_table_info, stmt_query_posts_by_id, id);
 }
 
 static MYSQL_STMT* stmt_query_posts_by_author_name = NULL;
@@ -136,7 +175,7 @@ ks_list* query_posts_by_author_name(const char* author_name)
 static MYSQL_STMT* stmt_query_posts_by_community_id = NULL;
 ks_list* query_posts_by_community_id(const char* community_id)
 {
-  return sql_select(&posts_table_info, stmt_query_posts_by_id, community_id);
+  return sql_select(&posts_table_info, stmt_query_posts_by_community_id, community_id);
 }
 
 static MYSQL_STMT* stmt_query_posts_by_community_name = NULL;
@@ -195,10 +234,21 @@ static const struct table_info comments_table_info =
   comments_field_lengths
 };
 
-static MYSQL_STMT* stmt_query_comments_by_id = NULL;
-ks_list* query_comments_by_id(const char* comment_id)
+static MYSQL_STMT* stmt_query_comment_by_id = NULL;
+ks_hashmap* query_comment_by_id(const char* comment_id)
 {
-  return sql_select(&comments_table_info, stmt_query_comments_by_id, comment_id);
+  ks_list* ls;
+  if ((ls = sql_select(&comments_table_info, stmt_query_comment_by_id, comment_id)) == NULL)
+  {
+    return NULL;
+  }
+
+  ks_datacont* dc = ks_list_get(ls, 0);
+  ks_hashmap* row0 = dc->hm;
+  dc->hm = NULL;
+  ks_list_delete(ls);
+
+  return row0;
 }
 
 static MYSQL_STMT* stmt_query_comments_by_author_name = NULL;
@@ -257,16 +307,44 @@ static const struct table_info communities_table_info =
   communities_field_lengths
 };
 
+static MYSQL_STMT* stmt_query_community_by_id = NULL;
+ks_hashmap* query_community_by_id(const char* community_id)
+{
+  ks_list* ls;
+  if ((ls = sql_select(&communities_table_info, stmt_query_community_by_id, community_id)) == NULL)
+  {
+    return NULL;
+  }
+
+  ks_datacont* dc = ks_list_get(ls, 0);
+  ks_hashmap* row0 = dc->hm;
+  dc->hm = NULL;
+  ks_list_delete(ls);
+
+  return row0;
+}
+
+static MYSQL_STMT* stmt_query_community_by_name = NULL;
+ks_hashmap* query_community_by_name(const char* community_name)
+{
+  ks_list* ls;
+  if ((ls = sql_select(&communities_table_info, stmt_query_community_by_name, community_name)) == NULL)
+  {
+    return NULL;
+  }
+
+  ks_datacont* dc = ks_list_get(ls, 0);
+  ks_hashmap* row0 = dc->hm;
+  dc->hm = NULL;
+  ks_list_delete(ls);
+
+  return row0;
+}
+
 static MYSQL_STMT* stmt_query_all_communities = NULL;
 ks_list* query_all_communities()
 {
   return sql_select(&communities_table_info, stmt_query_all_communities);
-}
-
-static MYSQL_STMT* stmt_query_communities_by_name = NULL;
-ks_list* query_communities_by_name(const char* community_name)
-{
-  return sql_select(&communities_table_info, stmt_query_communities_by_name, community_name);
 }
 
 static MYSQL_STMT* stmt_create_community = NULL;
@@ -305,10 +383,21 @@ static const struct table_info moderators_table_info =
   moderators_field_lengths
 };
 
-static MYSQL_STMT* stmt_query_moderators_by_community_id_user_id = NULL;
-ks_list* query_moderators_by_community_id_user_id(const char* community_id, const char* user_id)
+static MYSQL_STMT* stmt_query_moderator_by_community_id_user_id = NULL;
+ks_hashmap* query_moderator_by_community_id_user_id(const char* community_id, const char* user_id)
 {
-  return sql_select(&moderators_table_info, stmt_query_moderators_by_community_id_user_id, community_id, user_id);
+  ks_list* ls;
+  if ((ls = sql_select(&moderators_table_info, stmt_query_moderator_by_community_id_user_id, community_id, user_id)) == NULL)
+  {
+    return NULL;
+  }
+
+  ks_datacont* dc = ks_list_get(ls, 0);
+  ks_hashmap* row0 = dc->hm;
+  dc->hm = NULL;
+  ks_list_delete(ls);
+
+  return row0;
 }
 
 static MYSQL_STMT* stmt_create_moderator = NULL;
@@ -343,10 +432,21 @@ static const struct table_info administrators_table_info =
   administrators_field_lengths
 };
 
-static MYSQL_STMT* stmt_query_administrators_by_user_id = NULL;
-ks_list* query_administrators_by_user_id(const char* user_id)
+static MYSQL_STMT* stmt_query_administrator_by_user_id = NULL;
+ks_hashmap* query_administrator_by_user_id(const char* user_id)
 {
-  return sql_select(&administrators_table_info, stmt_query_administrators_by_user_id, user_id);
+  ks_list* ls;
+  if ((ls = sql_select(&administrators_table_info, stmt_query_administrator_by_user_id, user_id)) == NULL)
+  {
+    return NULL;
+  }
+
+  ks_datacont* dc = ks_list_get(ls, 0);
+  ks_hashmap* row0 = dc->hm;
+  dc->hm = NULL;
+  ks_list_delete(ls);
+
+  return row0;
 }
 
 static MYSQL_STMT* stmt_create_administrator = NULL;
@@ -385,10 +485,21 @@ static const struct table_info subscriptions_table_info =
   subscriptions_field_lengths
 };
 
-static MYSQL_STMT* stmt_query_subscriptions_by_community_id_user_id = NULL;
-ks_list* query_subscriptions_by_community_id_user_id(const char* community_id, const char* user_id)
+static MYSQL_STMT* stmt_query_subscription_by_community_id_user_id = NULL;
+ks_hashmap* query_subscription_by_community_id_user_id(const char* community_id, const char* user_id)
 {
-  return sql_select(&subscriptions_table_info, stmt_query_subscriptions_by_community_id_user_id, community_id, user_id);
+  ks_list* ls;
+  if ((ls = sql_select(&subscriptions_table_info, stmt_query_subscription_by_community_id_user_id, community_id, user_id)) == NULL)
+  {
+    return NULL;
+  }
+
+  ks_datacont* dc = ks_list_get(ls, 0);
+  ks_hashmap* row0 = dc->hm;
+  dc->hm = NULL;
+  ks_list_delete(ls);
+
+  return row0;
 }
 
 static MYSQL_STMT* stmt_query_subscriptions_by_user_id = NULL;
@@ -436,10 +547,21 @@ static const struct table_info post_up_votes_table_info =
   post_up_votes_field_lengths
 };
 
-static MYSQL_STMT* stmt_query_post_up_votes_by_post_id_user_id = NULL;
-ks_list* query_post_up_votes_by_post_id_user_id(const char* post_id, const char* user_id)
+static MYSQL_STMT* stmt_query_post_up_vote_by_post_id_user_id = NULL;
+ks_hashmap* query_post_up_vote_by_post_id_user_id(const char* post_id, const char* user_id)
 {
-  return sql_select(&post_up_votes_table_info, stmt_query_post_up_votes_by_post_id_user_id, post_id, user_id);
+  ks_list* ls;
+  if ((ls = sql_select(&post_up_votes_table_info, stmt_query_post_up_vote_by_post_id_user_id, post_id, user_id)) == NULL)
+  {
+    return NULL;
+  }
+
+  ks_datacont* dc = ks_list_get(ls, 0);
+  ks_hashmap* row0 = dc->hm;
+  dc->hm = NULL;
+  ks_list_delete(ls);
+
+  return row0;
 }
 
 static MYSQL_STMT* stmt_toggle_post_up_vote = NULL;
@@ -472,10 +594,21 @@ static const struct table_info post_down_votes_table_info =
   post_down_votes_field_lengths
 };
 
-static MYSQL_STMT* stmt_query_post_down_votes_by_post_id_user_id = NULL;
-ks_list* query_post_down_votes_by_post_id_user_id(const char* post_id, const char* user_id)
+static MYSQL_STMT* stmt_query_post_down_vote_by_post_id_user_id = NULL;
+ks_hashmap* query_post_down_vote_by_post_id_user_id(const char* post_id, const char* user_id)
 {
-  return sql_select(&post_down_votes_table_info, stmt_query_post_down_votes_by_post_id_user_id, post_id, user_id);
+  ks_list* ls;
+  if ((ls = sql_select(&post_down_votes_table_info, stmt_query_post_down_vote_by_post_id_user_id, post_id, user_id)) == NULL)
+  {
+    return NULL;
+  }
+
+  ks_datacont* dc = ks_list_get(ls, 0);
+  ks_hashmap* row0 = dc->hm;
+  dc->hm = NULL;
+  ks_list_delete(ls);
+
+  return row0;
 }
 
 static MYSQL_STMT* stmt_toggle_post_down_vote = NULL;
@@ -508,10 +641,21 @@ static const struct table_info comment_up_votes_table_info =
   comment_up_votes_field_lengths
 };
 
-static MYSQL_STMT* stmt_query_comment_up_votes_by_comment_id_user_id = NULL;
-ks_list* query_comment_up_votes_by_comment_id_user_id(const char* comment_id, const char* user_id)
+static MYSQL_STMT* stmt_query_comment_up_vote_by_comment_id_user_id = NULL;
+ks_hashmap* query_comment_up_vote_by_comment_id_user_id(const char* comment_id, const char* user_id)
 {
-  return sql_select(&comment_up_votes_table_info, stmt_query_comment_up_votes_by_comment_id_user_id, comment_id, user_id);
+  ks_list* ls;
+  if ((ls = sql_select(&comment_up_votes_table_info, stmt_query_comment_up_vote_by_comment_id_user_id, comment_id, user_id)) == NULL)
+  {
+    return NULL;
+  }
+
+  ks_datacont* dc = ks_list_get(ls, 0);
+  ks_hashmap* row0 = dc->hm;
+  dc->hm = NULL;
+  ks_list_delete(ls);
+
+  return row0;
 }
 
 static MYSQL_STMT* stmt_toggle_comment_up_vote = NULL;
@@ -544,10 +688,21 @@ static const struct table_info comment_down_votes_table_info =
   comment_down_votes_field_lengths
 };
 
-static MYSQL_STMT* stmt_query_comment_down_votes_by_comment_id_user_id = NULL;
-ks_list* query_comment_down_votes_by_comment_id_user_id(const char* comment_id, const char* user_id)
+static MYSQL_STMT* stmt_query_comment_down_vote_by_comment_id_user_id = NULL;
+ks_hashmap* query_comment_down_vote_by_comment_id_user_id(const char* comment_id, const char* user_id)
 {
-  return sql_select(&comment_down_votes_table_info, stmt_query_comment_down_votes_by_comment_id_user_id, comment_id, user_id);
+  ks_list* ls;
+  if ((ls = sql_select(&comment_down_votes_table_info, stmt_query_comment_down_vote_by_comment_id_user_id, comment_id, user_id)) == NULL)
+  {
+    return NULL;
+  }
+
+  ks_datacont* dc = ks_list_get(ls, 0);
+  ks_hashmap* row0 = dc->hm;
+  dc->hm = NULL;
+  ks_list_delete(ls);
+
+  return row0;
 }
 
 static MYSQL_STMT* stmt_toggle_comment_down_vote = NULL;
@@ -636,13 +791,14 @@ void init_sql_manager()
   // build prepared statements
 
   // users
-  stmt_query_users_by_name = build_prepared_statement(sqlcon, "SELECT * FROM users WHERE name = ?;");
+  stmt_query_user_by_id = build_prepared_statement(sqlcon, "SELECT * FROM users WHERE id = ?;");
+  stmt_query_user_by_name = build_prepared_statement(sqlcon, "SELECT * FROM users WHERE name = ?;");
   stmt_create_user = build_prepared_statement(sqlcon, "SELECT CreateUser(?, ?, ?);");
   stmt_delete_user = build_prepared_statement(sqlcon, "CALL DeleteUser(?);");
 
   // posts
+  stmt_query_post_by_id = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE id = ?;");
   stmt_query_all_posts = build_prepared_statement(sqlcon, "SELECT * FROM posts;");
-  stmt_query_posts_by_id = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE id = ?;");
   stmt_query_posts_by_author_name = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE author_name = ?;");
   stmt_query_posts_by_community_id = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE community_id = ?;");
   stmt_query_posts_by_community_name = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE community_name = ?;");
@@ -650,42 +806,43 @@ void init_sql_manager()
   stmt_delete_post = build_prepared_statement(sqlcon, "CALL DeletePost(?);");
 
   // comments
-  stmt_query_comments_by_id = build_prepared_statement(sqlcon, "SELECT * FROM comments WHERE id = ?;");
+  stmt_query_comment_by_id = build_prepared_statement(sqlcon, "SELECT * FROM comments WHERE id = ?;");
   stmt_query_comments_by_author_name = build_prepared_statement(sqlcon, "SELECT * FROM comments WHERE author_name = ?;");
   stmt_query_comments_by_post_id = build_prepared_statement(sqlcon, "SELECT * FROM comments WHERE post_id = ?;");
   stmt_create_comment = build_prepared_statement(sqlcon, "SELECT CreateComment(?, ?, ?, ?);");
   stmt_delete_comment = build_prepared_statement(sqlcon, "CALL DeleteComment(?);");
 
   // communities
+  stmt_query_community_by_id = build_prepared_statement(sqlcon, "SELECT * FROM communities WHERE id = ?;");
+  stmt_query_community_by_name = build_prepared_statement(sqlcon, "SELECT * FROM communities WHERE name = ?;");
   stmt_query_all_communities = build_prepared_statement(sqlcon, "SELECT * FROM communities;");
-  stmt_query_communities_by_name = build_prepared_statement(sqlcon, "SELECT * FROM communities WHERE name = ?;");
   stmt_create_community = build_prepared_statement(sqlcon, "SELECT CreateCommunity(?, ?, ?);");
   stmt_delete_community = build_prepared_statement(sqlcon, "CALL DeleteCommunity(?);");
 
   // moderators
-  stmt_query_moderators_by_community_id_user_id = build_prepared_statement(sqlcon, "SELECT * FROM moderators WHERE community_id = ? AND user_id = ?;");
+  stmt_query_moderator_by_community_id_user_id = build_prepared_statement(sqlcon, "SELECT * FROM moderators WHERE community_id = ? AND user_id = ?;");
   stmt_create_moderator = build_prepared_statement(sqlcon, "INSERT INTO moderators (user_id, community_id) VALUES (?, ?);");
   stmt_delete_moderator = build_prepared_statement(sqlcon, "DELETE FROM moderators WHERE community_id = ? AND user_id = ?;");
 
   // administrators
-  stmt_query_administrators_by_user_id = build_prepared_statement(sqlcon, "SELECT * FROM administrators WHERE user_id = ?;");
+  stmt_query_administrator_by_user_id = build_prepared_statement(sqlcon, "SELECT * FROM administrators WHERE user_id = ?;");
   stmt_create_administrator = build_prepared_statement(sqlcon, "INSERT INTO administrators (user_id) VALUES (?);");
   stmt_delete_administrator = build_prepared_statement(sqlcon, "DELETE FROM administrators WHERE user_id = ?;");
 
   // subscriptions
-  stmt_query_subscriptions_by_community_id_user_id = build_prepared_statement(sqlcon, "SELECT * FROM subscriptions WHERE community_id = ? AND user_id = ?;");
+  stmt_query_subscription_by_community_id_user_id = build_prepared_statement(sqlcon, "SELECT * FROM subscriptions WHERE community_id = ? AND user_id = ?;");
   stmt_query_subscriptions_by_user_id = build_prepared_statement(sqlcon, "SELECT * FROM subscriptions WHERE user_id = ?;");
   stmt_toggle_subscription = build_prepared_statement(sqlcon, "CALL ToggleSubscription(?, ?);");
 
   // post votes
-  stmt_query_post_up_votes_by_post_id_user_id = build_prepared_statement(sqlcon, "SELECT * FROM post_up_votes WHERE post_id = ? AND user_id = ?;");
-  stmt_query_post_down_votes_by_post_id_user_id = build_prepared_statement(sqlcon, "SELECT * FROM post_down_votes WHERE post_id = ? AND user_id = ?;");
+  stmt_query_post_up_vote_by_post_id_user_id = build_prepared_statement(sqlcon, "SELECT * FROM post_up_votes WHERE post_id = ? AND user_id = ?;");
+  stmt_query_post_down_vote_by_post_id_user_id = build_prepared_statement(sqlcon, "SELECT * FROM post_down_votes WHERE post_id = ? AND user_id = ?;");
   stmt_toggle_post_up_vote = build_prepared_statement(sqlcon, "CALL TogglePostUpVote(?, ?);");
   stmt_toggle_post_down_vote = build_prepared_statement(sqlcon, "CALL TogglePostDownVote(?, ?);");
 
   // comment votes
-  stmt_query_comment_up_votes_by_comment_id_user_id = build_prepared_statement(sqlcon, "SELECT * FROM comment_up_votes WHERE comment_id = ? AND user_id = ?;");
-  stmt_query_comment_down_votes_by_comment_id_user_id = build_prepared_statement(sqlcon, "SELECT * FROM comment_down_votes WHERE comment_id = ? AND user_id = ?;");
+  stmt_query_comment_up_vote_by_comment_id_user_id = build_prepared_statement(sqlcon, "SELECT * FROM comment_up_votes WHERE comment_id = ? AND user_id = ?;");
+  stmt_query_comment_down_vote_by_comment_id_user_id = build_prepared_statement(sqlcon, "SELECT * FROM comment_down_votes WHERE comment_id = ? AND user_id = ?;");
   stmt_toggle_comment_up_vote = build_prepared_statement(sqlcon, "CALL ToggleCommentUpVote(?, ?);");
   stmt_toggle_comment_down_vote = build_prepared_statement(sqlcon, "CALL ToggleCommentDownVote(?, ?);");
 
@@ -700,13 +857,14 @@ static void terminate_sql_manager()
   // close prepared statements
 
   // users
-  mysql_stmt_close(stmt_query_users_by_name);
+  mysql_stmt_close(stmt_query_user_by_id);
+  mysql_stmt_close(stmt_query_user_by_name);
   mysql_stmt_close(stmt_create_user);
   mysql_stmt_close(stmt_delete_user);
 
   // posts
+  mysql_stmt_close(stmt_query_post_by_id);
   mysql_stmt_close(stmt_query_all_posts);
-  mysql_stmt_close(stmt_query_posts_by_id);
   mysql_stmt_close(stmt_query_posts_by_author_name);
   mysql_stmt_close(stmt_query_posts_by_community_id);
   mysql_stmt_close(stmt_query_posts_by_community_name);
@@ -714,42 +872,43 @@ static void terminate_sql_manager()
   mysql_stmt_close(stmt_delete_post);
 
   // comments
-  mysql_stmt_close(stmt_query_comments_by_id);
+  mysql_stmt_close(stmt_query_comment_by_id);
   mysql_stmt_close(stmt_query_comments_by_author_name);
   mysql_stmt_close(stmt_query_comments_by_post_id);
   mysql_stmt_close(stmt_create_comment);
   mysql_stmt_close(stmt_delete_comment);
 
   // communities
+  mysql_stmt_close(stmt_query_community_by_id);
+  mysql_stmt_close(stmt_query_community_by_name);
   mysql_stmt_close(stmt_query_all_communities);
-  mysql_stmt_close(stmt_query_communities_by_name);
   mysql_stmt_close(stmt_create_community);
   mysql_stmt_close(stmt_delete_community);
 
   // moderators
-  mysql_stmt_close(stmt_query_moderators_by_community_id_user_id);
+  mysql_stmt_close(stmt_query_moderator_by_community_id_user_id);
   mysql_stmt_close(stmt_create_moderator);
   mysql_stmt_close(stmt_delete_moderator);
 
   // administrators
-  mysql_stmt_close(stmt_query_administrators_by_user_id);
+  mysql_stmt_close(stmt_query_administrator_by_user_id);
   mysql_stmt_close(stmt_create_administrator);
   mysql_stmt_close(stmt_delete_administrator);
 
   // subscriptions
-  mysql_stmt_close(stmt_query_subscriptions_by_community_id_user_id);
+  mysql_stmt_close(stmt_query_subscription_by_community_id_user_id);
   mysql_stmt_close(stmt_query_subscriptions_by_user_id);
   mysql_stmt_close(stmt_toggle_subscription);
 
   // post votes
-  mysql_stmt_close(stmt_query_post_up_votes_by_post_id_user_id);
-  mysql_stmt_close(stmt_query_post_down_votes_by_post_id_user_id);
+  mysql_stmt_close(stmt_query_post_up_vote_by_post_id_user_id);
+  mysql_stmt_close(stmt_query_post_down_vote_by_post_id_user_id);
   mysql_stmt_close(stmt_toggle_post_up_vote);
   mysql_stmt_close(stmt_toggle_post_down_vote);
 
   // comment votes
-  mysql_stmt_close(stmt_query_comment_up_votes_by_comment_id_user_id);
-  mysql_stmt_close(stmt_query_comment_down_votes_by_comment_id_user_id);
+  mysql_stmt_close(stmt_query_comment_up_vote_by_comment_id_user_id);
+  mysql_stmt_close(stmt_query_comment_down_vote_by_comment_id_user_id);
   mysql_stmt_close(stmt_toggle_comment_up_vote);
   mysql_stmt_close(stmt_toggle_comment_down_vote);
 

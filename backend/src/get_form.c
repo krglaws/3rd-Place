@@ -113,7 +113,7 @@ struct response* get_edit_user(enum user_form_error err, const struct auth_token
 
   // get user info
   ks_hashmap* page_data;
-  if ((page_data = get_user_info(client_info->user_name)) == NULL)
+  if ((page_data = query_user_by_name(client_info->user_name)) == NULL)
   {
     return response_error(STAT404);
   }
@@ -183,7 +183,7 @@ struct response* get_new_post(const char* community_name, enum post_form_error e
 
   // get community info
   ks_hashmap* page_data;
-  if (community_name == NULL || (page_data = get_community_info(community_name)) == NULL)
+  if (community_name == NULL || (page_data = query_community_by_name(community_name)) == NULL)
   {
     return response_error(STAT404);
   }
@@ -242,7 +242,7 @@ struct response* get_edit_post(const char* post_id, enum post_form_error err, co
 
   // get post info
   ks_hashmap* page_data;
-  if (post_id == NULL || (page_data = get_post_info(post_id)) == NULL)
+  if (post_id == NULL || (page_data = query_post_by_id(post_id)) == NULL)
   {
     return response_error(STAT404);
   }
@@ -302,7 +302,7 @@ struct response* get_new_comment(const char* post_id, enum comment_form_error er
 
   // get post info
   ks_hashmap* page_data;
-  if (post_id == NULL || (page_data = get_post_info(post_id)) == NULL)
+  if (post_id == NULL || (page_data = query_post_by_id(post_id)) == NULL)
   {
     return response_error(STAT404);
   }
@@ -352,7 +352,7 @@ struct response* get_edit_comment(const char* comment_id, enum comment_form_erro
 
   // get comment info
   ks_hashmap* page_data;
-  if (comment_id == NULL || (page_data = get_comment_info(comment_id)) == NULL)
+  if (comment_id == NULL || (page_data = query_comment_by_id(comment_id)) == NULL)
   {
     return response_error(STAT404);
   }
@@ -463,7 +463,7 @@ struct response* get_edit_community(const char* community_id, enum community_for
 
   // get community info
   ks_hashmap* page_data;
-  if (community_id == NULL || (page_data = get_community_info(community_id)) == NULL)
+  if (community_id == NULL || (page_data = query_community_by_id(community_id)) == NULL)
   {
     return response_error(STAT404);
   }
@@ -474,11 +474,11 @@ struct response* get_edit_community(const char* community_id, enum community_for
   {
     // check if client is moderator of this community
     ks_hashmap* mod_info;
-    if ((mod_info = get_moderator_info(community_id, client_info->user_id)) == NULL)
+    if ((mod_info = query_moderator_by_community_id_user_id(community_id, client_info->user_id)) == NULL)
     {
       // check if client is an admin
       ks_hashmap* admin_info;
-      if ((admin_info = get_administrator_info(client_info->user_id)) == NULL)
+      if ((admin_info = query_administrator_by_user_id(client_info->user_id)) == NULL)
       {
         ks_hashmap_delete(page_data);
         return response_error(STAT403);

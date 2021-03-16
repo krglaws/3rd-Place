@@ -59,18 +59,6 @@ struct response* get_file(const char* uri);
 
 void add_nav_info(ks_hashmap* page_data, const struct auth_token* client_info);
 
-ks_hashmap* get_community_info(const char* community_name);
-
-ks_hashmap* get_post_info(const char* post_id);
-
-ks_hashmap* get_comment_info(const char* comment_id);
-
-ks_hashmap* get_user_info(const char* user_name);
-
-ks_hashmap* get_moderator_info(const char* community_id, const char* user_id);
-
-ks_hashmap* get_administrator_info(const char* user_id);
-
 #define UPVOTE_CLICKED_STATE "upvote-clicked"
 #define UPVOTE_NOTCLICKED_STATE "upvote-notclicked"
 #define DOWNVOTE_CLICKED_STATE "downvote-clicked"

@@ -76,7 +76,7 @@ struct response* get_community(const char* community_name, const struct auth_tok
 
   // get community info
   ks_hashmap* page_data;
-  if ((page_data = get_community_info(community_name)) == NULL)
+  if ((page_data = query_community_by_name(community_name)) == NULL)
   {
     // community does not exist
     return NULL;

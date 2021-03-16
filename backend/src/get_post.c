@@ -77,7 +77,7 @@ struct response* get_post(const char* post_id, const struct auth_token* client_i
 
   // get post from DB
   ks_hashmap* page_data;
-  if ((page_data = get_post_info(post_id)) == NULL)
+  if ((page_data = query_post_by_id(post_id)) == NULL)
   {
     return response_error(STAT404);
   }

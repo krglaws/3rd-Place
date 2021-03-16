@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <time.h>
 #include <kylestructs.h>
@@ -117,7 +118,7 @@ struct response* get_file(const char* uri)
 
   // get file
   struct file_str* f;
-  if ((f = load_file_str(uri)) == NULL)
+  if (access(uri, F_OK) != 0 || (f = load_file_str(uri)) == NULL)
   {
     return response_error(STAT404);
   }
@@ -177,33 +178,30 @@ void add_nav_info(ks_hashmap* page_data, const struct auth_token* client_info)
 
 enum vote_type check_for_vote(enum item_type item_type, const char* item_id, const char* user_id)
 {
-  ks_list* up_vote_query_result;
-  ks_list* down_vote_query_result;
+  ks_hashmap* up_vote;
+  ks_hashmap* down_vote;
 
   // are we looking for post votes or comment votes?
   if (item_type == POST_ITEM)
   {
-    up_vote_query_result = query_post_up_votes_by_post_id_user_id(item_id, user_id);
-    down_vote_query_result = query_post_down_votes_by_post_id_user_id(item_id, user_id);
+    up_vote = query_post_up_vote_by_post_id_user_id(item_id, user_id);
+    down_vote = query_post_down_vote_by_post_id_user_id(item_id, user_id);
   }
   else if (item_type == COMMENT_ITEM)
   {
-    up_vote_query_result = query_comment_up_votes_by_comment_id_user_id(item_id, user_id);
-    down_vote_query_result = query_comment_down_votes_by_comment_id_user_id(item_id, user_id);
+    up_vote = query_comment_up_vote_by_comment_id_user_id(item_id, user_id);
+    down_vote = query_comment_down_vote_by_comment_id_user_id(item_id, user_id);
   }
   else {
     log_crit("check_for_vote(): invalid item_type argument");
   }
 
-  ks_datacont* uv0 = ks_list_get(up_vote_query_result, 0);
-  ks_datacont* dv0 = ks_list_get(down_vote_query_result, 0);
-
   // determine vote type
-  enum vote_type result = uv0 ? UPVOTE : (dv0 ? DOWNVOTE : NOVOTE);
+  enum vote_type result = up_vote ? UPVOTE : (down_vote ? DOWNVOTE : NOVOTE);
 
   // cleanup query results
-  ks_list_delete(up_vote_query_result);
-  ks_list_delete(down_vote_query_result);
+  ks_hashmap_delete(up_vote);
+  ks_hashmap_delete(down_vote);
 
   return result;
 } // end check_for_vote()
@@ -223,113 +221,11 @@ bool check_for_sub(const char* community_id, const struct auth_token* client_inf
     return false;
   }
 
-  ks_list* sub_query_result = query_subscriptions_by_community_id_user_id(community_id, client_info->user_id);
-  bool subbed = ks_list_get(sub_query_result, 0) != NULL;
-  ks_list_delete(sub_query_result);
+  ks_hashmap* sub = query_subscription_by_community_id_user_id(community_id, client_info->user_id);
+  bool subbed = sub != NULL;
+  ks_hashmap_delete(sub);
 
   return subbed;
-}
-
-
-ks_hashmap* get_community_info(const char* community_name)
-{
-  ks_list* result;
-  if ((result = query_communities_by_name(community_name)) == NULL)
-  {
-    return NULL;
-  }
-
-  ks_datacont* row0 = ks_list_get(result, 0);
-  ks_hashmap* community_info = row0->hm;
-  row0->hm = NULL;
-  ks_list_delete(result);
-
-  return community_info;
-}
-
-
-ks_hashmap* get_post_info(const char* post_id)
-{
-  ks_list* result;
-  if ((result = query_posts_by_id(post_id)) == NULL)
-  {
-    return NULL;
-  }
-
-  ks_datacont* row0 = ks_list_get(result, 0);
-  ks_hashmap* post_info = row0->hm;
-  row0->hm = NULL;
-  ks_list_delete(result);
-
-  return post_info;
-}
-
-
-ks_hashmap* get_comment_info(const char* comment_id)
-{
-  ks_list* result;
-  if ((result = query_comments_by_id(comment_id)) == NULL)
-  {
-    return NULL;
-  }
-
-  ks_datacont* row0 = ks_list_get(result, 0);
-  ks_hashmap* comment_info = row0->hm;
-  row0->hm = NULL;
-  ks_list_delete(result);
-
-  return comment_info;
-}
-
-
-ks_hashmap* get_user_info(const char* user_name)
-{
-  ks_list* result;
-  if ((result = query_users_by_name(user_name)) == NULL)
-  {
-    return NULL;
-  }
-
-  ks_datacont* row0 = ks_list_get(result, 0);
-  ks_hashmap* user_info = row0->hm;
-  row0->hm = NULL;
-  ks_list_delete(result);
-
-  return user_info;
-}
-
-
-ks_hashmap* get_moderator_info(const char* community_id, const char* user_id)
-{
-  ks_list* result;
-  if ((result = query_moderators_by_community_id_user_id(community_id, user_id)) == NULL)
-  {
-    return NULL;
-  }
-
-  ks_datacont* row0 = ks_list_get(result, 0);
-  ks_hashmap* user_info = row0->hm;
-  row0->hm = NULL;
-  ks_list_delete(result);
-
-  return user_info;
-}
-
-
-ks_hashmap* get_administrator_info(const char* user_id)
-{
-  ks_list* result;
-  if ((result = query_administrators_by_user_id(user_id)) == NULL)
-  {
-    return NULL;
-  }
-
-  ks_datacont* row0 = ks_list_get(result, 0);
-  ks_hashmap* user_info = row0->hm;
-  row0->hm = NULL;
-  ks_list_delete(result);
-
-  return user_info;
 }
 
 

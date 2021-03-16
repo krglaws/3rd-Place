@@ -9,7 +9,6 @@
 #include <kylestructs.h>
 
 #include <string_map.h>
-#include <http_get.h>
 #include <log_manager.h>
 #include <sql_manager.h>
 #include <auth_manager.h>
@@ -119,7 +118,7 @@ const char* login_user(const char* uname, const char* passwd)
   }
 
   ks_hashmap* user_info;
-  if ((user_info = get_user_info(uname)) == NULL)
+  if ((user_info = query_user_by_name(uname)) == NULL)
   {
     // user does not exist
     return NULL;
@@ -176,7 +175,7 @@ const char* new_user(const char* uname, const char* passwd, const char* about)
   }
 
   // check if user already exists
-  ks_hashmap* user_info = get_user_info(uname);
+  ks_hashmap* user_info = query_user_by_name(uname);
 
   if (user_info != NULL)
   {
@@ -209,11 +208,10 @@ const char* new_user(const char* uname, const char* passwd, const char* about)
 }
 
 
-
 static const char* new_token(const char* uname)
 {
   // pull user info from database
-  ks_hashmap* user_info = get_user_info(uname);
+  ks_hashmap* user_info = query_user_by_name(uname);
   const char* user_id = get_map_value_str(user_info, FIELD_USER_ID);
 
   // copy info into auth token

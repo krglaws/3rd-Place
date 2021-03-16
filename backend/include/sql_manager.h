@@ -156,11 +156,13 @@ void init_sql_manager();
  * to a field value (also a string).
  */
 
-ks_list* query_users_by_name(const char* user_name);
+ks_hashmap* query_user_by_id(const char* user_id);
+
+ks_hashmap* query_user_by_name(const char* user_name);
+
+ks_hashmap* query_post_by_id(const char* id);
 
 ks_list* query_all_posts();
-
-ks_list* query_posts_by_id(const char* id);
 
 ks_list* query_posts_by_author_name(const char* user_name);
 
@@ -168,31 +170,33 @@ ks_list* query_posts_by_community_id(const char* community_id);
 
 ks_list* query_posts_by_community_name(const char* community_name);
 
+ks_hashmap* query_community_by_id(const char* community_id);
+
+ks_hashmap* query_community_by_name(const char* community_name);
+
 ks_list* query_all_communities();
 
-ks_list* query_communities_by_name(const char* community_name);
+ks_hashmap* query_moderator_by_community_id_user_id(const char* community_id, const char* user_id);
 
-ks_list* query_moderators_by_community_id_user_id(const char* community_id, const char* user_id);
+ks_hashmap* query_administrator_by_user_id(const char* user_id);
 
-ks_list* query_administrators_by_user_id(const char* user_id);
-
-ks_list* query_comments_by_id(const char* comment_id);
+ks_hashmap* query_comment_by_id(const char* comment_id);
 
 ks_list* query_comments_by_author_name(const char* author_name);
 
 ks_list* query_comments_by_post_id(const char* post_id);
 
+ks_hashmap* query_post_up_vote_by_post_id_user_id(const char* post_id, const char* user_id);
+
+ks_hashmap* query_post_down_vote_by_post_id_user_id(const char* post_id, const char* user_id);
+
+ks_hashmap* query_comment_up_vote_by_comment_id_user_id(const char* comment_id, const char* user_id);
+
+ks_hashmap* query_comment_down_vote_by_comment_id_user_id(const char* comment_id, const char* user_id);
+
+ks_hashmap* query_subscription_by_community_id_user_id(const char* community_id, const char* id);
+
 ks_list* query_subscriptions_by_user_id(const char* user_id);
-
-ks_list* query_post_up_votes_by_post_id_user_id(const char* post_id, const char* user_id);
-
-ks_list* query_post_down_votes_by_post_id_user_id(const char* post_id, const char* user_id);
-
-ks_list* query_comment_up_votes_by_comment_id_user_id(const char* comment_id, const char* user_id);
-
-ks_list* query_comment_down_votes_by_comment_id_user_id(const char* comment_id, const char* user_id);
-
-ks_list* query_subscriptions_by_community_id_user_id(const char* community_id, const char* id);
 
 
 /* Return 0 on success, -1 on failure */

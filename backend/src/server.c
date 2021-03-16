@@ -343,14 +343,13 @@ static struct response* process_request(const int sock)
 
   if (req_len == 0)
   {
-    log_info("Connection to %s closed (sock no. %d)", ipstr, sock);
     remove_socket(sock);
     return NULL;
   }
 
   if (req_len > MAXREQUESTSIZE)
   {
-    log_info("Bad request from %s (sock no. %d)", ipstr, sock);
+    log_info("Bad request from %s (socket number %d)", ipstr, sock);
     return response_error(STAT413);
   }
 
@@ -367,22 +366,22 @@ static struct response* process_request(const int sock)
   if (strcmp(req->method, "GET") == 0 ||
            strcmp(req->method, "HEAD") == 0)
   {
-    log_info("Request from %s (sock no. %d): %s %s", ipstr, sock, req->method, (req->uri + 1));
+    log_info("Request from %s (socket number %d): %s %s", ipstr, sock, req->method, (req->uri + 1));
     resp = http_get(req);
   }
   else if (strcmp(req->method, "POST") == 0)
   {
-    log_info("Request from %s(sock no. %d): POST %s", ipstr, sock, (req->uri + 1));
+    log_info("Request from %s(socket number %d): POST %s", ipstr, sock, (req->uri + 1));
     resp = http_post(req);
   }
   else if (strcmp(req->method, "PUT") == 0)
   {
-    log_info("Request from %s(sock no. %d): PUT %s", ipstr, sock, (req->uri + 1));
+    log_info("Request from %s(socket number %d): PUT %s", ipstr, sock, (req->uri + 1));
     resp = http_put(req);
   }
   else if (strcmp(req->method, "DELETE") == 0)
   {
-    log_info("Request from %s(sock no. %d): DELETE %s", ipstr, sock, (req->uri + 1));
+    log_info("Request from %s(socket number %d): DELETE %s", ipstr, sock, (req->uri + 1));
     resp = http_delete(req);
   }
   else
