@@ -515,15 +515,6 @@ int sql_toggle_subscribe(const char* community_id, const char* user_id)
 }
 
 
-// all vote tables have the same field lengths
-static const int votes_field_lengths[3] =
-{
-  INT_BUF_LEN,
-  INT_BUF_LEN,
-  INT_BUF_LEN
-};
-
-
 /*****************/
 /* post up votes */
 
@@ -983,7 +974,6 @@ static ks_list* sql_select(const struct table_info* table_info, MYSQL_STMT* stmt
 
   if (num_rows == -1)
   {
-    log_err("sql_select(): failed on call to sql_exec()");
     return NULL;
   }
 
@@ -1087,7 +1077,7 @@ static int sql_procedure(MYSQL_STMT* stmt, ...)
   int res = sql_exec(stmt, ap);
   va_end(ap);
 
-  return res == 0 ? 0 : -1;
+  return res;
 }
 
 
@@ -1102,6 +1092,11 @@ static char* sql_function(MYSQL_STMT* stmt, ...)
   int res = sql_exec(stmt, ap);
   va_end(ap);
 
+  if (res == -1)
+  {
+    return NULL;
+  }
+
   unsigned long length;
   bool is_null;
   bool error;
@@ -1110,6 +1105,7 @@ static char* sql_function(MYSQL_STMT* stmt, ...)
 
   bind.buffer_type = MYSQL_TYPE_STRING;
   bind.buffer = malloc(sizeof(char) * INT_BUF_LEN);
+  bind.buffer_length = INT_BUF_LEN;
   bind.is_null = &is_null;
   bind.length = &length;
   bind.error = &error;

@@ -211,15 +211,9 @@ static void serve()
  */
 static struct request* parse_request(char* req_buf)
 {
-  // delimiters
-  char* space_del = " ";
-  char* question_del = "?";
-  char* crlf_del = "\r\n";
-  char* hdrend_del = "\r\n\r\n";
-
   // grab first line of request
   char* end_req_line;
-  if ((end_req_line = strstr(req_buf, crlf_del)) == NULL)
+  if ((end_req_line = strstr(req_buf, "\r\n")) == NULL)
   {
     return NULL;
   }
@@ -232,7 +226,7 @@ static struct request* parse_request(char* req_buf)
 
   // get request method
   char* token;
-  if ((token = strtok(req_buf, space_del)) == NULL)
+  if ((token = strtok(req_buf, " ")) == NULL)
   {
     delete_request(req);
     return NULL;
@@ -240,7 +234,7 @@ static struct request* parse_request(char* req_buf)
   COPY_STR(req->method, token);
 
   // get URI
-  if ((token = strtok(NULL, space_del)) == NULL)
+  if ((token = strtok(NULL, " ")) == NULL)
   {
     delete_request(req);
     return NULL;
@@ -249,7 +243,7 @@ static struct request* parse_request(char* req_buf)
   COPY_STR(uri, token);
 
   // get HTTP version
-  if ((token = strtok(NULL, space_del)) == NULL)
+  if ((token = strtok(NULL, " ")) == NULL)
   {
     delete_request(req);
     return NULL;
@@ -286,7 +280,7 @@ static struct request* parse_request(char* req_buf)
   hdr_end += 4;
 
   // parse header and content
-  req->header = string_to_map(end_req_line, crlf_del, ": ");
+  req->header = string_to_map(end_req_line, "\r\n", ": ");
   req->content = string_to_map(hdr_end, "&", "=");
 
   // parse cookies
@@ -440,7 +434,6 @@ static void send_response(const int sock, struct response* resp)
   log_info("Response: %s", ks_list_get(resp->header, 0)->cp);
 
   // send each line of header
-  int total, bytes, msg_len;
   int head_lines = ks_list_length(resp->header);
   for (int i = 0; i < head_lines; i++)
   {

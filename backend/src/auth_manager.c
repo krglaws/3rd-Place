@@ -22,8 +22,6 @@ static const char* get_token(const char* uname);
 static void terminate_auth_manager();
 
 /* ks_list of login tokens */
-static struct token_entry* head = NULL;
-
 static ks_list* token_list;
 
 

@@ -44,7 +44,7 @@ struct response* http_delete(struct request* req)
   if (strcmp(req->uri, "./delete_comment") == 0)
   {
     const char* comment_id = get_map_value_str(req->query, "comment_id");
-    return delete_post(comment_id, req->client_info);
+    return delete_comment(comment_id, req->client_info);
   }
 
   if (strcmp(req->uri, "./delete_community") == 0)

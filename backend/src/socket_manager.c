@@ -7,8 +7,8 @@
 #include <log_manager.h>
 #include <socket_manager.h>
 
-static const int reload_socket_set();
-static const int get_active_socket();
+static int reload_socket_set();
+static int get_active_socket();
 static void terminate_socket_manager();
 
 static int server_socket = 0;
@@ -25,7 +25,7 @@ void init_socket_manager(const struct in6_addr* server_addr, const uint16_t serv
   socket_list = ks_list_new();
 
   struct sockaddr_in6 addr;
-  int addrlen = sizeof(addr);
+  socklen_t addrlen = sizeof(addr);
 
   memset(&addr, 0, addrlen);
   addr.sin6_family = AF_INET6;
@@ -89,7 +89,7 @@ static void terminate_socket_manager()
 int get_socket_ip(const int sock, char* ipstr, const int iplen)
 {
   struct sockaddr_in6 addr;
-  int addrlen = sizeof(addr);
+  socklen_t addrlen = sizeof(addr);
 
   // find out socket address
   if (getpeername(sock, (struct sockaddr*) &addr, &addrlen) == -1)
@@ -149,7 +149,7 @@ void remove_socket(int sock)
 }
 
 
-static const int reload_socket_set()
+static int reload_socket_set()
 {
   // clear socket set, add server socket
   FD_ZERO(&socket_set);
@@ -175,10 +175,8 @@ static const int reload_socket_set()
 }
 
 
-static const int get_active_socket()
+static int get_active_socket()
 {
-  int num_sockets = ks_list_length(socket_list);
-
   // check if server socket is active
   if (FD_ISSET(server_socket, &socket_set))
   {
@@ -202,14 +200,13 @@ static const int get_active_socket()
 }
 
 
-const int await_active_socket()
+int await_active_socket()
 {
   int max_socket = reload_socket_set();
   int active_socket, new_socket;
 
   struct sockaddr addr;
-  int addrlen = sizeof(addr);
-  char ipstr[64];
+  socklen_t addrlen = sizeof(addr);
 
   // wait for active socket
   if (select(max_socket + 1, &socket_set, NULL, NULL, NULL) == -1)

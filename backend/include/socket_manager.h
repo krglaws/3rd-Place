@@ -23,6 +23,6 @@ void remove_socket(int sock);
 /* Blocking call (via select()) that waits for socket activity.
     If active socket is server socket, new client socket is
     created and stored in socket list. */
-const int await_active_socket();
+int await_active_socket();
 
 #endif
