@@ -3,7 +3,7 @@
 eval $(cat ./db.config)
 
 mysql -uroot <<WIPE_DB
-DROP DATABASE $DBNAME;
+DROP DATABASE IF EXISTS $DBNAME;
 WIPE_DB
 
 # install database schema

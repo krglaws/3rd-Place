@@ -67,7 +67,7 @@ struct response* get_feed(const enum feed_type ft, const struct auth_token* clie
 {
   if (ft == HOME_FEED && client_info == NULL)
   {
-    return response_redirect("/popular");
+    return response_redirect("/all");
   }
 
   ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 8);

@@ -34,7 +34,7 @@ struct response* http_get(const struct request* req)
     return get_feed(HOME_FEED, req->client_info);
   }
 
-  if (strcmp(req->uri, "./popular") == 0)
+  if (strcmp(req->uri, "./all") == 0)
   {
     return get_feed(POPULAR_FEED, req->client_info);
   }
