@@ -14,7 +14,7 @@
 #include <get_form.h>
 
 
-struct response* get_login(enum user_form_error err, const struct auth_token* client_info)
+struct response* get_login(const char* submitted_user_name, enum user_form_error err, const struct auth_token* client_info)
 {
   ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 8);
 
@@ -23,67 +23,62 @@ struct response* get_login(enum user_form_error err, const struct auth_token* cl
   {
     add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_LOGIN);
 
-    // check for login/signup error
-    switch (err)
+    if (err == USER_FORM_ERR_BAD_LOGIN)
     {
-      case USER_FORM_ERR_NONE:
-        add_map_value_str(page_data, SIGNUP_ERR_KEY, "");
-        add_map_value_str(page_data, LOGIN_ERR_KEY, "");
-        break;
-      case USER_FORM_ERR_BAD_LOGIN:
-        add_map_value_str(page_data, LOGIN_ERR_KEY, "<p>Bad login</p>");
-        add_map_value_str(page_data, SIGNUP_ERR_KEY, "");
-        break;
-      case USER_FORM_ERR_UNAME_TAKEN:
-        add_map_value_str(page_data, LOGIN_ERR_KEY, "");
-        add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Username already exists</p>");
-        break;
-      case USER_FORM_ERR_UNAME_TOO_SHORT:
-        add_map_value_str(page_data, LOGIN_ERR_KEY, "");
-        add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Username too short</p>");
-        break;
-      case USER_FORM_ERR_UNAME_TOO_LONG:
-        add_map_value_str(page_data, LOGIN_ERR_KEY, "");
-        add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Username too long</p>");
-        break;
-      case USER_FORM_ERR_UNAME_INV_CHAR:
-        add_map_value_str(page_data, LOGIN_ERR_KEY, "");
-        add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Username contains invalid characters</p>");
-        break;
-      case USER_FORM_ERR_PASSWD_MISMATCH:
-        add_map_value_str(page_data, EDIT_PASSWD_ERR_KEY, "<p>Password inputs do not match</p>");
-        add_map_value_str(page_data, EDIT_ABOUT_ERR_KEY, "");
-        break;
-      case USER_FORM_ERR_PASSWD_TOO_SHORT:
-        add_map_value_str(page_data, LOGIN_ERR_KEY, "");
-        add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Password too short</p>");
-        break;
-      case USER_FORM_ERR_PASSWD_TOO_LONG:
-        add_map_value_str(page_data, LOGIN_ERR_KEY, "");
-        add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Password too long</p>");
-        break;
-      case USER_FORM_ERR_PASSWD_UNMET:
-        add_map_value_str(page_data, LOGIN_ERR_KEY, "");
-        add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Password does not meet character requirement</p>");
-        break;
-      case USER_FORM_ERR_PASSWD_INV_ENC:
-        add_map_value_str(page_data, LOGIN_ERR_KEY, "");
-        add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Password contains invalid character encoding</p>");
-        break;
-      case USER_FORM_ERR_ABOUT_TOO_SHORT:
-        add_map_value_str(page_data, LOGIN_ERR_KEY, "");
-        add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>User about too short</p>");
-        break;
-      case USER_FORM_ERR_ABOUT_TOO_LONG:
-        add_map_value_str(page_data, LOGIN_ERR_KEY, "");
-        add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>User about too long</p>");
-        break;
-      case USER_FORM_ERR_ABOUT_INV_ENC:
-        add_map_value_str(page_data, LOGIN_ERR_KEY, "");
-        add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>User about contains invalid character encoding</p>");
-        break;
-      default:
-        log_crit("get_login(): invalid login error no.");
+      if (submitted_user_name != NULL)
+      {
+        add_map_value_str(page_data, SUBMITTED_LOGIN_UNAME_KEY, submitted_user_name);
+      }
+      add_map_value_str(page_data, LOGIN_ERR_KEY, "<p>Bad login</p>");
+    }
+
+    else if (err != USER_FORM_ERR_NONE)
+    {
+      if (submitted_user_name != NULL)
+      {
+        add_map_value_str(page_data, SUBMITTED_SIGNUP_UNAME_KEY, submitted_user_name);
+      }
+      switch (err)
+      {
+        case USER_FORM_ERR_UNAME_TAKEN:
+          add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Username already exists</p>");
+          break;
+        case USER_FORM_ERR_UNAME_TOO_SHORT:
+          add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Username too short</p>");
+          break;
+        case USER_FORM_ERR_UNAME_TOO_LONG:
+          add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Username too long</p>");
+          break;
+        case USER_FORM_ERR_UNAME_INV_CHAR:
+          add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Username contains invalid characters</p>");
+          break;
+        case USER_FORM_ERR_PASSWD_MISMATCH:
+          add_map_value_str(page_data, EDIT_PASSWD_ERR_KEY, "<p>Password inputs do not match</p>");
+          break;
+        case USER_FORM_ERR_PASSWD_TOO_SHORT:
+          add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Password too short</p>");
+          break;
+        case USER_FORM_ERR_PASSWD_TOO_LONG:
+          add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Password too long</p>");
+          break;
+        case USER_FORM_ERR_PASSWD_UNMET:
+          add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Password does not meet character requirement</p>");
+          break;
+        case USER_FORM_ERR_PASSWD_INV_ENC:
+          add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Password contains invalid character encoding</p>");
+          break;
+        case USER_FORM_ERR_ABOUT_TOO_SHORT:
+          add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>User about too short</p>");
+          break;
+        case USER_FORM_ERR_ABOUT_TOO_LONG:
+          add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>User about too long</p>");
+          break;
+        case USER_FORM_ERR_ABOUT_INV_ENC:
+          add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>User about contains invalid character encoding</p>");
+          break;
+        default:
+          log_crit("get_login(): invalid login error no.");
+      }
     }
   }
   else
@@ -92,7 +87,7 @@ struct response* get_login(enum user_form_error err, const struct auth_token* cl
   }
 
   // wrap page data
-  page_data = wrap_page_data(client_info, page_data, CSS_LOGIN, "");
+  page_data = wrap_page_data(client_info, page_data, CSS_LOGIN, NULL);
 
   // build content 
   char* content;
@@ -108,7 +103,7 @@ struct response* get_login(enum user_form_error err, const struct auth_token* cl
 }
 
 
-struct response* get_edit_user(enum user_form_error err, const struct auth_token* client_info)
+struct response* get_edit_user(const char* submitted_about, enum user_form_error err, const struct auth_token* client_info)
 {
   if (client_info == NULL)
   {
@@ -119,54 +114,55 @@ struct response* get_edit_user(enum user_form_error err, const struct auth_token
   ks_hashmap* page_data;
   if ((page_data = query_user_by_name(client_info->user_name)) == NULL)
   {
+    // this should not happen if client_info is not NULL
     return response_error(STAT404);
   }
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_EDIT_USER);
 
-  switch (err)
+  if (err == USER_FORM_ERR_NONE)
   {
-    case USER_FORM_ERR_NONE:
-      add_map_value_str(page_data, EDIT_PASSWD_ERR_KEY, "");
-      add_map_value_str(page_data, EDIT_ABOUT_ERR_KEY, "");
-      break;
-    case USER_FORM_ERR_BAD_LOGIN:
-      add_map_value_str(page_data, EDIT_PASSWD_ERR_KEY, "<p>Wrong password</p>");
-      add_map_value_str(page_data, EDIT_ABOUT_ERR_KEY, "");
-      break;
-    case USER_FORM_ERR_PASSWD_MISMATCH:
-      add_map_value_str(page_data, EDIT_PASSWD_ERR_KEY, "<p>New password inputs do not match</p>");
-      add_map_value_str(page_data, EDIT_ABOUT_ERR_KEY, "");
-      break;
-    case USER_FORM_ERR_PASSWD_TOO_SHORT:
-      add_map_value_str(page_data, EDIT_PASSWD_ERR_KEY, "<p>New password too short</p>");
-      add_map_value_str(page_data, EDIT_ABOUT_ERR_KEY, "");
-      break;
-    case USER_FORM_ERR_PASSWD_TOO_LONG:
-      add_map_value_str(page_data, EDIT_PASSWD_ERR_KEY, "<p>New password too long</p>");
-      add_map_value_str(page_data, EDIT_ABOUT_ERR_KEY, "");
-      break;
-    case USER_FORM_ERR_PASSWD_INV_ENC:
-      add_map_value_str(page_data, EDIT_PASSWD_ERR_KEY, "<p>New password contains invalid encoding</p>");
-      add_map_value_str(page_data, EDIT_ABOUT_ERR_KEY, "");
-      break;
-    case USER_FORM_ERR_ABOUT_TOO_SHORT:
-      add_map_value_str(page_data, EDIT_PASSWD_ERR_KEY, "");
-      add_map_value_str(page_data, EDIT_ABOUT_ERR_KEY, "<p>User about too short</p>");
-      break;
-    case USER_FORM_ERR_ABOUT_TOO_LONG:
-      add_map_value_str(page_data, EDIT_PASSWD_ERR_KEY, "");
-      add_map_value_str(page_data, EDIT_ABOUT_ERR_KEY, "<p>User about too long</p>");
-      break;
-    case USER_FORM_ERR_ABOUT_INV_ENC:
-      add_map_value_str(page_data, EDIT_PASSWD_ERR_KEY, "");
-      add_map_value_str(page_data, EDIT_ABOUT_ERR_KEY, "<p>User about contains invalid encoding</p>");
-      break;
-    default:
-      log_crit("get_edit_user(): invalid edit user form error: %d", err); 
+    const char* existing_about = get_map_value_str(page_data, FIELD_USER_ABOUT);
+    add_map_value_str(page_data, SUBMITTED_USER_ABOUT_KEY, existing_about);
+  }
+  else
+  {
+    if (submitted_about != NULL)
+    {
+      add_map_value_str(page_data, SUBMITTED_USER_ABOUT_KEY, submitted_about);
+    }
+    switch (err)
+    {
+      case USER_FORM_ERR_BAD_LOGIN:
+        add_map_value_str(page_data, EDIT_PASSWD_ERR_KEY, "<p>Wrong password</p>");
+        break;
+      case USER_FORM_ERR_PASSWD_MISMATCH:
+        add_map_value_str(page_data, EDIT_PASSWD_ERR_KEY, "<p>New password inputs do not match</p>");
+        break;
+      case USER_FORM_ERR_PASSWD_TOO_SHORT:
+        add_map_value_str(page_data, EDIT_PASSWD_ERR_KEY, "<p>New password too short</p>");
+        break;
+      case USER_FORM_ERR_PASSWD_TOO_LONG:
+        add_map_value_str(page_data, EDIT_PASSWD_ERR_KEY, "<p>New password too long</p>");
+        break;
+      case USER_FORM_ERR_PASSWD_INV_ENC:
+        add_map_value_str(page_data, EDIT_PASSWD_ERR_KEY, "<p>New password contains invalid encoding</p>");
+        break;
+      case USER_FORM_ERR_ABOUT_TOO_SHORT:
+        add_map_value_str(page_data, EDIT_ABOUT_ERR_KEY, "<p>User about too short</p>");
+        break;
+      case USER_FORM_ERR_ABOUT_TOO_LONG:
+        add_map_value_str(page_data, EDIT_ABOUT_ERR_KEY, "<p>User about too long</p>");
+        break;
+      case USER_FORM_ERR_ABOUT_INV_ENC:
+        add_map_value_str(page_data, EDIT_ABOUT_ERR_KEY, "<p>User about contains invalid encoding</p>");
+        break;
+      default:
+        log_crit("get_edit_user(): invalid edit user form error: %d", err); 
+    }
   }
 
   // wrap page data
-  page_data = wrap_page_data(client_info, page_data, CSS_FORM, "");
+  page_data = wrap_page_data(client_info, page_data, CSS_FORM, NULL);
 
   // build content
   char* content;
@@ -182,7 +178,7 @@ struct response* get_edit_user(enum user_form_error err, const struct auth_token
 }
 
 
-struct response* get_new_post(const char* community_name, enum post_form_error err, const struct auth_token* client_info)
+struct response* get_new_post(const char* submitted_title, const char* submitted_body, const char* community_name, enum post_form_error err, const struct auth_token* client_info)
 {
   if (client_info == NULL)
   {
@@ -197,10 +193,20 @@ struct response* get_new_post(const char* community_name, enum post_form_error e
   }
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_NEW_POST);
 
+  // copy previously submitted data into page if present
+  if (submitted_title != NULL)
+  {
+    add_map_value_str(page_data, SUBMITTED_POST_TITLE_KEY, submitted_title);
+  }
+
+  if (submitted_body != NULL)
+  {
+    add_map_value_str(page_data, SUBMITTED_POST_BODY_KEY, submitted_body);
+  }
+
   switch (err)
   {
     case POST_FORM_ERR_NONE:
-      add_map_value_str(page_data, POST_FORM_ERR_KEY, "");
       break;
     case POST_FORM_ERR_TITLE_TOO_SHORT:
       add_map_value_str(page_data, POST_FORM_ERR_KEY, "<p>Title too short</p>");
@@ -225,7 +231,7 @@ struct response* get_new_post(const char* community_name, enum post_form_error e
   }
 
   // wrap page data
-  page_data = wrap_page_data(client_info, page_data, CSS_FORM, "");
+  page_data = wrap_page_data(client_info, page_data, CSS_FORM, NULL);
 
   // build content
   char* content;
@@ -241,7 +247,7 @@ struct response* get_new_post(const char* community_name, enum post_form_error e
 }
 
 
-struct response* get_edit_post(const char* post_id, enum post_form_error err, const struct auth_token* client_info)
+struct response* get_edit_post(const char* submitted_body, const char* post_id, enum post_form_error err, const struct auth_token* client_info)
 {
   if (client_info == NULL)
   {
@@ -264,12 +270,22 @@ struct response* get_edit_post(const char* post_id, enum post_form_error err, co
   }
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_EDIT_POST);
 
+  // copy previously submitted post body, or else existing post body
+  if (submitted_body != NULL)
+  {
+    add_map_value_str(page_data, SUBMITTED_POST_BODY_KEY, submitted_body);
+  }
+  else
+  {
+    const char* existing_body = get_map_value_str(page_data, FIELD_POST_BODY);
+    add_map_value_str(page_data, SUBMITTED_POST_BODY_KEY, existing_body);
+  }
+
   // you can only edit the post body, not the title. Why? just cuz
   // thats how reddit does it.
   switch (err)
   {
     case POST_FORM_ERR_NONE:
-      add_map_value_str(page_data, EDIT_POST_FORM_ERR_KEY, "");
       break;
     case POST_FORM_ERR_BODY_TOO_SHORT:
       add_map_value_str(page_data, EDIT_POST_FORM_ERR_KEY, "<p>Post body too short</p>");
@@ -285,7 +301,7 @@ struct response* get_edit_post(const char* post_id, enum post_form_error err, co
   }
 
   // wrap page data
-  page_data = wrap_page_data(client_info, page_data, CSS_FORM, "");
+  page_data = wrap_page_data(client_info, page_data, CSS_FORM, NULL);
 
   // build content
   char* content;
@@ -301,7 +317,7 @@ struct response* get_edit_post(const char* post_id, enum post_form_error err, co
 }
 
 
-struct response* get_new_comment(const char* post_id, enum comment_form_error err, const struct auth_token* client_info)
+struct response* get_new_comment(const char* submitted_body, const char* post_id, enum comment_form_error err, const struct auth_token* client_info)
 {
   if (client_info == NULL)
   {
@@ -316,10 +332,14 @@ struct response* get_new_comment(const char* post_id, enum comment_form_error er
   }
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_NEW_COMMENT);
 
+  if (submitted_body != NULL)
+  {
+    add_map_value_str(page_data, SUBMITTED_COMMENT_BODY_KEY, submitted_body);
+  }
+
   switch (err)
   {
     case COMMENT_FORM_ERR_NONE:
-      add_map_value_str(page_data, COMMENT_FORM_ERR_KEY, "");
       break;
     case COMMENT_FORM_ERR_TOO_SHORT:
       add_map_value_str(page_data, COMMENT_FORM_ERR_KEY, "<p>Comment body too short</p>");
@@ -335,7 +355,7 @@ struct response* get_new_comment(const char* post_id, enum comment_form_error er
   }
 
   // put page data together
-  page_data = wrap_page_data(client_info, page_data, CSS_FORM, "");
+  page_data = wrap_page_data(client_info, page_data, CSS_FORM, NULL);
 
   // build content
   char* content;
@@ -351,7 +371,7 @@ struct response* get_new_comment(const char* post_id, enum comment_form_error er
 }
 
 
-struct response* get_edit_comment(const char* comment_id, enum comment_form_error err, const struct auth_token* client_info)
+struct response* get_edit_comment(const char* submitted_body, const char* comment_id, enum comment_form_error err, const struct auth_token* client_info)
 {
   if (client_info == NULL)
   {
@@ -374,6 +394,17 @@ struct response* get_edit_comment(const char* comment_id, enum comment_form_erro
   }
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_NEW_COMMENT);
 
+  // copy previously submitted comment body, or else existing comment body
+  if (submitted_body != NULL)
+  {
+    add_map_value_str(page_data, SUBMITTED_COMMENT_BODY_KEY, submitted_body);
+  }
+  else
+  {
+    const char* existing_body = get_map_value_str(page_data, FIELD_COMMENT_BODY);
+    add_map_value_str(page_data, SUBMITTED_COMMENT_BODY_KEY, existing_body);
+  }
+
   switch (err)
   {
     case COMMENT_FORM_ERR_NONE:
@@ -392,7 +423,7 @@ struct response* get_edit_comment(const char* comment_id, enum comment_form_erro
   }
 
   // put page data together
-  page_data = wrap_page_data(client_info, page_data, CSS_FORM, "");
+  page_data = wrap_page_data(client_info, page_data, CSS_FORM, NULL);
 
   // build content
   char* content;
@@ -408,7 +439,7 @@ struct response* get_edit_comment(const char* comment_id, enum comment_form_erro
 }
 
 
-struct response* get_new_community(enum community_form_error err, const struct auth_token* client_info)
+struct response* get_new_community(const char* submitted_name, const char* submitted_about, enum community_form_error err, const struct auth_token* client_info)
 {
   if (client_info == NULL)
   {
@@ -418,10 +449,19 @@ struct response* get_new_community(enum community_form_error err, const struct a
   ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 1);
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_NEW_COMMUNITY);
 
+  if (submitted_name != NULL)
+  {
+    add_map_value_str(page_data, SUBMITTED_COMMUNITY_NAME_KEY, submitted_name);
+  }
+
+  if (submitted_about != NULL)
+  {
+    add_map_value_str(page_data, SUBMITTED_COMMUNITY_ABOUT_KEY, submitted_about);
+  }
+
   switch (err)
   {
     case COMMUNITY_FORM_ERR_NONE:
-      add_map_value_str(page_data, COMMUNITY_FORM_ERR_KEY, "");
       break;
     case COMMUNITY_FORM_ERR_NAME_TOO_SHORT:
       add_map_value_str(page_data, COMMUNITY_FORM_ERR_KEY, "<p>Community name too short</p>");
@@ -446,7 +486,7 @@ struct response* get_new_community(enum community_form_error err, const struct a
   }
 
   // put page data together
-  page_data = wrap_page_data(client_info, page_data, CSS_FORM, "");
+  page_data = wrap_page_data(client_info, page_data, CSS_FORM, NULL);
 
   // build content
   char* content;
@@ -462,7 +502,7 @@ struct response* get_new_community(enum community_form_error err, const struct a
 }
 
 
-struct response* get_edit_community(const char* community_id, enum community_form_error err, const struct auth_token* client_info)
+struct response* get_edit_community(const char* submitted_about, const char* community_id, enum community_form_error err, const struct auth_token* client_info)
 {
   if (client_info == NULL)
   {
@@ -497,10 +537,20 @@ struct response* get_edit_community(const char* community_id, enum community_for
   }
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_EDIT_COMMUNITY);
 
+  // copy submitted community about if present, else existing community about
+  if (submitted_about != NULL)
+  {
+    add_map_value_str(page_data, SUBMITTED_COMMUNITY_ABOUT_KEY, submitted_about);
+  }
+  else
+  {
+    const char* existing_about = get_map_value_str(page_data, FIELD_COMMUNITY_ABOUT);
+    add_map_value_str(page_data, SUBMITTED_COMMUNITY_ABOUT_KEY, existing_about);
+  }
+
   switch (err)
   {
     case COMMUNITY_FORM_ERR_NONE:
-      add_map_value_str(page_data, EDIT_COMMUNITY_FORM_ERR_KEY, "");
       break;
     case COMMUNITY_FORM_ERR_ABOUT_TOO_SHORT:
       add_map_value_str(page_data, EDIT_COMMUNITY_FORM_ERR_KEY, "<p>Community about too short</p>");
@@ -516,7 +566,7 @@ struct response* get_edit_community(const char* community_id, enum community_for
   }
 
   // put page data together
-  page_data = wrap_page_data(client_info, page_data, CSS_FORM, "");
+  page_data = wrap_page_data(client_info, page_data, CSS_FORM, NULL);
 
   // build content
   char* content;

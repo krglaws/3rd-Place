@@ -97,17 +97,13 @@ struct response* get_post(const char* post_id, const struct auth_token* client_i
 
   // get post comments
   ks_list* comments;
-  if ((comments = get_post_comments(post_id, client_info)) == NULL)
-  {
-    add_map_value_str(page_data, POST_COMMENT_LIST_KEY, "");
-  }
-  else
+  if ((comments = get_post_comments(post_id, client_info)) != NULL)
   {
     add_map_value_ls(page_data, POST_COMMENT_LIST_KEY, comments);
   }
 
   // put page data together
-  page_data = wrap_page_data(client_info, page_data, CSS_POST, "");
+  page_data = wrap_page_data(client_info, page_data, CSS_POST, NULL);
 
   // build template
   char* content;

@@ -18,7 +18,7 @@
 
 
 static struct response* post_login(const char* uname, const char* password, const struct auth_token* client_info);
-static struct response* post_signup(const char* uname, const char* password, const char* about, const struct auth_token* client_info);
+static struct response* post_signup(const char* uname, const char* password1, const char* password2, const char* about, const struct auth_token* client_info);
 static struct response* post_vote(const char* type, const char* direction, const char* id, const struct auth_token* client_info);
 static struct response* post_comment(const char* post_id, const char* body, const struct auth_token* client_info);
 static struct response* post_post(const char* community_name, const char* post_title, const char* post_body, const struct auth_token* client_info);
@@ -37,10 +37,11 @@ struct response* http_post(struct request* req)
   if (strcmp(req->uri, "./signup") == 0)
   {
     const char* uname = get_map_value_str(req->content, "uname");
-    const char* password = get_map_value_str(req->content, "password");
+    const char* password1 = get_map_value_str(req->content, "password1");
+    const char* password2 = get_map_value_str(req->content, "password2");
     const char* about = get_map_value_str(req->content, "about");
 
-    return post_signup(uname, password, about, req->client_info);
+    return post_signup(uname, password1, password2, about, req->client_info);
   }
 
   if (strcmp(req->uri, "./login") == 0)
@@ -117,7 +118,7 @@ static struct response* post_login(const char* uname, const char* password, cons
       (token = login_user(uname, password_decoded)) == NULL)
   {
     // no need to indicate exactly why login failed
-    return get_login(USER_FORM_ERR_BAD_LOGIN, NULL);
+    return get_login(uname, USER_FORM_ERR_BAD_LOGIN, NULL);
   }
 
   // build redirect
@@ -132,7 +133,7 @@ static struct response* post_login(const char* uname, const char* password, cons
 }
 
 
-static struct response* post_signup(const char* uname, const char* password, const char* about, const struct auth_token* client_info)
+static struct response* post_signup(const char* uname, const char* password1, const char* password2, const char* about, const struct auth_token* client_info)
 {
   if (client_info != NULL)
   {
@@ -147,32 +148,43 @@ static struct response* post_signup(const char* uname, const char* password, con
     case VALRES_OK:
       break;
     case VALRES_TOO_SHORT:
-      return get_login(USER_FORM_ERR_UNAME_TOO_SHORT, NULL);
+      return get_login(uname, USER_FORM_ERR_UNAME_TOO_SHORT, NULL);
     case VALRES_TOO_LONG:
-      return get_login(USER_FORM_ERR_UNAME_TOO_LONG, NULL);
+      return get_login(uname, USER_FORM_ERR_UNAME_TOO_LONG, NULL);
     case VALRES_INV_CHAR:
-      return get_login(USER_FORM_ERR_UNAME_INV_CHAR, NULL);
+      return get_login(uname, USER_FORM_ERR_UNAME_INV_CHAR, NULL);
     default:
       log_crit("post_signup(): unexpected validation result value for username: '%s', errno: %d", uname, valres);
   }
 
+  if (password1 == NULL && password2 == NULL)
+  {
+    return get_login(uname, USER_FORM_ERR_PASSWD_TOO_SHORT, NULL);
+  }
+  
+  if (password1 == NULL || password2 == NULL ||
+      strcmp(password1, password2) != 0)
+  {
+    return get_login(uname, USER_FORM_ERR_PASSWD_MISMATCH, NULL);
+  }
+
   char password_decoded[USER_PASSWD_BUF_LEN];
-  valres = validate_password(password_decoded, password);
+  valres = validate_password(password_decoded, password1);
 
   switch (valres)
   {
     case VALRES_OK:
       break;
     case VALRES_TOO_SHORT:
-      return get_login(USER_FORM_ERR_PASSWD_TOO_SHORT, NULL);
+      return get_login(uname, USER_FORM_ERR_PASSWD_TOO_SHORT, NULL);
     case VALRES_TOO_LONG:
-      return get_login(USER_FORM_ERR_PASSWD_TOO_LONG, NULL);
+      return get_login(uname, USER_FORM_ERR_PASSWD_TOO_LONG, NULL);
     case VALRES_UNMET:
-      return get_login(USER_FORM_ERR_PASSWD_UNMET, NULL);
+      return get_login(uname, USER_FORM_ERR_PASSWD_UNMET, NULL);
     case VALRES_INV_ENC:
-      return get_login(USER_FORM_ERR_PASSWD_INV_ENC, NULL);
+      return get_login(uname, USER_FORM_ERR_PASSWD_INV_ENC, NULL);
     default:
-      log_crit("post_signup(): unexpected validation result value for password: '%s', errno: %d", password, valres);
+      log_crit("post_signup(): unexpected validation result value for password: '%s', errno: %d", password1, valres);
   }
 
   char about_decoded[USER_ABOUT_BUF_LEN];
@@ -183,20 +195,20 @@ static struct response* post_signup(const char* uname, const char* password, con
     case VALRES_OK:
       break;
     case VALRES_TOO_SHORT:
-      return get_login(USER_FORM_ERR_ABOUT_TOO_SHORT, NULL);
+      return get_login(uname, USER_FORM_ERR_ABOUT_TOO_SHORT, NULL);
     case VALRES_TOO_LONG:
-      return get_login(USER_FORM_ERR_ABOUT_TOO_LONG, NULL);
+      return get_login(uname, USER_FORM_ERR_ABOUT_TOO_LONG, NULL);
     case VALRES_INV_ENC:
-      return get_login(USER_FORM_ERR_ABOUT_INV_ENC, NULL);
+      return get_login(uname, USER_FORM_ERR_ABOUT_INV_ENC, NULL);
     default:
       log_crit("post_signup(): unexpected validation result value for about: '%s', errno: %d", about, valres);
   }
 
   // create new user
   const char* token;
-  if ((token = new_user(uname, password, about)) == NULL)
+  if ((token = new_user(uname, password1, about)) == NULL)
   {
-    return get_login(USER_FORM_ERR_UNAME_TAKEN, NULL);
+    return get_login(uname, USER_FORM_ERR_UNAME_TAKEN, NULL);
   }
 
   // build redirect
@@ -283,11 +295,11 @@ static struct response* post_comment(const char* post_id, const char* body, cons
     case VALRES_OK:
       break;
     case VALRES_INV_ENC:
-      return get_new_comment(post_id, COMMENT_FORM_ERR_INV_ENC, client_info);
+      return get_new_comment(body_decoded, post_id, COMMENT_FORM_ERR_INV_ENC, client_info);
     case VALRES_TOO_LONG:
-      return get_new_comment(post_id, COMMENT_FORM_ERR_TOO_LONG, client_info);
+      return get_new_comment(body_decoded, post_id, COMMENT_FORM_ERR_TOO_LONG, client_info);
     case VALRES_TOO_SHORT:
-      return get_new_comment(post_id, COMMENT_FORM_ERR_TOO_SHORT, client_info);
+      return get_new_comment(body_decoded, post_id, COMMENT_FORM_ERR_TOO_SHORT, client_info);
     default:
       log_crit("post_comment(): unexpected validation result value for comment: '%s', errno: %d", body, valres);
   }
@@ -332,11 +344,11 @@ static struct response* post_post(const char* community_name, const char* post_t
     case VALRES_OK:
       break;
     case VALRES_INV_ENC:
-      return get_new_post(community_name, POST_FORM_ERR_TITLE_INV_ENC, client_info);
+      return get_new_post(NULL, NULL, community_name, POST_FORM_ERR_TITLE_INV_ENC, client_info);
     case VALRES_TOO_LONG:
-      return get_new_post(community_name, POST_FORM_ERR_TITLE_TOO_LONG, client_info);
+      return get_new_post(title_decoded, NULL, community_name, POST_FORM_ERR_TITLE_TOO_LONG, client_info);
     case VALRES_TOO_SHORT:
-      return get_new_post(community_name, POST_FORM_ERR_TITLE_TOO_SHORT, client_info);
+      return get_new_post(title_decoded, NULL, community_name, POST_FORM_ERR_TITLE_TOO_SHORT, client_info);
     default:
       log_crit("post_post(): unexpected validation result value for post title: '%s', errno: %d", post_title, valres);
   }
@@ -349,11 +361,11 @@ static struct response* post_post(const char* community_name, const char* post_t
     case VALRES_OK:
       break;
     case VALRES_INV_ENC:
-      return get_new_post(community_name, POST_FORM_ERR_BODY_INV_ENC, client_info);
+      return get_new_post(title_decoded, NULL, community_name, POST_FORM_ERR_BODY_INV_ENC, client_info);
     case VALRES_TOO_LONG:
-      return get_new_post(community_name, POST_FORM_ERR_BODY_TOO_LONG, client_info);
+      return get_new_post(title_decoded, body_decoded, community_name, POST_FORM_ERR_BODY_TOO_LONG, client_info);
     case VALRES_TOO_SHORT:
-      return get_new_post(community_name, POST_FORM_ERR_BODY_TOO_SHORT, client_info);
+      return get_new_post(title_decoded, body_decoded, community_name, POST_FORM_ERR_BODY_TOO_SHORT, client_info);
     default:
       log_crit("post_post(): unexpected validation result value for post body: '%s', errno: %d", post_body, valres);
   }
@@ -391,11 +403,11 @@ static struct response* post_community(const char* community_name, const char* c
     case VALRES_OK:
       break;
     case VALRES_TOO_LONG:
-      return get_new_community(COMMUNITY_FORM_ERR_NAME_TOO_LONG, client_info);
+      return get_new_community(community_name, NULL, COMMUNITY_FORM_ERR_NAME_TOO_LONG, client_info);
     case VALRES_TOO_SHORT:
-      return get_new_community(COMMUNITY_FORM_ERR_NAME_TOO_SHORT, client_info);
+      return get_new_community(community_name, NULL, COMMUNITY_FORM_ERR_NAME_TOO_SHORT, client_info);
     case VALRES_INV_CHAR:
-      return get_new_community(COMMUNITY_FORM_ERR_NAME_INV_CHAR, client_info);
+      return get_new_community(community_name, NULL, COMMUNITY_FORM_ERR_NAME_INV_CHAR, client_info);
     default:
       log_crit("post_community(): unexpected validation result value for community name: '%s', errno: %d", community_name, valres);
   }
@@ -408,11 +420,11 @@ static struct response* post_community(const char* community_name, const char* c
     case VALRES_OK:
       break;
     case VALRES_TOO_LONG:
-      return get_new_community(COMMUNITY_FORM_ERR_ABOUT_TOO_LONG, client_info);
+      return get_new_community(community_name, about_decoded, COMMUNITY_FORM_ERR_ABOUT_TOO_LONG, client_info);
     case VALRES_TOO_SHORT:
-      return get_new_community(COMMUNITY_FORM_ERR_ABOUT_TOO_SHORT, client_info);
+      return get_new_community(community_name, about_decoded, COMMUNITY_FORM_ERR_ABOUT_TOO_SHORT, client_info);
     case VALRES_INV_ENC:
-      return get_new_community(COMMUNITY_FORM_ERR_ABOUT_INV_ENC, client_info);
+      return get_new_community(community_name, NULL, COMMUNITY_FORM_ERR_ABOUT_INV_ENC, client_info);
     default:
       log_crit("post_community(): unexpected validation result value for commuity about: '%s', errno: %d", community_about, valres);
   }
@@ -431,4 +443,3 @@ static struct response* post_community(const char* community_name, const char* c
 
   return response_redirect(uri);
 }
-

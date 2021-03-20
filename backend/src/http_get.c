@@ -46,47 +46,47 @@ struct response* http_get(const struct request* req)
 
   if (strcmp(req->uri, "./login") == 0)
   {
-    return get_login(USER_FORM_ERR_NONE, req->client_info);
+    return get_login(NULL, USER_FORM_ERR_NONE, req->client_info);
   }
 
   if (strcmp(req->uri, "./edit_user") == 0)
   {
-    return get_edit_user(USER_FORM_ERR_NONE, req->client_info);
+    return get_edit_user(NULL, USER_FORM_ERR_NONE, req->client_info);
   }
 
   if (strcmp(req->uri, "./new_post") == 0)
   {
     const char* community_id = get_map_value_str(req->query, "community_id");
-    return get_new_post(community_id, POST_FORM_ERR_NONE, req->client_info);
+    return get_new_post(NULL, NULL, community_id, POST_FORM_ERR_NONE, req->client_info);
   }
 
   if (strcmp(req->uri, "./edit_post") == 0)
   {
     const char* post_id = get_map_value_str(req->query, "post_id");
-    return get_edit_post(post_id, POST_FORM_ERR_NONE, req->client_info);
+    return get_edit_post(NULL, post_id, POST_FORM_ERR_NONE, req->client_info);
   }
 
   if (strcmp(req->uri, "./new_comment") == 0)
   {
     const char* post_id = get_map_value_str(req->query, "post_id");
-    return get_new_comment(post_id, COMMENT_FORM_ERR_NONE, req->client_info);
+    return get_new_comment(NULL, post_id, COMMENT_FORM_ERR_NONE, req->client_info);
   }
 
   if (strcmp(req->uri, "./edit_comment") == 0)
   {
     const char* comment_id = get_map_value_str(req->query, "comment_id");
-    return get_edit_comment(comment_id, COMMENT_FORM_ERR_NONE, req->client_info);
+    return get_edit_comment(NULL, comment_id, COMMENT_FORM_ERR_NONE, req->client_info);
   }
 
   if (strcmp(req->uri, "./new_community") == 0)
   {
-    return get_new_community(COMMUNITY_FORM_ERR_NONE, req->client_info);
+    return get_new_community(NULL, NULL, COMMUNITY_FORM_ERR_NONE, req->client_info);
   }
 
   if (strcmp(req->uri, "./edit_community") == 0)
   {
     const char* community_id = get_map_value_str(req->query, "community_id");
-    return get_edit_community(community_id, COMMUNITY_FORM_ERR_NONE, req->client_info);
+    return get_edit_community(NULL, community_id, COMMUNITY_FORM_ERR_NONE, req->client_info);
   }
 
   if (req->uri == strstr(req->uri, "./u/"))
@@ -352,10 +352,10 @@ ks_list* merge_items(ks_list* lsA, ks_list* lsB, enum item_type it)
 
 ks_hashmap* wrap_page_data(const struct auth_token* client_info, const ks_hashmap* page_data, const char* css_path, const char* js_path)
 {
-  // client_info can be NULL
-  if (page_data == NULL || css_path == NULL || js_path == NULL)
+  // page_data cannot be NULL
+  if (page_data == NULL)
   {
-    log_crit("wrap_page_data(): NULL parameter");
+    log_crit("wrap_page_data(): NULL page_data");
   }
 
   // create wrapper hashmap
@@ -363,8 +363,17 @@ ks_hashmap* wrap_page_data(const struct auth_token* client_info, const ks_hashma
 
   // add paths and page data
   add_map_value_str(wrapper, TEMPLATE_PATH_KEY, HTML_MAIN);
-  add_map_value_str(wrapper, STYLE_PATH_KEY, css_path);
-  add_map_value_str(wrapper, SCRIPT_PATH_KEY, js_path);
+
+  if (css_path != NULL)
+  {
+    add_map_value_str(wrapper, STYLE_PATH_KEY, css_path);
+  }
+
+  if (js_path != NULL)
+  {
+    add_map_value_str(wrapper, SCRIPT_PATH_KEY, js_path);
+  }
+
   add_map_value_hm(wrapper, PAGE_CONTENT_KEY, page_data);
 
   // add nav bar info

@@ -80,11 +80,19 @@ char* build_template(const ks_hashmap* page_data)
 
     if (val_dc == NULL)
     {
-      log_err("build_template(): missing page data '%s%s%s' in '%s'\n",
+      if (strstr(key, OPTIONAL_PREFIX) != key)
+      {
+        log_err("build_template(): missing page data '%s%s%s' in '%s'\n",
                 TEMPLATE_BEGIN,
                 key,
                 TEMPLATE_END,
-                tmplt_path->cp);
+                tmplt_path->cp);       
+      }
+
+      char* val_str = "";
+      int val_len = 0;
+      COPY_INTO_TEMPLATE();
+
       next += (key_len + 4);
       continue;
     }

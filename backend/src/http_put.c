@@ -80,11 +80,11 @@ static struct response* update_user_about(const char* about, const struct auth_t
     case VALRES_OK:
       break;
     case VALRES_TOO_SHORT:
-      return get_edit_user(USER_FORM_ERR_ABOUT_TOO_SHORT, client_info);
+      return get_edit_user(about_decoded, USER_FORM_ERR_ABOUT_TOO_SHORT, client_info);
     case VALRES_TOO_LONG:
-      return get_edit_user(USER_FORM_ERR_ABOUT_TOO_LONG, client_info);
+      return get_edit_user(about_decoded, USER_FORM_ERR_ABOUT_TOO_LONG, client_info);
     case VALRES_INV_ENC:
-      return get_edit_user(USER_FORM_ERR_ABOUT_INV_ENC, client_info);
+      return get_edit_user(about_decoded, USER_FORM_ERR_ABOUT_INV_ENC, client_info);
     default:
       log_crit("update_user_about(): invalid validation error for user about: %d", valres);
   }
@@ -116,19 +116,19 @@ static struct response* update_user_password(const char* oldpass, const char* ne
   if (validate_password(oldpass_decoded, oldpass) != VALRES_OK ||
       login_user(client_info->user_name, oldpass_decoded) == NULL)
   {
-    return get_edit_user(USER_FORM_ERR_BAD_LOGIN, client_info);
+    return get_edit_user(NULL, USER_FORM_ERR_BAD_LOGIN, client_info);
   }
 
   // make sure new password inputs match
   if (newpass1 == NULL && newpass2 == NULL)
   {
-    return get_edit_user(USER_FORM_ERR_PASSWD_TOO_SHORT, client_info);
+    return get_edit_user(NULL, USER_FORM_ERR_PASSWD_TOO_SHORT, client_info);
   }
 
   if (newpass1 == NULL || newpass2 == NULL ||
       strcmp(newpass1, newpass2) != 0)
   {
-    return get_edit_user(USER_FORM_ERR_PASSWD_MISMATCH, client_info);
+    return get_edit_user(NULL, USER_FORM_ERR_PASSWD_MISMATCH, client_info);
   }
 
   // validate new password
@@ -140,13 +140,13 @@ static struct response* update_user_password(const char* oldpass, const char* ne
     case VALRES_OK:
       break;
     case VALRES_TOO_SHORT:
-      return get_edit_user(USER_FORM_ERR_PASSWD_TOO_SHORT, client_info);
+      return get_edit_user(NULL, USER_FORM_ERR_PASSWD_TOO_SHORT, client_info);
     case VALRES_TOO_LONG:
-      return get_edit_user(USER_FORM_ERR_PASSWD_TOO_LONG, client_info);
+      return get_edit_user(NULL, USER_FORM_ERR_PASSWD_TOO_LONG, client_info);
     case VALRES_UNMET:
-      return get_edit_user(USER_FORM_ERR_PASSWD_UNMET, client_info);
+      return get_edit_user(NULL, USER_FORM_ERR_PASSWD_UNMET, client_info);
     case VALRES_INV_ENC:
-      return get_edit_user(USER_FORM_ERR_PASSWD_INV_ENC, client_info);
+      return get_edit_user(NULL, USER_FORM_ERR_PASSWD_INV_ENC, client_info);
     default:
       log_crit("update_user_password(): invalid validation error for user password: %d", valres);
   }
@@ -197,11 +197,11 @@ static struct response* update_post(const char* id, const char* body, const stru
     case VALRES_OK:
       break;
     case VALRES_TOO_SHORT:
-      return get_edit_post(id, POST_FORM_ERR_BODY_TOO_SHORT, client_info);
+      return get_edit_post(body_decoded, id, POST_FORM_ERR_BODY_TOO_SHORT, client_info);
     case VALRES_TOO_LONG:
-      return get_edit_post(id, POST_FORM_ERR_BODY_TOO_LONG, client_info);
+      return get_edit_post(body_decoded, id, POST_FORM_ERR_BODY_TOO_LONG, client_info);
     case VALRES_INV_ENC:
-      return get_edit_post(id, POST_FORM_ERR_BODY_INV_ENC, client_info);
+      return get_edit_post(body_decoded, id, POST_FORM_ERR_BODY_INV_ENC, client_info);
     default:
       log_crit("update_post(): invalid validation error for post body: %d", valres);
   }
@@ -250,11 +250,11 @@ static struct response* update_comment(const char* id, const char* body, const s
     case VALRES_OK:
       break;
     case VALRES_TOO_SHORT:
-      return get_edit_comment(id, COMMENT_FORM_ERR_TOO_SHORT, client_info);
+      return get_edit_comment(body_decoded, id, COMMENT_FORM_ERR_TOO_SHORT, client_info);
     case VALRES_TOO_LONG:
-      return get_edit_comment(id, COMMENT_FORM_ERR_TOO_LONG, client_info);
+      return get_edit_comment(body_decoded, id, COMMENT_FORM_ERR_TOO_LONG, client_info);
     case VALRES_INV_ENC:
-      return get_edit_comment(id, COMMENT_FORM_ERR_INV_ENC, client_info);
+      return get_edit_comment(body_decoded, id, COMMENT_FORM_ERR_INV_ENC, client_info);
     default:
       log_crit("update_comment(): invalid validation error for comment body: %d", valres);
   }
@@ -319,11 +319,11 @@ static struct response* update_community_about(const char* id, const char* about
     case VALRES_OK:
       break;
     case VALRES_TOO_SHORT:
-      return get_edit_community(id, COMMUNITY_FORM_ERR_ABOUT_TOO_SHORT, client_info);
+      return get_edit_community(about_decoded, id, COMMUNITY_FORM_ERR_ABOUT_TOO_SHORT, client_info);
     case VALRES_TOO_LONG:
-      return get_edit_community(id, COMMUNITY_FORM_ERR_ABOUT_TOO_LONG, client_info);
+      return get_edit_community(about_decoded, id, COMMUNITY_FORM_ERR_ABOUT_TOO_LONG, client_info);
     case VALRES_INV_ENC:
-      return get_edit_community(id, COMMUNITY_FORM_ERR_ABOUT_INV_ENC, client_info);
+      return get_edit_community(about_decoded, id, COMMUNITY_FORM_ERR_ABOUT_INV_ENC, client_info);
     default:
       log_crit("update_community_about(): invalid validation error for community about: %d", valres);
   }

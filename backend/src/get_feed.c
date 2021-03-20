@@ -107,20 +107,14 @@ struct response* get_feed(const enum feed_type ft, const struct auth_token* clie
 
     posts = sort_items(posts, POST_ITEM);
   }
-  posts = wrap_posts(posts, client_info);
 
-  // add feed list to page data map
-  if (posts == NULL)
-  {
-    add_map_value_str(page_data, FEED_ITEM_LIST_KEY, "");
-  }
-  else
+  if ((posts = wrap_posts(posts, client_info)) != NULL)
   {
     add_map_value_ls(page_data, FEED_ITEM_LIST_KEY, posts);
   }
 
   // put page data together
-  page_data = wrap_page_data(client_info, page_data, CSS_FEED, "");
+  page_data = wrap_page_data(client_info, page_data, CSS_FEED, NULL);
 
   // build template
   char* content;
@@ -157,7 +151,7 @@ struct response* get_communities(const struct auth_token* client_info)
   add_map_value_ls(page_data, FEED_ITEM_LIST_KEY, communities);
 
   // put page data together
-  page_data = wrap_page_data(client_info, page_data, CSS_FEED, "");
+  page_data = wrap_page_data(client_info, page_data, CSS_FEED, NULL);
 
   // build content
   char* content;
