@@ -212,7 +212,7 @@ int sql_toggle_comment_down_vote(const char* comment_id, const char* user_id);
 
 
 /* Return heap-allocated string ID of the newly created item (free() after use), NULL on failure */
-char* sql_create_user(const char* user_name, const char* passwd_hash, const char* about);
+char* sql_create_user(const char* user_name, const char* password_hash, const char* about);
 
 char* sql_create_comment(const char* user_id, const char* post_id, const char* body);
 
@@ -222,12 +222,17 @@ char* sql_create_community(const char* user_id, const char* community_name, cons
 
 
 /* Return 0 on success, -1 on failure */
+int sql_update_user_about(const char* user_id, const char* about);
+int sql_update_user_password_hash(const char* user_id, const char* password_hash);
 int sql_delete_user(const char* user_id);
 
+int sql_update_comment_body(const char* comment_id, const char* body);
 int sql_delete_comment(const char* comment_id);
 
+int sql_update_post_body(const char* post_id, const char* body);
 int sql_delete_post(const char* post_id);
 
+int sql_update_community_about(const char* community_id, const char* about);
 int sql_delete_community(const char* community_id);
 
 int sql_delete_moderator(const char* community_id, const char* user_id);

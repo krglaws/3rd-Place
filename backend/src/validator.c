@@ -136,7 +136,7 @@ static void html_encode(char* dest, char* src)
 }
 
 
-enum validation_result validate_passwd(char* dest, const char* src)
+enum validation_result validate_password(char* dest, const char* src)
 {
   // caller must allocate buffer for
   // decoded password string

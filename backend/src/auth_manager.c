@@ -108,9 +108,9 @@ static void rand_token(char* token_buf)
 }
 
 
-const char* login_user(const char* uname, const char* passwd)
+const char* login_user(const char* uname, const char* password)
 {
-  if (uname == NULL || passwd == NULL)
+  if (uname == NULL || password == NULL)
   {
     return NULL;
   }
@@ -130,9 +130,9 @@ const char* login_user(const char* uname, const char* passwd)
   salt[1] = hash1[1];
   salt[2] = '\0';
 
-  // hash submitted passwd
+  // hash submitted password
   char* hash2;
-  if ((hash2 = crypt(passwd, salt)) == NULL)
+  if ((hash2 = crypt(password, salt)) == NULL)
   {
     return NULL;
   }
@@ -141,12 +141,12 @@ const char* login_user(const char* uname, const char* passwd)
   if (strcmp(hash1, hash2) != 0)
   {
     ks_hashmap_delete(user_info);
-    // invalid passwd
+    // invalid password
     return NULL;
   }
   ks_hashmap_delete(user_info);
 
-  // user and passwd match, retrieve token if already exists,
+  // user and password match, retrieve token if already exists,
   // else create new token and return
   const char* token;
   if ((token = get_token(uname)) != NULL)
@@ -164,9 +164,9 @@ const char* login_user(const char* uname, const char* passwd)
 }
 
 
-const char* new_user(const char* uname, const char* passwd, const char* about)
+const char* new_user(const char* uname, const char* password, const char* about)
 {
-  if (uname == NULL || passwd == NULL)
+  if (uname == NULL || password == NULL)
   {
     // this should never happen
     return NULL;
@@ -181,10 +181,10 @@ const char* new_user(const char* uname, const char* passwd, const char* about)
     return NULL;
   }
 
-  // hash user passwd
+  // hash user password
   char salt[3];
   rand_salt(salt);
-  char* pwhash = crypt(passwd, salt);
+  char* pwhash = crypt(password, salt);
 
   // prepare insert query
   char* user_id;
@@ -203,6 +203,18 @@ const char* new_user(const char* uname, const char* passwd, const char* about)
   }
 
   return token;
+}
+
+
+int update_password(const char* user_id, const char* password)
+{
+  // create salt and hash password
+  char salt[3];
+  rand_salt(salt);
+  char* pwhash = crypt(password, salt);
+
+  // store into database
+  return sql_update_user_password_hash(user_id, pwhash);
 }
 
 

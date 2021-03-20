@@ -50,6 +50,10 @@ struct response* get_login(enum user_form_error err, const struct auth_token* cl
         add_map_value_str(page_data, LOGIN_ERR_KEY, "");
         add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Username contains invalid characters</p>");
         break;
+      case USER_FORM_ERR_PASSWD_MISMATCH:
+        add_map_value_str(page_data, EDIT_PASSWD_ERR_KEY, "<p>Password inputs do not match</p>");
+        add_map_value_str(page_data, EDIT_ABOUT_ERR_KEY, "");
+        break;
       case USER_FORM_ERR_PASSWD_TOO_SHORT:
         add_map_value_str(page_data, LOGIN_ERR_KEY, "");
         add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Password too short</p>");
@@ -127,6 +131,10 @@ struct response* get_edit_user(enum user_form_error err, const struct auth_token
       break;
     case USER_FORM_ERR_BAD_LOGIN:
       add_map_value_str(page_data, EDIT_PASSWD_ERR_KEY, "<p>Wrong password</p>");
+      add_map_value_str(page_data, EDIT_ABOUT_ERR_KEY, "");
+      break;
+    case USER_FORM_ERR_PASSWD_MISMATCH:
+      add_map_value_str(page_data, EDIT_PASSWD_ERR_KEY, "<p>New password inputs do not match</p>");
       add_map_value_str(page_data, EDIT_ABOUT_ERR_KEY, "");
       break;
     case USER_FORM_ERR_PASSWD_TOO_SHORT:

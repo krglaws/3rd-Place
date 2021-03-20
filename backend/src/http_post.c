@@ -17,8 +17,8 @@
 #include <http_post.h>
 
 
-static struct response* post_login(const char* uname, const char* passwd, const struct auth_token* client_info);
-static struct response* post_signup(const char* uname, const char* passwd, const char* about, const struct auth_token* client_info);
+static struct response* post_login(const char* uname, const char* password, const struct auth_token* client_info);
+static struct response* post_signup(const char* uname, const char* password, const char* about, const struct auth_token* client_info);
 static struct response* post_vote(const char* type, const char* direction, const char* id, const struct auth_token* client_info);
 static struct response* post_comment(const char* post_id, const char* body, const struct auth_token* client_info);
 static struct response* post_post(const char* community_name, const char* post_title, const char* post_body, const struct auth_token* client_info);
@@ -37,21 +37,21 @@ struct response* http_post(struct request* req)
   if (strcmp(req->uri, "./signup") == 0)
   {
     const char* uname = get_map_value_str(req->content, "uname");
-    const char* passwd = get_map_value_str(req->content, "passwd");
+    const char* password = get_map_value_str(req->content, "password");
     const char* about = get_map_value_str(req->content, "about");
 
-    return post_signup(uname, passwd, about, req->client_info);
+    return post_signup(uname, password, about, req->client_info);
   }
 
-  else if (strcmp(req->uri, "./login") == 0)
+  if (strcmp(req->uri, "./login") == 0)
   {
     const char* uname = get_map_value_str(req->content, "uname");
-    const char* passwd = get_map_value_str(req->content, "passwd");
+    const char* password = get_map_value_str(req->content, "password");
 
-    return post_login(uname, passwd, req->client_info);
+    return post_login(uname, password, req->client_info);
   }
 
-  else if (strcmp(req->uri, "./logout") == 0)
+  if (strcmp(req->uri, "./logout") == 0)
   {
     if (req->client_info)
     {
@@ -61,7 +61,7 @@ struct response* http_post(struct request* req)
     return response_redirect("/home");
   }
 
-  else if (strcmp(req->uri, "./vote") == 0)
+  if (strcmp(req->uri, "./vote") == 0)
   {
     const char* type = get_map_value_str(req->content, "type");
     const char* direction = get_map_value_str(req->content, "direction");
@@ -70,7 +70,7 @@ struct response* http_post(struct request* req)
     return post_vote(type, direction, id, req->client_info);
   }
 
-  else if (strcmp(req->uri, "./new_comment") == 0)
+  if (strcmp(req->uri, "./new_comment") == 0)
   {
     const char* post_id = get_map_value_str(req->content, "post_id");
     const char* body = get_map_value_str(req->content, "body");
@@ -78,7 +78,7 @@ struct response* http_post(struct request* req)
     return post_comment(post_id, body, req->client_info);
   }
 
-  else if (strcmp(req->uri, "./new_post") == 0)
+  if (strcmp(req->uri, "./new_post") == 0)
   {
     const char* community_name = get_map_value_str(req->content, "community_name");
     const char* post_title = get_map_value_str(req->content, "post_title");
@@ -87,7 +87,7 @@ struct response* http_post(struct request* req)
     return post_post(community_name, post_title, post_body, req->client_info);
   }
 
-  else if (strcmp(req->uri, "./new_community") == 0)
+  if (strcmp(req->uri, "./new_community") == 0)
   {
     const char* community_name = get_map_value_str(req->content, "community_name");
     const char* community_about = get_map_value_str(req->content, "community_about");
@@ -99,7 +99,7 @@ struct response* http_post(struct request* req)
 }
 
 
-static struct response* post_login(const char* uname, const char* passwd, const struct auth_token* client_info)
+static struct response* post_login(const char* uname, const char* password, const struct auth_token* client_info)
 {
   if (client_info != NULL)
   {
@@ -110,11 +110,11 @@ static struct response* post_login(const char* uname, const char* passwd, const 
   const char* token;
 
   // Not using USER_PASSWD_BUF_LEN since it is only used for the password hash
-  char passwd_decoded[MAX_PASSWD_LEN + 1];
+  char password_decoded[MAX_PASSWD_LEN + 1];
 
-  if (uname == NULL || passwd == NULL ||
-      validate_passwd(passwd_decoded, passwd) != VALRES_OK ||
-      (token = login_user(uname, passwd_decoded)) == NULL)
+  if (uname == NULL || password == NULL ||
+      validate_password(password_decoded, password) != VALRES_OK ||
+      (token = login_user(uname, password_decoded)) == NULL)
   {
     // no need to indicate exactly why login failed
     return get_login(USER_FORM_ERR_BAD_LOGIN, NULL);
@@ -132,7 +132,7 @@ static struct response* post_login(const char* uname, const char* passwd, const 
 }
 
 
-static struct response* post_signup(const char* uname, const char* passwd, const char* about, const struct auth_token* client_info)
+static struct response* post_signup(const char* uname, const char* password, const char* about, const struct auth_token* client_info)
 {
   if (client_info != NULL)
   {
@@ -149,17 +149,15 @@ static struct response* post_signup(const char* uname, const char* passwd, const
     case VALRES_TOO_SHORT:
       return get_login(USER_FORM_ERR_UNAME_TOO_SHORT, NULL);
     case VALRES_TOO_LONG:
-      // SIGNUPERR_UNAME_TOO_LONG
       return get_login(USER_FORM_ERR_UNAME_TOO_LONG, NULL);
     case VALRES_INV_CHAR:
-      // SIGNUPERR_UNAME_INV_CHAR
       return get_login(USER_FORM_ERR_UNAME_INV_CHAR, NULL);
     default:
       log_crit("post_signup(): unexpected validation result value for username: '%s', errno: %d", uname, valres);
   }
 
-  char passwd_decoded[USER_PASSWD_BUF_LEN];
-  valres = validate_passwd(passwd_decoded, passwd);
+  char password_decoded[USER_PASSWD_BUF_LEN];
+  valres = validate_password(password_decoded, password);
 
   switch (valres)
   {
@@ -174,7 +172,7 @@ static struct response* post_signup(const char* uname, const char* passwd, const
     case VALRES_INV_ENC:
       return get_login(USER_FORM_ERR_PASSWD_INV_ENC, NULL);
     default:
-      log_crit("post_signup(): unexpected validation result value for passwd: '%s', errno: %d", passwd, valres);
+      log_crit("post_signup(): unexpected validation result value for password: '%s', errno: %d", password, valres);
   }
 
   char about_decoded[USER_ABOUT_BUF_LEN];
@@ -196,7 +194,7 @@ static struct response* post_signup(const char* uname, const char* passwd, const
 
   // create new user
   const char* token;
-  if ((token = new_user(uname, passwd, about)) == NULL)
+  if ((token = new_user(uname, password, about)) == NULL)
   {
     return get_login(USER_FORM_ERR_UNAME_TAKEN, NULL);
   }

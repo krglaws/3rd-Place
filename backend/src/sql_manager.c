@@ -96,9 +96,21 @@ ks_hashmap* query_user_by_name(const char* user_name)
 }
 
 static MYSQL_STMT* stmt_create_user = NULL;
-char* sql_create_user(const char* user_name, const char* passwd_hash, const char* about)
+char* sql_create_user(const char* user_name, const char* password_hash, const char* about)
 {
-  return sql_function(stmt_create_user, user_name, passwd_hash, about);
+  return sql_function(stmt_create_user, user_name, password_hash, about);
+}
+
+static MYSQL_STMT* stmt_update_user_about = NULL;
+int sql_update_user_about(const char* user_id, const char* about)
+{
+  return sql_procedure(stmt_update_user_about, user_id, about);
+}
+
+static MYSQL_STMT* stmt_update_user_password_hash = NULL;
+int sql_update_user_password_hash(const char* user_id, const char* password_hash)
+{
+  return sql_procedure(stmt_update_user_password_hash, user_id, password_hash);
 }
 
 static MYSQL_STMT* stmt_delete_user = NULL;
@@ -190,6 +202,12 @@ char* sql_create_post(const char* user_id, const char* community_id, const char*
   return sql_function(stmt_create_post, user_id, community_id, title, body);
 }
 
+static MYSQL_STMT* stmt_update_post_body = NULL;
+int sql_update_post_body(const char* post_id, const char* body)
+{
+  return sql_procedure(stmt_update_post_body, post_id, body);
+}
+
 static MYSQL_STMT* stmt_delete_post = NULL;
 int sql_delete_post(const char* post_id)
 {
@@ -267,6 +285,12 @@ static MYSQL_STMT* stmt_create_comment = NULL;
 char* sql_create_comment(const char* user_id, const char* post_id, const char* body)
 {
   return sql_function(stmt_create_comment, user_id, post_id, body);
+}
+
+static MYSQL_STMT* stmt_update_comment_body = NULL;
+int sql_update_comment_body(const char* comment_id, const char* body)
+{
+  return sql_procedure(stmt_update_comment_body, comment_id, body);
 }
 
 static MYSQL_STMT* stmt_delete_comment = NULL;
@@ -351,6 +375,12 @@ static MYSQL_STMT* stmt_create_community = NULL;
 char* sql_create_community(const char* user_id, const char* community_name, const char* about)
 {
   return sql_function(stmt_create_community, user_id, community_name, about);
+}
+
+static MYSQL_STMT* stmt_update_community_about = NULL;
+int sql_update_community_about(const char* community_id, const char* about)
+{
+  return sql_procedure(stmt_update_community_about, community_id, about);
 }
 
 static MYSQL_STMT* stmt_delete_community = NULL;
@@ -785,6 +815,8 @@ void init_sql_manager()
   stmt_query_user_by_id = build_prepared_statement(sqlcon, "SELECT * FROM users WHERE id = ?;");
   stmt_query_user_by_name = build_prepared_statement(sqlcon, "SELECT * FROM users WHERE name = ?;");
   stmt_create_user = build_prepared_statement(sqlcon, "SELECT CreateUser(?, ?, ?);");
+  stmt_update_user_about = build_prepared_statement(sqlcon, "UPDATE users SET about = ? WHERE id = ?;");
+  stmt_update_user_password_hash = build_prepared_statement(sqlcon, "UPDATE users SET password_hash = ? WHERE id = ?;");
   stmt_delete_user = build_prepared_statement(sqlcon, "CALL DeleteUser(?);");
 
   // posts
@@ -794,6 +826,7 @@ void init_sql_manager()
   stmt_query_posts_by_community_id = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE community_id = ?;");
   stmt_query_posts_by_community_name = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE community_name = ?;");
   stmt_create_post = build_prepared_statement(sqlcon, "SELECT CreatePost(?, ?, ?, ?);");
+  stmt_update_post_body = build_prepared_statement(sqlcon, "UPDATE posts SET body = ? WHERE id = ?;");
   stmt_delete_post = build_prepared_statement(sqlcon, "CALL DeletePost(?);");
 
   // comments
@@ -801,6 +834,7 @@ void init_sql_manager()
   stmt_query_comments_by_author_name = build_prepared_statement(sqlcon, "SELECT * FROM comments WHERE author_name = ?;");
   stmt_query_comments_by_post_id = build_prepared_statement(sqlcon, "SELECT * FROM comments WHERE post_id = ?;");
   stmt_create_comment = build_prepared_statement(sqlcon, "SELECT CreateComment(?, ?, ?, ?);");
+  stmt_update_comment_body = build_prepared_statement(sqlcon, "UPDATE comments SET body = ? WHERE id = ?;");
   stmt_delete_comment = build_prepared_statement(sqlcon, "CALL DeleteComment(?);");
 
   // communities
@@ -808,6 +842,7 @@ void init_sql_manager()
   stmt_query_community_by_name = build_prepared_statement(sqlcon, "SELECT * FROM communities WHERE name = ?;");
   stmt_query_all_communities = build_prepared_statement(sqlcon, "SELECT * FROM communities;");
   stmt_create_community = build_prepared_statement(sqlcon, "SELECT CreateCommunity(?, ?, ?);");
+  stmt_update_community_about = build_prepared_statement(sqlcon, "UPDATE communities SET about = ? WHERE id = ?;");
   stmt_delete_community = build_prepared_statement(sqlcon, "CALL DeleteCommunity(?);");
 
   // moderators
@@ -851,6 +886,8 @@ static void terminate_sql_manager()
   mysql_stmt_close(stmt_query_user_by_id);
   mysql_stmt_close(stmt_query_user_by_name);
   mysql_stmt_close(stmt_create_user);
+  mysql_stmt_close(stmt_update_user_about);
+  mysql_stmt_close(stmt_update_user_password_hash);
   mysql_stmt_close(stmt_delete_user);
 
   // posts
@@ -860,6 +897,7 @@ static void terminate_sql_manager()
   mysql_stmt_close(stmt_query_posts_by_community_id);
   mysql_stmt_close(stmt_query_posts_by_community_name);
   mysql_stmt_close(stmt_create_post);
+  mysql_stmt_close(stmt_update_post_body);
   mysql_stmt_close(stmt_delete_post);
 
   // comments
@@ -867,6 +905,7 @@ static void terminate_sql_manager()
   mysql_stmt_close(stmt_query_comments_by_author_name);
   mysql_stmt_close(stmt_query_comments_by_post_id);
   mysql_stmt_close(stmt_create_comment);
+  mysql_stmt_close(stmt_update_comment_body);
   mysql_stmt_close(stmt_delete_comment);
 
   // communities
@@ -874,6 +913,7 @@ static void terminate_sql_manager()
   mysql_stmt_close(stmt_query_community_by_name);
   mysql_stmt_close(stmt_query_all_communities);
   mysql_stmt_close(stmt_create_community);
+  mysql_stmt_close(stmt_update_community_about);
   mysql_stmt_close(stmt_delete_community);
 
   // moderators

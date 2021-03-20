@@ -29,12 +29,17 @@ void init_auth_manager();
 
 /* Called by http_post when a user tries to login.
  */
-const char* login_user(const char* uname, const char* passwd);
+const char* login_user(const char* uname, const char* password);
 
 
 /* Called by http_post when user signs up
  */
-const char* new_user(const char* uname, const char* passwd, const char* about);
+const char* new_user(const char* uname, const char* password, const char* about);
+
+
+/* Called by http_put when user changes password
+ */
+int update_password(const char* user_id, const char* password);
 
 
 /* Called by http_post when user logs out.
