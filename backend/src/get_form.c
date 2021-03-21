@@ -53,7 +53,7 @@ struct response* get_login(const char* submitted_user_name, enum user_form_error
           add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Username contains invalid characters</p>");
           break;
         case USER_FORM_ERR_PASSWD_MISMATCH:
-          add_map_value_str(page_data, EDIT_PASSWD_ERR_KEY, "<p>Password inputs do not match</p>");
+          add_map_value_str(page_data, EDIT_USER_PASSWD_ERR_KEY, "<p>Password inputs do not match</p>");
           break;
         case USER_FORM_ERR_PASSWD_TOO_SHORT:
           add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Password too short</p>");
@@ -133,28 +133,28 @@ struct response* get_edit_user(const char* submitted_about, enum user_form_error
     switch (err)
     {
       case USER_FORM_ERR_BAD_LOGIN:
-        add_map_value_str(page_data, EDIT_PASSWD_ERR_KEY, "<p>Wrong password</p>");
+        add_map_value_str(page_data, EDIT_USER_PASSWD_ERR_KEY, "<p>Wrong password</p>");
         break;
       case USER_FORM_ERR_PASSWD_MISMATCH:
-        add_map_value_str(page_data, EDIT_PASSWD_ERR_KEY, "<p>New password inputs do not match</p>");
+        add_map_value_str(page_data, EDIT_USER_PASSWD_ERR_KEY, "<p>New password inputs do not match</p>");
         break;
       case USER_FORM_ERR_PASSWD_TOO_SHORT:
-        add_map_value_str(page_data, EDIT_PASSWD_ERR_KEY, "<p>New password too short</p>");
+        add_map_value_str(page_data, EDIT_USER_PASSWD_ERR_KEY, "<p>New password too short</p>");
         break;
       case USER_FORM_ERR_PASSWD_TOO_LONG:
-        add_map_value_str(page_data, EDIT_PASSWD_ERR_KEY, "<p>New password too long</p>");
+        add_map_value_str(page_data, EDIT_USER_PASSWD_ERR_KEY, "<p>New password too long</p>");
         break;
       case USER_FORM_ERR_PASSWD_INV_ENC:
-        add_map_value_str(page_data, EDIT_PASSWD_ERR_KEY, "<p>New password contains invalid encoding</p>");
+        add_map_value_str(page_data, EDIT_USER_PASSWD_ERR_KEY, "<p>New password contains invalid encoding</p>");
         break;
       case USER_FORM_ERR_ABOUT_TOO_SHORT:
-        add_map_value_str(page_data, EDIT_ABOUT_ERR_KEY, "<p>User about too short</p>");
+        add_map_value_str(page_data, EDIT_USER_ABOUT_ERR_KEY, "<p>User about too short</p>");
         break;
       case USER_FORM_ERR_ABOUT_TOO_LONG:
-        add_map_value_str(page_data, EDIT_ABOUT_ERR_KEY, "<p>User about too long</p>");
+        add_map_value_str(page_data, EDIT_USER_ABOUT_ERR_KEY, "<p>User about too long</p>");
         break;
       case USER_FORM_ERR_ABOUT_INV_ENC:
-        add_map_value_str(page_data, EDIT_ABOUT_ERR_KEY, "<p>User about contains invalid encoding</p>");
+        add_map_value_str(page_data, EDIT_USER_ABOUT_ERR_KEY, "<p>User about contains invalid encoding</p>");
         break;
       default:
         log_crit("get_edit_user(): invalid edit user form error: %d", err); 

@@ -1,11 +1,12 @@
     <div class="form-container-container">
       <div class="form-container">
         <h2>New Community:</h2>
+        <<OPT_COMMUNITY_FORM_ERR>>
         <form action="/new_community" method="post">
           <label for="title">Name:</label><br>
-          <input id="title" class="form-title" type="text" name="name" value=""><br>
+          <input id="title" class="form-title" type="text" name="name" value="<<OPT_SUBMITTED_COMMUNITY_NAME>>"><br>
           <label for="body">About:</label><br>
-          <input id="body" class="form-body" type="text" name="about" value=""><br>
+          <input id="body" class="form-body" type="text" name="about" value="<<OPT_SUBMITTED_COMMUNITY_ABOUT>>"><br>
           <input type="submit" value="Submit"><br>
         </form>
       </div>

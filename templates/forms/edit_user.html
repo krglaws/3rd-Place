@@ -1,9 +1,10 @@
     <div class="form-container-container">
       <div class="form-container">
         <h2><<USER_NAME>></h2>
+	<<OPT_EDIT_USER_ABOUT_ERR>>
         <form action="/edit_user" method="put">
           <label for="body">Edit about:</label><br>
-          <input id="body" class="form-body" type="text" name="about" value="<<USER_ABOUT>>"><br>
+          <input id="body" class="form-body" type="text" name="about" value="<<OPT_SUBMITTED_USER_ABOUT>>"><br>
           <input type="submit" value="Submit"><br>
         </form>
       </div>
