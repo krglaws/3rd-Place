@@ -146,7 +146,7 @@ ALLDEPS := $(LOADFILETARG) $(STRINGMAPTARG) $(TEMPLATINGTARG) $(LOGMGRTARG) $(SQ
 
 
 server: $(ALLDEPS)
-	$(CC) -o $@ $^ $(CFLAGS) -lkylestructs -lcrypt `mysql_config --libs`
+	$(CC) -o $@ $^ -lkylestructs -lcrypt `mysql_config --libs`
 
 
 .PHONY: clean
