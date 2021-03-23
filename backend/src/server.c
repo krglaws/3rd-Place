@@ -16,7 +16,7 @@
 #include <auth_manager.h>
 #include <http_post.h>
 #include <http_get.h>
-#include <http_put.h>
+#include <http_patch.h>
 #include <http_delete.h>
 #include <server.h>
 
@@ -368,10 +368,10 @@ static struct response* process_request(const int sock)
     log_info("Request from %s(socket number %d): POST %s", ipstr, sock, (req->uri + 1));
     resp = http_post(req);
   }
-  else if (strcmp(req->method, "PUT") == 0)
+  else if (strcmp(req->method, "PATCH") == 0)
   {
-    log_info("Request from %s(socket number %d): PUT %s", ipstr, sock, (req->uri + 1));
-    resp = http_put(req);
+    log_info("Request from %s(socket number %d): PATCH %s", ipstr, sock, (req->uri + 1));
+    resp = http_patch(req);
   }
   else if (strcmp(req->method, "DELETE") == 0)
   {

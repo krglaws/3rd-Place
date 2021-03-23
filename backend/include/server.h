@@ -47,7 +47,7 @@ struct request
   /* will accept either 1.1 or 1.0 */
   char* http_version;
 
-  /* POST, GET, PUT, DELETE, or HEAD */
+  /* POST, GET, PATCH, DELETE, or HEAD */
   char* method;
 
   /* path to requested resource */

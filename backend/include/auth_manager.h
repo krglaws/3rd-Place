@@ -37,7 +37,7 @@ const char* login_user(const char* uname, const char* password);
 const char* new_user(const char* uname, const char* password, const char* about);
 
 
-/* Called by http_put when user changes password
+/* Called by http_patch when user changes password
  */
 int update_password(const char* user_id, const char* password);
 

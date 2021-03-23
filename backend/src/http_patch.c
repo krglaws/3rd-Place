@@ -9,7 +9,7 @@
 #include <response.h>
 #include <validator.h>
 #include <get_form.h>
-#include <http_put.h>
+#include <http_patch.h>
 
 
 static struct response* update_user_about(const char* about, const struct auth_token* client_info);
@@ -19,7 +19,7 @@ static struct response* update_comment(const char* id, const char* body, const s
 static struct response* update_community_about(const char* id, const char* about, const struct auth_token* client_info);
 
 
-struct response* http_put(struct request* req)
+struct response* http_patch(struct request* req)
 {
   if (strcmp(req->uri, "./user_about") == 0)
   {
