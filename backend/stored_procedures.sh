@@ -300,7 +300,7 @@ BEGIN
   UPDATE comments SET author_name = "[deleted]", author_id = 0 WHERE author_id = uid;
 
   # remove references in communities
-  UPDATE communities SET owner_name = "[deleted]", owner_id = 0 WHERE author_id = uid;
+  UPDATE communities SET owner_name = "[deleted]", owner_id = 0 WHERE owner_id = uid;
 
   # remove references from votes
   UPDATE post_up_votes SET user_id = 0 WHERE user_id = uid;
