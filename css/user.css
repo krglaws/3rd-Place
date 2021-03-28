@@ -6,7 +6,7 @@
 /* start user title */
 .user-title-container {
   width: 100%;
-  padding: 1%;
+  padding: 1% 1% 0% 1%;
 }
 
 .user-title {
@@ -18,6 +18,29 @@
 }
 /* end user title */
 /******************/
+
+/**********************/
+/* start user options */
+.user-options-container {
+  margin: 0% 0% 2% 42%;
+}
+
+.user-option {
+  float: left;
+  margin: 1% 1%
+}
+
+.user-option:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.user-option a {
+  text-decoration: none;
+  color: black;
+}
+/* end user options */
+/********************/
 
 /**********************/
 /* start user content */

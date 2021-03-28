@@ -5,13 +5,13 @@ function findSibling(arrow, upOrDown) {
   for (var i = 0; i < voteWrapper.childNodes.length; i++) {
     var child = voteWrapper.childNodes[i];
 
-    if (child['classList'] !== undefined && 
-        child.classList.contains('arrow-wrapper')) {
+    if (child["classList"] !== undefined && 
+        child.classList.contains("arrow-wrapper")) {
 
       for (var j = 0; j < child.childNodes.length; j++) {
         var grandChild = child.childNodes[j];
 
-        if (grandChild['classList'] !== undefined &&
+        if (grandChild["classList"] !== undefined &&
             grandChild.classList.contains(upOrDown)) {
 
           return grandChild;
@@ -31,8 +31,8 @@ function getScoreWrapper(arrow) {
   for (var i = 0; i < voteWrapper.childNodes.length; i++) {
     var child = voteWrapper.childNodes[i];
 
-    if (child['classList'] !== undefined &&
-        child.classList.contains('score-wrapper')) {
+    if (child["classList"] !== undefined &&
+        child.classList.contains("score-wrapper")) {
 
       return child;
     }
@@ -118,17 +118,21 @@ function vote(arrow, postOrComment, id) {
   var arrowDirection = arrow.classList.contains("up") ? "up" : "down";
   var siblingDirection = arrowDirection === "up" ? "down" : "up";
 
-  fetch('/vote', {
-    method: 'POST',
-    redirect: 'follow',
-    credentials: 'same-origin',
+  fetch("/vote", {
+    method: "POST",
+    redirect: "follow",
+    credentials: "same-origin",
     body: "type="+postOrComment+"&direction="+arrowDirection+"&id="+id
   }).then(response => {
     if (response.redirected) {
       window.location.href = response.url;
     }
-    else {
+    else if (response.ok) {
       toggleVote(arrow, postOrComment, id, arrowDirection, siblingDirection);
+    }
+    else {
+      console.log(response);
+      alert("Error");
     }
   });
 }
