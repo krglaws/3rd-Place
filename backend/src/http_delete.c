@@ -84,6 +84,9 @@ static struct response* delete_user(const char* user_name, const struct auth_tok
     else ks_hashmap_delete(admin_info);
   }
 
+  // logout
+  remove_token(client_info->token);
+
   // remove user from DB
   const char* user_id = get_map_value_str(user_info, FIELD_USER_ID);
   if (sql_delete_user(user_id) != 0)
