@@ -17,8 +17,8 @@
 #include <http_post.h>
 
 
-static struct response* post_login(const char* uname, const char* password, const struct auth_token* client_info);
-static struct response* post_signup(const char* uname, const char* password1, const char* password2, const char* about, const struct auth_token* client_info);
+static struct response* post_login(const char* user_name, const char* password, const struct auth_token* client_info);
+static struct response* post_signup(const char* user_name, const char* password1, const char* password2, const char* about, const struct auth_token* client_info);
 static struct response* post_vote(const char* type, const char* direction, const char* id, const struct auth_token* client_info);
 static struct response* post_comment(const char* post_id, const char* body, const struct auth_token* client_info);
 static struct response* post_post(const char* community_name, const char* post_title, const char* post_body, const struct auth_token* client_info);
@@ -36,20 +36,20 @@ struct response* http_post(struct request* req)
   // figure out which endpoint
   if (strcmp(req->uri, "./signup") == 0)
   {
-    const char* uname = get_map_value_str(req->content, "uname");
+    const char* user_name = get_map_value_str(req->content, "user_name");
     const char* password1 = get_map_value_str(req->content, "password1");
     const char* password2 = get_map_value_str(req->content, "password2");
     const char* about = get_map_value_str(req->content, "about");
 
-    return post_signup(uname, password1, password2, about, req->client_info);
+    return post_signup(user_name, password1, password2, about, req->client_info);
   }
 
   if (strcmp(req->uri, "./login") == 0)
   {
-    const char* uname = get_map_value_str(req->content, "uname");
+    const char* user_name = get_map_value_str(req->content, "user_name");
     const char* password = get_map_value_str(req->content, "password");
 
-    return post_login(uname, password, req->client_info);
+    return post_login(user_name, password, req->client_info);
   }
 
   if (strcmp(req->uri, "./logout") == 0)
@@ -100,7 +100,7 @@ struct response* http_post(struct request* req)
 }
 
 
-static struct response* post_login(const char* uname, const char* password, const struct auth_token* client_info)
+static struct response* post_login(const char* user_name, const char* password, const struct auth_token* client_info)
 {
   if (client_info != NULL)
   {
@@ -113,12 +113,12 @@ static struct response* post_login(const char* uname, const char* password, cons
   // Not using USER_PASSWD_BUF_LEN since it is only used for the password hash
   char password_decoded[MAX_PASSWD_LEN + 1];
 
-  if (uname == NULL || password == NULL ||
+  if (user_name == NULL || password == NULL ||
       validate_password(password_decoded, password) != VALRES_OK ||
-      (token = login_user(uname, password_decoded)) == NULL)
+      (token = login_user(user_name, password_decoded)) == NULL)
   {
     // no need to indicate exactly why login failed
-    return get_login(uname, USER_FORM_ERR_BAD_LOGIN, NULL);
+    return get_login(user_name, USER_FORM_ERR_BAD_LOGIN, NULL);
   }
 
   // build redirect
@@ -133,7 +133,7 @@ static struct response* post_login(const char* uname, const char* password, cons
 }
 
 
-static struct response* post_signup(const char* uname, const char* password1, const char* password2, const char* about, const struct auth_token* client_info)
+static struct response* post_signup(const char* user_name, const char* password1, const char* password2, const char* about, const struct auth_token* client_info)
 {
   if (client_info != NULL)
   {
@@ -141,31 +141,31 @@ static struct response* post_signup(const char* uname, const char* password1, co
     return response_redirect("/login");
   }
 
-  enum validation_result valres = validate_user_name(uname);
+  enum validation_result valres = validate_user_name(user_name);
 
   switch (valres)
   {
     case VALRES_OK:
       break;
     case VALRES_TOO_SHORT:
-      return get_login(uname, USER_FORM_ERR_UNAME_TOO_SHORT, NULL);
+      return get_login(user_name, USER_FORM_ERR_UNAME_TOO_SHORT, NULL);
     case VALRES_TOO_LONG:
-      return get_login(uname, USER_FORM_ERR_UNAME_TOO_LONG, NULL);
+      return get_login(user_name, USER_FORM_ERR_UNAME_TOO_LONG, NULL);
     case VALRES_INV_CHAR:
-      return get_login(uname, USER_FORM_ERR_UNAME_INV_CHAR, NULL);
+      return get_login(user_name, USER_FORM_ERR_UNAME_INV_CHAR, NULL);
     default:
-      log_crit("post_signup(): unexpected validation result value for username: '%s', errno: %d", uname, valres);
+      log_crit("post_signup(): unexpected validation result value for username: '%s', errno: %d", user_name, valres);
   }
 
   if (password1 == NULL && password2 == NULL)
   {
-    return get_login(uname, USER_FORM_ERR_PASSWD_TOO_SHORT, NULL);
+    return get_login(user_name, USER_FORM_ERR_PASSWD_TOO_SHORT, NULL);
   }
   
   if (password1 == NULL || password2 == NULL ||
       strcmp(password1, password2) != 0)
   {
-    return get_login(uname, USER_FORM_ERR_PASSWD_MISMATCH, NULL);
+    return get_login(user_name, USER_FORM_ERR_PASSWD_MISMATCH, NULL);
   }
 
   char password_decoded[USER_PASSWD_BUF_LEN];
@@ -176,13 +176,13 @@ static struct response* post_signup(const char* uname, const char* password1, co
     case VALRES_OK:
       break;
     case VALRES_TOO_SHORT:
-      return get_login(uname, USER_FORM_ERR_PASSWD_TOO_SHORT, NULL);
+      return get_login(user_name, USER_FORM_ERR_PASSWD_TOO_SHORT, NULL);
     case VALRES_TOO_LONG:
-      return get_login(uname, USER_FORM_ERR_PASSWD_TOO_LONG, NULL);
+      return get_login(user_name, USER_FORM_ERR_PASSWD_TOO_LONG, NULL);
     case VALRES_UNMET:
-      return get_login(uname, USER_FORM_ERR_PASSWD_UNMET, NULL);
+      return get_login(user_name, USER_FORM_ERR_PASSWD_UNMET, NULL);
     case VALRES_INV_ENC:
-      return get_login(uname, USER_FORM_ERR_PASSWD_INV_ENC, NULL);
+      return get_login(user_name, USER_FORM_ERR_PASSWD_INV_ENC, NULL);
     default:
       log_crit("post_signup(): unexpected validation result value for password: '%s', errno: %d", password1, valres);
   }
@@ -195,20 +195,20 @@ static struct response* post_signup(const char* uname, const char* password1, co
     case VALRES_OK:
       break;
     case VALRES_TOO_SHORT:
-      return get_login(uname, USER_FORM_ERR_ABOUT_TOO_SHORT, NULL);
+      return get_login(user_name, USER_FORM_ERR_ABOUT_TOO_SHORT, NULL);
     case VALRES_TOO_LONG:
-      return get_login(uname, USER_FORM_ERR_ABOUT_TOO_LONG, NULL);
+      return get_login(user_name, USER_FORM_ERR_ABOUT_TOO_LONG, NULL);
     case VALRES_INV_ENC:
-      return get_login(uname, USER_FORM_ERR_ABOUT_INV_ENC, NULL);
+      return get_login(user_name, USER_FORM_ERR_ABOUT_INV_ENC, NULL);
     default:
       log_crit("post_signup(): unexpected validation result value for about: '%s', errno: %d", about, valres);
   }
 
   // create new user
   const char* token;
-  if ((token = new_user(uname, password1, about)) == NULL)
+  if ((token = new_user(user_name, password1, about)) == NULL)
   {
-    return get_login(uname, USER_FORM_ERR_UNAME_TAKEN, NULL);
+    return get_login(user_name, USER_FORM_ERR_UNAME_TAKEN, NULL);
   }
 
   // build redirect

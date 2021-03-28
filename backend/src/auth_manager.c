@@ -17,8 +17,8 @@
 static char rand_byte();
 static void rand_salt(char* salt_buf);
 static void rand_token(char* token_buf);
-static const char* new_token(const char* uname);
-static const char* get_token(const char* uname);
+static const char* new_token(const char* user_name);
+static const char* get_token(const char* user_name);
 static void terminate_auth_manager();
 
 /* ks_list of login tokens */
@@ -108,15 +108,15 @@ static void rand_token(char* token_buf)
 }
 
 
-const char* login_user(const char* uname, const char* password)
+const char* login_user(const char* user_name, const char* password)
 {
-  if (uname == NULL || password == NULL)
+  if (user_name == NULL || password == NULL)
   {
     return NULL;
   }
 
   ks_hashmap* user_info;
-  if ((user_info = query_user_by_name(uname)) == NULL)
+  if ((user_info = query_user_by_name(user_name)) == NULL)
   {
     // user does not exist
     return NULL;
@@ -149,12 +149,12 @@ const char* login_user(const char* uname, const char* password)
   // user and password match, retrieve token if already exists,
   // else create new token and return
   const char* token;
-  if ((token = get_token(uname)) != NULL)
+  if ((token = get_token(user_name)) != NULL)
   {
     return token;
   }
 
-  if ((token = new_token(uname)) == NULL)
+  if ((token = new_token(user_name)) == NULL)
   {
     log_err("login_user(): failed to create new user token");
     return NULL;
@@ -164,16 +164,16 @@ const char* login_user(const char* uname, const char* password)
 }
 
 
-const char* new_user(const char* uname, const char* password, const char* about)
+const char* new_user(const char* user_name, const char* password, const char* about)
 {
-  if (uname == NULL || password == NULL)
+  if (user_name == NULL || password == NULL)
   {
     // this should never happen
     return NULL;
   }
 
   // check if user already exists
-  ks_hashmap* user_info = query_user_by_name(uname);
+  ks_hashmap* user_info = query_user_by_name(user_name);
 
   if (user_info != NULL)
   {
@@ -188,7 +188,7 @@ const char* new_user(const char* uname, const char* password, const char* about)
 
   // prepare insert query
   char* user_id;
-  if ((user_id = sql_create_user(uname, pwhash, about)) == NULL)
+  if ((user_id = sql_create_user(user_name, pwhash, about)) == NULL)
   {
     log_err("new_user(): failed to create new user");
     return NULL;
@@ -196,7 +196,7 @@ const char* new_user(const char* uname, const char* password, const char* about)
   free(user_id);
 
   const char* token;
-  if ((token = new_token(uname)) == NULL)
+  if ((token = new_token(user_name)) == NULL)
   {
     log_err("new_user(): failed to create new user token");
     return NULL;
@@ -218,16 +218,16 @@ int update_password(const char* user_id, const char* password)
 }
 
 
-static const char* new_token(const char* uname)
+static const char* new_token(const char* user_name)
 {
   // pull user info from database
-  ks_hashmap* user_info = query_user_by_name(uname);
+  ks_hashmap* user_info = query_user_by_name(user_name);
   const char* user_id = get_map_value_str(user_info, FIELD_USER_ID);
 
   // copy info into auth token
   struct auth_token* new_token = calloc(1, sizeof(struct auth_token));
   memcpy(new_token->user_id, user_id, strlen(user_id));
-  memcpy(new_token->user_name, uname, strlen(uname));
+  memcpy(new_token->user_name, user_name, strlen(user_name));
   new_token->last_active = time(NULL);
   ks_hashmap_delete(user_info);
 
@@ -245,9 +245,9 @@ static const char* new_token(const char* uname)
 }
 
 
-static const char* get_token(const char* uname)
+static const char* get_token(const char* user_name)
 {
-  if (uname == NULL)
+  if (user_name == NULL)
   {
     return NULL;
   }
@@ -257,7 +257,7 @@ static const char* get_token(const char* uname)
   while ((curr = ks_iterator_get(iter)) != NULL)
   {
     struct auth_token* at = curr->vp;
-    if (strcmp(at->user_name, uname) == 0)
+    if (strcmp(at->user_name, user_name) == 0)
     {
       ks_iterator_delete(iter);
       return at->token;
