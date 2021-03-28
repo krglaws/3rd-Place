@@ -8,7 +8,7 @@
       <label for="uname">Username:</label><br>
       <input type="text" id="uname" name="uname" value="<<OPT_SUBMITTED_LOGIN_UNAME>>"><br>
       <label for="password">Password:</label><br>
-      <input type="text" id="password" name="password" value=""><br>
+      <input type="password" id="password" name="password" value=""><br>
       <input type="submit" value="Login"><br>
     </form>
   </div>
@@ -17,10 +17,12 @@
     <<OPT_SIGNUP_ERROR>>
     <h2>Sign up</h2>
     <form action="/signup" method="post">
-      <label for="uname">Username:</label><br>
-      <input type="text" id="uname" name="uname" value="<<OPT_SUBMITTED_SIGNUP_UNAME>>"><br>
-      <label type="password">Password:</label><br>
-      <input type="password" id="password" name="password" value=""><br>
+      <label for="user_name">Username:</label><br>
+      <input type="text" id="user_name" name="user_name" value="<<OPT_SUBMITTED_SIGNUP_UNAME>>"><br>
+      <label for="password1">Password:</label><br>
+      <input type="password" id="password1" name="password1" value=""><br>
+      <label for="password2">Retype password:</label><br>
+      <input type="password" id="password2" name="password2" value=""><br>
       <input type="submit" value="Sign Up"><br>
     </form> 
   </div>
