@@ -125,7 +125,7 @@ struct response* get_user(const char* user_name, const struct auth_token* client
 {
   if (user_name == NULL || strlen(user_name) == 0)
   {
-    return NULL;
+    return response_error(STAT404);
   }
 
   // get user info from DB
@@ -133,7 +133,7 @@ struct response* get_user(const char* user_name, const struct auth_token* client
   if ((page_data = query_user_by_name(user_name)) == NULL)
   {
     // user not found
-    return NULL;
+    return response_error(STAT404);
   }
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_USER);
 
@@ -146,11 +146,36 @@ struct response* get_user(const char* user_name, const struct auth_token* client
 
   // get user comments
   ks_list* comments;
-  if ((comments = get_user_comments(user_name, client_info)) == NULL)
+  if ((comments = get_user_comments(user_name, client_info)) != NULL)
   {
     add_map_value_ls(page_data, USER_COMMENT_LIST_KEY, comments);
   }
 
+  // add css display values for user options
+  char* edit_disp = "none";
+  char* logout_disp = "none";
+  char* delete_disp = "none";
+
+  if (client_info != NULL)
+  {
+    ks_hashmap* admin_info;
+    if (strcmp(user_name, client_info->user_name) == 0)
+    {
+      edit_disp = "block";
+      logout_disp = "block";
+      delete_disp = "block";
+    }
+    else if ((admin_info = query_administrator_by_user_id(client_info->user_id)) != NULL)
+    {
+      ks_hashmap_delete(admin_info);
+      delete_disp = "block";
+    }
+  }
+
+  add_map_value_str(page_data, EDIT_USER_LINK_DISPLAY_KEY, edit_disp);
+  add_map_value_str(page_data, LOGOUT_USER_LINK_DISPLAY_KEY, logout_disp);
+  add_map_value_str(page_data, DELETE_USER_LINK_DISPLAY_KEY, delete_disp);
+ 
   // put page data together
   page_data = wrap_page_data(client_info, page_data, CSS_USER, JS_USER);
 

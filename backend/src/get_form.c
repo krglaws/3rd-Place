@@ -53,7 +53,7 @@ struct response* get_login(const char* submitted_user_name, enum user_form_error
           add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Username contains invalid characters</p>");
           break;
         case USER_FORM_ERR_PASSWD_MISMATCH:
-          add_map_value_str(page_data, EDIT_USER_PASSWD_ERR_KEY, "<p>Password inputs do not match</p>");
+          add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Password inputs do not match</p>");
           break;
         case USER_FORM_ERR_PASSWD_TOO_SHORT:
           add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Password too short</p>");

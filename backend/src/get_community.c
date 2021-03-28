@@ -71,7 +71,7 @@ struct response* get_community(const char* community_name, const struct auth_tok
 {
   if (community_name == NULL || strlen(community_name) == 0)
   {
-    return NULL;
+    return response_error(STAT404);
   }
 
   // get community info
@@ -79,7 +79,7 @@ struct response* get_community(const char* community_name, const struct auth_tok
   if ((page_data = query_community_by_name(community_name)) == NULL)
   {
     // community does not exist
-    return NULL;
+    return response_error(STAT404);
   }
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_COMMUNITY);
 
