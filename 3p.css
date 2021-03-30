@@ -27,11 +27,23 @@ html, body {
   background-color: var(--outer-bg-color);
 }
 
+a {
+  color: black;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
 .border-box {
   background-color: var(--inner-bg-color);
   border-color: var(--border-color);
   border-style: var(--border-style);
   border-width: var(--border-width); 
+}
+
+.utc-timestamp {
 }
 
 .vote-content-wrapper {
@@ -103,11 +115,6 @@ html, body {
   text-decoration: underline;
   cursor: pointer;
 }
-
-.option a {
-  text-decoration: none;
-  color: black;
-}
 /* end global style */
 /********************/
 
@@ -158,15 +165,6 @@ html, body {
   display: none;
 }
 
-.community-tab-content-container a {
-  color: black;
-  text-decoration: none;
-}
-
-.community-tab-content-container a:hover {
-  text-decoration: underline;
-}
-
 .community-tab-content {
   margin: 1%;
   padding: 1%;
@@ -202,7 +200,6 @@ html, body {
 }
 
 .feed-title {
-  font-weight: normal;
   font-size: var(--title-font-size);
   text-align: center;
   padding: 1%;
@@ -222,54 +219,44 @@ html, body {
   width: 75%;
 }
 
-.post {
+.feed-post {
   margin: 1%;
   padding: 1%;
   flex: 98%;
 }
 
-.post a {
-  color: black;
-  text-decoration: none;
+.feed-post-title {
+  font-size: 16px;
 }
 
-.post a:hover {
-  text-decoration: underline;
+.feed-post-info {
+  font-size: 10px;
 }
+
+.feed-community {
+  margin: 1%;
+  padding: 1%;
+  flex: 98%;
+}
+
+.feed-community-name {
+  font-size: 16px;
+  padding: 0%;
+  margin: 0%;
+}
+
+.feed-community-about {
+  font-size: 14px;
+  margin: 0%;
+  padding: 0%;
+}
+
+.feed-community-info {
+  font-size: 10px;
+}
+
 /* end feed style */
 /******************/
-
-/*******************/
-/* community style */
-.community-name {
-  font-size: var(--title-font-size);
-  font-weight: normal;
-  padding: 0%;
-  margin: 0%;
-}
-
-.community-about {
-  font-size: var(--body-font-size);
-  margin: 0%;
-  padding: 0%;
-}
-
-.community {
-  margin: 1%;
-  padding: 1%;
-  flex: 98%;
-}
-
-.community a {
-  color: black;
-  text-decoration: none;
-}
-
-.community a:hover {
-  text-decoration: underline;
-}
-/* end community style */
-/***********************/
 
 /**************/
 /* form style */
@@ -312,15 +299,9 @@ html, body {
 .top-navigation a {
   float: left;
   padding: 12px;
-  color: black;
-  text-decoration: none;
   font-size: var(--nav-font-size);
   width: 25%;
   text-align: center;
-}
-
-.top-navigation a:hover {
-  text-decoration: underline;
 }
 
 @media screen and (max-width: 500px) {
@@ -356,15 +337,6 @@ html, body {
   text-align: left;
 }
 
-.post-author a {
-  color: black;
-  text-decoration: none;
-}
-
-.post-author a:hover {
-  text-decoration: underline;
-}
-
 .post-title {
   font-size: var(--title-font-size);
   text-align: center;
@@ -397,15 +369,6 @@ html, body {
 
 .comment-author {
   font-size: var(--uname-font-size);
-}
-
-.comment-author a {
-  color: black;
-  text-decoration: none;
-}
-
-.comment-author a:hover {
-  text-decoration: underline;
 }
 
 .comment-body {
@@ -460,15 +423,6 @@ html, body {
   display: none;
 }
 
-.user-tab-content-container a {
-  color: black;
-  text-decoration: none;
-}
-
-.user-tab-content-container a:hover {
-  text-decoration: underline;
-}
-
 .user-tab-content {
   margin: 1%;
   padding: 1%;
@@ -476,7 +430,6 @@ html, body {
 }
 
 .user-tab-content h3 {
-  font-weight: normal;
 }
 /* end user style */
 /******************/
