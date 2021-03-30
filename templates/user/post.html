@@ -4,4 +4,13 @@
       <a href="/p/<<POST_ID>>">"<<POST_TITLE>>"</a> in <a href="/c/<<POST_COMMUNITY_NAME>>">"<<POST_COMMUNITY_NAME>>"</a>
     </h3>
   <p>"<<POST_BODY>>"</p>
+
+  <div class="user-options-container">
+    <div class="user-option">
+      <a href="/edit_post" style="visibility: <<EDIT_OPTION_VISIBILITY>>;">[edit post]</a>
+    </div>
+    <div class="user-option" style="visibility: <<DELETE_OPTION_VISIBILITY>>;" onclick="deletePost('<<POST_ID>>');">
+      [delete post]
+    </div>
+  </div>
 </div>

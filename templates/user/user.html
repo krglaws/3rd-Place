@@ -5,13 +5,13 @@
 </div>
 
 <div class="user-options-container">
-  <div class="user-option">
-    <a href="/edit_user" style="display: <<EDIT_USER_LINK_DISPLAY>>;">[edit user]</a>
+  <div class="user-option" style="visiblity: <<EDIT_OPTION_VISIBILITY>>;">
+    <a href="/edit_user">[edit user]</a>
   </div>
-  <div class="user-option" style="display: <<LOGOUT_USER_LINK_DISPLAY>>;" onclick="logOut();">
+  <div class="user-option" style="visibility: <<LOGOUT_OPTION_VISIBILITY>>;" onclick="logOut();">
     [logout]
   </div>
-  <div class="user-option" style="display: <<DELETE_USER_LINK_DISPLAY>>;" onclick="deleteAccount('<<USER_NAME>>');">
+  <div class="user-option" style="visibility: <<DELETE_OPTION_VISIBILITY>>;" onclick="deleteUser('<<USER_NAME>>');">
     [delete account]
   </div>
 </div>
@@ -20,10 +20,10 @@
   <div class="user-content border-box">
 
     <div class="user-tab-link-container">
-      <button id="default-tab" class="user-tab-link" onclick="openPage('overview', this);">Overview</button>
-      <button class="user-tab-link" onclick="openPage('posts', this);">Posts</button>
-      <button class="user-tab-link" onclick="openPage('comments', this);">Comments</button>
-      <button class="user-tab-link" onclick="openPage('about', this);">About</button>
+      <button id="default-tab" class="user-tab-link" onclick="openUserTab('overview', this);">Overview</button>
+      <button class="user-tab-link" onclick="openUserTab('posts', this);">Posts</button>
+      <button class="user-tab-link" onclick="openUserTab('comments', this);">Comments</button>
+      <button class="user-tab-link" onclick="openUserTab('about', this);">About</button>
     </div>
 
     <div id="overview" class="user-tab-content-container">
