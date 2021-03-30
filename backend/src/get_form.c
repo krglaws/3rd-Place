@@ -87,7 +87,7 @@ struct response* get_login(const char* submitted_user_name, enum user_form_error
   }
 
   // wrap page data
-  page_data = wrap_page_data(client_info, page_data, CSS_LOGIN, NULL);
+  page_data = wrap_page_data(client_info, page_data);
 
   // build content 
   char* content;
@@ -162,7 +162,7 @@ struct response* get_edit_user(const char* submitted_about, enum user_form_error
   }
 
   // wrap page data
-  page_data = wrap_page_data(client_info, page_data, CSS_FORM, NULL);
+  page_data = wrap_page_data(client_info, page_data);
 
   // build content
   char* content;
@@ -231,7 +231,7 @@ struct response* get_new_post(const char* submitted_title, const char* submitted
   }
 
   // wrap page data
-  page_data = wrap_page_data(client_info, page_data, CSS_FORM, NULL);
+  page_data = wrap_page_data(client_info, page_data);
 
   // build content
   char* content;
@@ -301,7 +301,7 @@ struct response* get_edit_post(const char* submitted_body, const char* post_id, 
   }
 
   // wrap page data
-  page_data = wrap_page_data(client_info, page_data, CSS_FORM, NULL);
+  page_data = wrap_page_data(client_info, page_data);
 
   // build content
   char* content;
@@ -355,7 +355,7 @@ struct response* get_new_comment(const char* submitted_body, const char* post_id
   }
 
   // put page data together
-  page_data = wrap_page_data(client_info, page_data, CSS_FORM, NULL);
+  page_data = wrap_page_data(client_info, page_data);
 
   // build content
   char* content;
@@ -423,7 +423,7 @@ struct response* get_edit_comment(const char* submitted_body, const char* commen
   }
 
   // put page data together
-  page_data = wrap_page_data(client_info, page_data, CSS_FORM, NULL);
+  page_data = wrap_page_data(client_info, page_data);
 
   // build content
   char* content;
@@ -486,7 +486,7 @@ struct response* get_new_community(const char* submitted_name, const char* submi
   }
 
   // put page data together
-  page_data = wrap_page_data(client_info, page_data, CSS_FORM, NULL);
+  page_data = wrap_page_data(client_info, page_data);
 
   // build content
   char* content;
@@ -566,7 +566,7 @@ struct response* get_edit_community(const char* submitted_about, const char* com
   }
 
   // put page data together
-  page_data = wrap_page_data(client_info, page_data, CSS_FORM, NULL);
+  page_data = wrap_page_data(client_info, page_data);
 
   // build content
   char* content;

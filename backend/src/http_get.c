@@ -129,15 +129,15 @@ struct response* get_file(const char* uri)
   // determine file type
   if (strstr(uri, ".css") != NULL)
   {
-    content_type = TEXTCSS;
+    content_type = "Content-Type: text/css\r\n";
   }
   else if (strstr(uri, ".js") != NULL)
   {
-    content_type = APPJS;
+    content_type = "Content-Type: application/javascript\r\n";
   }
   else if (strstr(uri, ".ico") != NULL)
   {
-    content_type = IMGICO;
+    content_type = "Content-Type: image/x-icon\r\n";
   }
 
   // build response object
@@ -154,25 +154,6 @@ struct response* get_file(const char* uri)
   free(f);
 
   return resp;
-}
-
-
-void add_nav_info(ks_hashmap* page_data, const struct auth_token* client_info)
-{
-  char user_link[64];
-
-  if (client_info != NULL)
-  {
-    sprintf(user_link, "/u/%s", client_info->user_name);
-    add_map_value_str(page_data, CLIENT_LINK_KEY, user_link);
-    add_map_value_str(page_data, CLIENT_NAME_KEY, client_info->user_name);
-  }
-
-  else
-  {
-    add_map_value_str(page_data, CLIENT_LINK_KEY, "/login");
-    add_map_value_str(page_data, CLIENT_NAME_KEY, "Login");
-  }
 }
 
 
@@ -350,7 +331,7 @@ ks_list* merge_items(ks_list* lsA, ks_list* lsB, enum item_type it)
 }
 
 
-ks_hashmap* wrap_page_data(const struct auth_token* client_info, const ks_hashmap* page_data, const char* css_path, const char* js_path)
+ks_hashmap* wrap_page_data(const struct auth_token* client_info, const ks_hashmap* page_data)
 {
   // page_data cannot be NULL
   if (page_data == NULL)
@@ -361,23 +342,25 @@ ks_hashmap* wrap_page_data(const struct auth_token* client_info, const ks_hashma
   // create wrapper hashmap
   ks_hashmap* wrapper = ks_hashmap_new(KS_CHARP, 8);
 
-  // add paths and page data
+  // add main html path and page data
   add_map_value_str(wrapper, TEMPLATE_PATH_KEY, HTML_MAIN);
-
-  if (css_path != NULL)
-  {
-    add_map_value_str(wrapper, STYLE_PATH_KEY, css_path);
-  }
-
-  if (js_path != NULL)
-  {
-    add_map_value_str(wrapper, SCRIPT_PATH_KEY, js_path);
-  }
-
   add_map_value_hm(wrapper, PAGE_CONTENT_KEY, page_data);
 
   // add nav bar info
-  add_nav_info(wrapper, client_info);
+  char user_link[64];
+
+  if (client_info != NULL)
+  {
+    sprintf(user_link, "/u/%s", client_info->user_name);
+    add_map_value_str(wrapper, CLIENT_LINK_KEY, user_link);
+    add_map_value_str(wrapper, CLIENT_NAME_KEY, client_info->user_name);
+  }
+
+  else
+  {
+    add_map_value_str(wrapper, CLIENT_LINK_KEY, "/login");
+    add_map_value_str(wrapper, CLIENT_NAME_KEY, "Login");
+  }
 
   return wrapper;
 }

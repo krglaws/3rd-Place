@@ -103,7 +103,7 @@ struct response* get_post(const char* post_id, const struct auth_token* client_i
   }
 
   // put page data together
-  page_data = wrap_page_data(client_info, page_data, CSS_POST, NULL);
+  page_data = wrap_page_data(client_info, page_data);
 
   // build template
   char* content;

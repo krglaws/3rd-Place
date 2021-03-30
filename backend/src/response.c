@@ -81,10 +81,13 @@ struct response* response_ok(const char* content)
   char contlenline[64];
   int len = sprintf(contlenline, cont_len_tmplt, resp->content_length);
 
+  // assume this is HTML being sent
+  const char* content_type = "Content-Type: text/html\r\n";
+
   // build header
   resp->header = ks_list_new();
   ks_list_add(resp->header, ks_datacont_new(STAT200, KS_CHARP, strlen(STAT200)));
-  ks_list_add(resp->header, ks_datacont_new(TEXTHTML, KS_CHARP, strlen(TEXTHTML)));
+  ks_list_add(resp->header, ks_datacont_new(content_type, KS_CHARP, strlen(content_type)));
   ks_list_add(resp->header, ks_datacont_new(contlenline, KS_CHARP, len));
 
   return resp;

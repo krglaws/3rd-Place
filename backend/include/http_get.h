@@ -35,29 +35,9 @@
 #define HTML_EDIT_COMMENT "templates/forms/edit_comment.html"
 #define HTML_EDIT_COMMUNITY "templates/forms/edit_community.html"
 
-
-/* paths hereafter need the leading '/' since
-   they will be requested by the client browser
-   directly */
-
-/* css paths */
-#define CSS_MAIN "/css/main.css"
-#define CSS_LOGIN "/css/login.css"
-#define CSS_FORM "/css/form.css"
-#define CSS_USER "/css/user.css"
-#define CSS_POST "/css/post.css"
-#define CSS_COMMUNITY "/css/community.css"
-#define CSS_FEED "/css/feed.css"
-
-/* js paths */
-#define JS_USER "/js/user.js"
-#define JS_COMMUNITY "/js/community.js"
-
 struct response* http_get(const struct request* req);
 
 struct response* get_file(const char* uri);
-
-void add_nav_info(ks_hashmap* page_data, const struct auth_token* client_info);
 
 #define UPVOTE_CLICKED_STATE "upvote-clicked"
 #define UPVOTE_NOTCLICKED_STATE "upvote-notclicked"
@@ -91,6 +71,6 @@ ks_list* sort_items(ks_list* items, enum item_type it);
 ks_list* merge_items(ks_list* lsA, ks_list* lsB, enum item_type it);
 
 /* wraps main page data hashmap with hashmap containing nav info */
-ks_hashmap* wrap_page_data(const struct auth_token* client_info, const ks_hashmap* page_data, const char* css_path, const char* js_path);
+ks_hashmap* wrap_page_data(const struct auth_token* client_info, const ks_hashmap* page_data);
 
 #endif

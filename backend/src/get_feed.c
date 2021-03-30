@@ -114,7 +114,7 @@ struct response* get_feed(const enum feed_type ft, const struct auth_token* clie
   }
 
   // put page data together
-  page_data = wrap_page_data(client_info, page_data, CSS_FEED, NULL);
+  page_data = wrap_page_data(client_info, page_data);
 
   // build template
   char* content;
@@ -151,7 +151,7 @@ struct response* get_communities(const struct auth_token* client_info)
   add_map_value_ls(page_data, FEED_ITEM_LIST_KEY, communities);
 
   // put page data together
-  page_data = wrap_page_data(client_info, page_data, CSS_FEED, NULL);
+  page_data = wrap_page_data(client_info, page_data);
 
   // build content
   char* content;

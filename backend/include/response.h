@@ -23,13 +23,6 @@
 #define STAT501 HTTPVERSION " 501 Not Implemented\r\n"
 #define STAT505 HTTPVERSION " 505 HTTP Version Not Supported\r\n"
 
-/* content types */
-#define TEXTHTML "Content-Type: text/html\r\n"
-#define TEXTCSS "Content-Type: text/css\r\n"
-#define APPJS "Content-Type: application/javascript\r\n"
-#define IMGICO "Content-Type: image/x-icon\r\n"
-
-
 /* struct containing response info */
 struct response
 {

@@ -91,7 +91,7 @@ struct response* get_community(const char* community_name, const struct auth_tok
   }
 
   // put page data together
-  page_data = wrap_page_data(client_info, page_data, CSS_COMMUNITY, JS_COMMUNITY);
+  page_data = wrap_page_data(client_info, page_data);
 
   // build content
   char* content;
