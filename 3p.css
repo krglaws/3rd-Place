@@ -175,20 +175,14 @@ a:hover {
   flex: 98%;
 }
 
-.post-stub-author {
-  font-size: var(--uname-font-size);
+.community-post-title {
+  font-size: 16px;
   margin: 0%;
   padding: 0%;
 }
 
-.post-stub-title {
-  font-size: var(--body-font-size);
-  margin: 0%;
-  padding: 0%;
-}
-
-.post-stub-body {
-  font-size: var(--body-font-size);
+.community-post-info {
+  font-size: 12px;
   margin: 0%;
   padding: 0%;
 }
@@ -371,11 +365,12 @@ a:hover {
   flex: 98%;
 }
 
-.comment-author {
-  font-size: var(--uname-font-size);
+.comment-info{
+  font-size: 12px;
 }
 
 .comment-body {
+  font-size: 16px;
 }
 /* end post style */
 /******************/
