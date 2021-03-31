@@ -36,6 +36,10 @@ a:hover {
   text-decoration: underline;
 }
 
+*:target {
+  background-color: yellow !important;
+}
+
 .border-box {
   background-color: var(--inner-bg-color);
   border-color: var(--border-color);
@@ -230,7 +234,7 @@ a:hover {
 }
 
 .feed-post-info {
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .feed-community {
@@ -252,7 +256,7 @@ a:hover {
 }
 
 .feed-community-info {
-  font-size: 10px;
+  font-size: 12px;
 }
 
 /* end feed style */
@@ -427,9 +431,27 @@ a:hover {
   margin: 1%;
   padding: 1%;
   flex: 98%;
+  font-size: 16px;
 }
 
-.user-tab-content h3 {
+.user-info-item {
+  font-size: 16px;
+}
+
+.user-post-title {
+  font-size: 16px;
+}
+
+.user-post-info {
+  font-size: 12px;
+}
+
+.user-comment-info {
+  font-size: 12px;
+}
+
+.user-comment-body {
+  font-size: 16px;
 }
 /* end user style */
 /******************/

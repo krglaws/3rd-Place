@@ -42,6 +42,24 @@ function selectOverview() {
 }
 
 
+function editUser() {
+
+  fetch("/edit_user", {
+    method: "GET",
+    redirect: "follow",
+    credentials: "same-origin"
+  }).then(response => {
+    if (response.ok) {
+      window.location.href = response.url;
+    }
+    else {
+      console.log(response);
+      alert("Error");
+    }
+  });
+}
+
+
 function logOut() {
 
   fetch("/logout", {
@@ -69,7 +87,7 @@ function deleteUser(user_name) {
   fetch("/delete_user?user_name="+user_name, {
     method: "DELETE",
     redirect: "follow",
-    credentials: "same-origin",
+    credentials: "same-origin"
   }).then(response => {
     if (response.redirected) {
       window.location.href = response.url;

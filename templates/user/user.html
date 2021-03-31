@@ -4,14 +4,14 @@
   </div>
 </div>
 
-<div class="user-options-container">
-  <div class="user-option" style="visiblity: <<EDIT_OPTION_VISIBILITY>>;">
-    <a href="/edit_user">[edit user]</a>
+<div class="options-container">
+  <div class="option" style="visibility: <<EDIT_OPTION_VISIBILITY>>;" onclick="editUser();">
+    [edit user]
   </div>
-  <div class="user-option" style="visibility: <<LOGOUT_OPTION_VISIBILITY>>;" onclick="logOut();">
+  <div class="option" style="visibility: <<LOGOUT_OPTION_VISIBILITY>>;" onclick="logOut();">
     [logout]
   </div>
-  <div class="user-option" style="visibility: <<DELETE_OPTION_VISIBILITY>>;" onclick="deleteUser('<<USER_NAME>>');">
+  <div class="option" style="visibility: <<DELETE_OPTION_VISIBILITY>>;" onclick="deleteUser('<<USER_NAME>>');">
     [delete account]
   </div>
 </div>
@@ -28,10 +28,10 @@
 
     <div id="overview" class="user-tab-content-container">
       <div class="user-tab-content border-box">
-        <p>Points: <<USER_POINTS>></p>
-        <p>Posts: <<USER_POST_COUNT>></p>
-        <p>Comments: <<USER_COMMENT_COUNT>></p>
-        <p id="user-bday">Joined: <<USER_DATE_JOINED>></p>
+        <div class="user-info-item">Points: <<USER_POINTS>></div>
+        <div class="user-info-item">Posts: <<USER_POST_COUNT>></div>
+        <div class="user-info-item">Comments: <<USER_COMMENT_COUNT>></div>
+        <div class="user-info-item">Joined: <div class="utc-timestamp" style="display: inline;"><<USER_DATE_JOINED>></div></div>
       </div>
     </div>
 
