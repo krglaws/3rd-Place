@@ -23,7 +23,7 @@ static int tmplt_end_len = sizeof(TEMPLATE_END)-1;
   memcpy(new_tmplt, tmplt, beg_len);\
   memcpy(new_tmplt + beg_len, val_str, val_len);\
   memcpy(new_tmplt + beg_len + val_len,\
-         tmplt + beg_len + key_len + 4,\
+         tmplt + beg_len + key_len + tmplt_beg_len + tmplt_end_len,\
          (int)(new_len - (beg_len + val_len)));\
   new_tmplt[new_len] = '\0';\
 \
@@ -67,7 +67,15 @@ char* build_template(const ks_hashmap* page_data)
   {
     // find key length
     next += 2;
-    int key_len = strstr(next, TEMPLATE_END) - next;
+    char* end = strstr(next, TEMPLATE_END);
+    char* next_next;
+    if (end == NULL || (((next_next = strstr(next, TEMPLATE_BEGIN)) != NULL) && next_next < end))
+    {
+      log_err("build_template(): TEMPLATE_BEGIN string is missing a corresponding TEMPLATE_END in file: %s\n%s", tmplt_path->cp, tmplt);
+      free(tmplt);
+      return NULL;
+    }
+    int key_len = end - next;
 
     // read key into buffer
     char key[key_len + 1];
@@ -82,18 +90,18 @@ char* build_template(const ks_hashmap* page_data)
     {
       if (strstr(key, OPTIONAL_PREFIX) != key)
       {
-        log_err("build_template(): missing page data '%s%s%s' in '%s'\n",
-                TEMPLATE_BEGIN,
+        log_err("build_template(): missing page data for key '%s' in file: '%s'\n",
                 key,
-                TEMPLATE_END,
-                tmplt_path->cp);       
+                tmplt_path->cp);
+        free(tmplt);
+        return NULL;
       }
 
       char* val_str = "";
       int val_len = 0;
       COPY_INTO_TEMPLATE();
 
-      next += (key_len + 4);
+      next += (key_len + tmplt_beg_len + tmplt_end_len);
       continue;
     }
 
