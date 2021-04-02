@@ -539,7 +539,7 @@ ks_list* query_subscriptions_by_user_id(const char* user_id)
 }
 
 static MYSQL_STMT* stmt_toggle_subscription = NULL;
-int sql_toggle_subscribe(const char* community_id, const char* user_id)
+int sql_toggle_subscription(const char* community_id, const char* user_id)
 {
   return sql_procedure(stmt_toggle_subscription, community_id, user_id);
 }

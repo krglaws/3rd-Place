@@ -200,7 +200,7 @@ ks_list* query_subscriptions_by_user_id(const char* user_id);
 
 
 /* Return 0 on success, -1 on failure */
-int sql_toggle_subscribe(const char* community_id, const char* user_id);
+int sql_toggle_subscription(const char* community_id, const char* user_id);
 
 int sql_toggle_post_up_vote(const char* post_id, const char* user_id);
 
