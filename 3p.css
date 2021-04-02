@@ -1,30 +1,10 @@
 /****************/
 /* global style */
 
-:root {
-  --nav-font-size: 17px;
-  --title-font-size: 20px;
-  --body-font-size: 15px;
-  --uname-font-size: 12px;
-
-  --border-color: black;
-  --border-style: solid;
-  --border-width: 1px;
-
-  --inner-bg-color: #FFFFFF;
-  --outer-bg-color: #CACBCC;
-
-  --upvote-clicked-color: orange;
-  --upvote-notclicked-color: black;
-
-  --downvote-clicked-color: blue;
-  --downvote-notclicked-color: black;
-}
-
 * {box-sizing: border-box}
 
 html, body {
-  background-color: var(--outer-bg-color);
+  background-color: #CACBCC;
 }
 
 a {
@@ -41,10 +21,10 @@ a:hover {
 }
 
 .border-box {
-  background-color: var(--inner-bg-color);
-  border-color: var(--border-color);
-  border-style: var(--border-style);
-  border-width: var(--border-width); 
+  background-color: white;
+  border-color: black;
+  border-style: solid;
+  border-width: 1px;
 }
 
 .utc-timestamp {
@@ -65,19 +45,19 @@ a:hover {
 }
 
 .upvote-clicked {
-  border-color: var(--upvote-clicked-color) !important;
+  border-color: orange; !important;
 }
 
 .upvote-notclicked {
-  border-color: var(--upvote-notclicked-color) !important;
+  border-color: black; !important;
 }
 
 .downvote-clicked {
-  border-color: var(--downvote-clicked-color) !important;
+  border-color: orange; !important;
 }
 
 .downvote-notclicked {
-  border-color: var(--downvote-notclicked-color) !important;
+  border-color: black; !important;
 }
 
 .arrow {
@@ -133,7 +113,7 @@ a:hover {
 .community-title {
   width: 60%;
   text-align: center;
-  font-size: var(--title-font-size);
+  font-size: 20px;
   padding: 2% 5% 2% 5%;
   display: table;
   margin: 0 auto;
@@ -160,7 +140,7 @@ a:hover {
   outline: none;
   cursor: pointer;
   padding: 10px 12px;
-  font-size: var(--nav-font-size);
+  font-size: 18px;
   width: 50%;
   height: 100%;
 }
@@ -173,6 +153,7 @@ a:hover {
   margin: 1%;
   padding: 1%;
   flex: 98%;
+  font-size: 16px;
 }
 
 .community-post-title {
@@ -186,6 +167,10 @@ a:hover {
   margin: 0%;
   padding: 0%;
 }
+
+.community-info-item {
+  font-size: 16px;
+}
 /* end community style */
 /***********************/
 
@@ -198,7 +183,7 @@ a:hover {
 }
 
 .feed-title {
-  font-size: var(--title-font-size);
+  font-size: 20px;
   text-align: center;
   padding: 1%;
   width: 50%;
@@ -297,7 +282,7 @@ a:hover {
 .top-navigation a {
   float: left;
   padding: 12px;
-  font-size: var(--nav-font-size);
+  font-size: 16px;
   width: 25%;
   text-align: center;
 }
@@ -331,18 +316,18 @@ a:hover {
 }
 
 .post-author {
-  font-size: var(--uname-font-size);
+  font-size: 12px;
   text-align: left;
 }
 
 .post-title {
-  font-size: var(--title-font-size);
+  font-size: 20px;
   text-align: center;
   padding: 2% 5% 2% 5%;
 }
 
 .post-body {
-  font-size: var(--body-font-size);
+  font-size: 16px;
   text-align: left;
 }
 
@@ -361,7 +346,7 @@ a:hover {
 .comment {
   margin: 1%;
   padding: 1%;
-  font-size: var(--body-font-size);
+  font-size: 16px;
   flex: 98%;
 }
 
@@ -388,7 +373,7 @@ a:hover {
   display: table;
   margin: 0 auto;
   text-align: center;
-  font-size: var(--title-font-size);
+  font-size: 20px;
 }
 
 .user-content-container {
@@ -413,7 +398,7 @@ a:hover {
   outline: none;
   cursor: pointer;
   padding: 10px 12px;
-  font-size: var(--nav-font-size);
+  font-size: 18px;
   width: 25%;
   height: 100%;
 }
