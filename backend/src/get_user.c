@@ -155,23 +155,21 @@ struct response* get_user(const char* user_name, const struct auth_token* client
   char* edit_vis = "hidden";
   char* logout_vis = "hidden";
   char* delete_vis = "hidden";
-
   if (client_info != NULL)
   {
     ks_hashmap* admin_info;
     if (strcmp(user_name, client_info->user_name) == 0)
     {
-      edit_vis = "hidden";
-      logout_vis = "hidden";
-      delete_vis = "hidden";
+      edit_vis = "visible";
+      logout_vis = "visible";
+      delete_vis = "visible";
     }
     else if ((admin_info = query_administrator_by_user_id(client_info->user_id)) != NULL)
     {
       ks_hashmap_delete(admin_info);
-      delete_vis = "hidden";
+      delete_vis = "visible";
     }
   }
-
   add_map_value_str(page_data, EDIT_OPTION_VISIBILITY_KEY, edit_vis);
   add_map_value_str(page_data, LOGOUT_OPTION_VISIBILITY_KEY, logout_vis);
   add_map_value_str(page_data, DELETE_OPTION_VISIBILITY_KEY, delete_vis);
