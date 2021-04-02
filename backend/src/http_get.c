@@ -140,11 +140,15 @@ struct response* get_file(const char* uri)
     content_type = "Content-Type: image/x-icon\r\n";
   }
 
+  // expiration
+  char* expiry = "Cache-Control: public, max-age=0\r\n";
+
   // build response object
   char contlenline[80];
-  int contlen = sprintf(contlenline, "Content-Length: %d\n", f->len);
+  int contlen = sprintf(contlenline, "Content-Length: %d\r\n", f->len);
   resp->header = ks_list_new();
   ks_list_add(resp->header, ks_datacont_new(STAT200, KS_CHARP, strlen(STAT200)));
+  ks_list_add(resp->header, ks_datacont_new(expiry, KS_CHARP, strlen(expiry)));
   ks_list_add(resp->header, ks_datacont_new(content_type, KS_CHARP, strlen(content_type)));
   ks_list_add(resp->header, ks_datacont_new(contlenline, KS_CHARP, contlen));
 
