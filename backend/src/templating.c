@@ -133,6 +133,7 @@ char* build_template(const ks_hashmap* page_data)
         char* temp_str;
         if ((temp_str = build_template(curr->hm)) == NULL)
         {
+          ks_iterator_delete(iter);
           free(tmplt);
           return NULL;
         }
