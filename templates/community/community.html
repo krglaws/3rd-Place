@@ -4,6 +4,19 @@
       </div>
     </div>
 
+    <div class="options-container">
+      <div class="option" onclick="subscribe(this, '<<COMMUNITY_ID>>');">[<<COMMUNITY_SUBSCRIPTION_STATUS>>]</div>
+      <div class="option">
+        <a href="/new_post?community_id=<<COMMUNITY_ID>>">[write post]</a>
+      </div>
+      <div class="option" style="visibility: <<EDIT_OPTION_VISIBILITY>>;">
+        <a href="/edit_community?community_id=<<COMMUNITY_ID>>">[edit community]</a>
+      </div>
+      <div class="option" style="visibility: <<DELETE_OPTION_VISIBILITY>>;" onclick="deleteCommunity('<<COMMUNITY_ID>>');">
+        [delete community]
+      </div>
+    </div>
+
     <div class="community-content-container">
       <div class="community-content border-box">
 
@@ -18,9 +31,9 @@
 
         <div id="about" class="community-tab-content-container">
           <div class="community-tab-content border-box">
-            <p>Created:</p>
-            <p class="utc-timestamp"><<COMMUNITY_DATE_CREATED>></p>
-            <p><<COMMUNITY_ABOUT>></p>
+            <div class="community-info-item">Created: <div class="utc-timestamp"><<COMMUNITY_DATE_CREATED>></div></div><br>
+            <div class="community-info-item">Members: <<COMMUNITY_MEMBERS>></div><br>
+            <div class="community-info-item">About:<br><<COMMUNITY_ABOUT>></div>
           </div>
         </div>
 

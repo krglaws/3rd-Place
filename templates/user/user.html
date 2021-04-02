@@ -5,8 +5,8 @@
 </div>
 
 <div class="options-container">
-  <div class="option" style="visibility: <<EDIT_OPTION_VISIBILITY>>;" onclick="editUser();">
-    [edit user]
+  <div class="option" style="visibility: <<EDIT_OPTION_VISIBILITY>>;">
+    <a href="/edit_user">[edit user]</a>
   </div>
   <div class="option" style="visibility: <<LOGOUT_OPTION_VISIBILITY>>;" onclick="logOut();">
     [logout]
@@ -28,9 +28,9 @@
 
     <div id="overview" class="user-tab-content-container">
       <div class="user-tab-content border-box">
-        <div class="user-info-item">Points: <<USER_POINTS>></div>
-        <div class="user-info-item">Posts: <<USER_POST_COUNT>></div>
-        <div class="user-info-item">Comments: <<USER_COMMENT_COUNT>></div>
+        <div class="user-info-item">Points: <<USER_POINTS>></div><br>
+        <div class="user-info-item">Posts: <<USER_POST_COUNT>></div><br>
+        <div class="user-info-item">Comments: <<USER_COMMENT_COUNT>></div><br>
         <div class="user-info-item">Joined: <div class="utc-timestamp" style="display: inline;"><<USER_DATE_JOINED>></div></div>
       </div>
     </div>

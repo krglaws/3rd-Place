@@ -9,4 +9,13 @@
     <<COMMENT_BODY>>
   </div>
 
+  <div class="options-container">
+    <div class="option" style="visibility: <<EDIT_OPTION_VISIBILITY>>;">
+      <a href="/edit_comment?comment_id=<<COMMENT_ID>>">[edit comment]</a>
+    </div>
+    <div class="option" style="visibility: <<DELETE_OPTION_VISIBILITY>>;" onclick="deleteComment('<<COMMENT_ID>>');">
+      [delete comment]
+    </div>
+  </div>
+
 </div>
