@@ -20,6 +20,7 @@
 static struct response* post_login(const char* user_name, const char* password, const struct auth_token* client_info);
 static struct response* post_signup(const char* user_name, const char* password1, const char* password2, const char* about, const struct auth_token* client_info);
 static struct response* post_vote(const char* type, const char* direction, const char* id, const struct auth_token* client_info);
+static struct response* post_subscribe(const char* community_id, const struct auth_token* client_info);
 static struct response* post_comment(const char* post_id, const char* body, const struct auth_token* client_info);
 static struct response* post_post(const char* community_name, const char* post_title, const char* post_body, const struct auth_token* client_info);
 static struct response* post_community(const char* community_name, const char* community_about, const struct auth_token* client_info);
@@ -69,6 +70,13 @@ struct response* http_post(struct request* req)
     const char* id = get_map_value_str(req->content, "id");
 
     return post_vote(type, direction, id, req->client_info);
+  }
+
+  if (strcmp(req->uri, "./subscribe") == 0)
+  {
+    const char* community_id = get_map_value_str(req->query, "community_id");
+
+    return post_subscribe(community_id, req->client_info);
   }
 
   if (strcmp(req->uri, "./new_comment") == 0)
@@ -239,11 +247,17 @@ static struct response* post_vote(const char* type, const char* direction, const
   {
     if (strcmp(direction, "up") == 0)
     {
-      sql_toggle_post_up_vote(id, client_info->user_id);
+      if (sql_toggle_post_up_vote(id, client_info->user_id) != 0)
+      {
+        return response_error(STAT500);
+      }
     }
     else if (strcmp(direction, "down") == 0)
     {
-      sql_toggle_post_down_vote(id, client_info->user_id);
+      if (sql_toggle_post_down_vote(id, client_info->user_id) != 0)
+      {
+        return response_error(STAT500);
+      }
     }
     else return response_error(STAT404);
   }
@@ -251,13 +265,50 @@ static struct response* post_vote(const char* type, const char* direction, const
   {
     if (strcmp(direction, "up") == 0)
     {
-      sql_toggle_comment_up_vote(id, client_info->user_id);
+      if (sql_toggle_comment_up_vote(id, client_info->user_id) != 0)
+      {
+        return response_error(STAT500);
+      }
     }
     else if (strcmp(direction, "down") == 0)
     {
-      sql_toggle_comment_down_vote(id, client_info->user_id);
+      if (sql_toggle_comment_down_vote(id, client_info->user_id) != 0)
+      {
+        return response_error(STAT500);
+      }
     }
     else return response_error(STAT404);
+  }
+
+  // prepare 200 response object
+  struct response* resp = calloc(1, sizeof(struct response));
+  resp->header = ks_list_new();
+  ks_list_add(resp->header, ks_datacont_new(STAT200, KS_CHARP, strlen(STAT200)));
+
+  char* contlen = "Content-Length: 0\r\n";
+  ks_list_add(resp->header, ks_datacont_new(contlen, KS_CHARP, strlen(contlen)));
+
+  return resp;
+}
+
+
+static struct response* post_subscribe(const char* community_id, const struct auth_token* client_info)
+{
+  if (client_info == NULL)
+  {
+    return response_redirect("/login");
+  }
+
+  ks_hashmap* community_info;
+  if (community_id == NULL || (community_info = query_community_by_id(community_id)) == NULL)
+  {
+    return response_error(STAT404);
+  }
+  ks_hashmap_delete(community_info);
+
+  if (sql_toggle_subscription(community_id, client_info->user_id) != 0)
+  {
+    return response_error(STAT500);
   }
 
   // prepare 200 response object
