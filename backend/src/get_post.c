@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <kylestructs.h>
 
 #include <templating.h>
@@ -14,7 +15,7 @@
 #include <get_post.h>
 
 
-static ks_list* get_post_comments(const char* post_id, const struct auth_token* client_info)
+static ks_list* get_post_comments(const char* post_id, bool can_delete, const struct auth_token* client_info)
 {
   // get user comments
   ks_list* comments;
@@ -56,6 +57,28 @@ static ks_list* get_post_comments(const char* post_id, const struct auth_token* 
     add_map_value_str(wrapper, UPVOTE_CLICKED_KEY, upvote_class);
     add_map_value_str(wrapper, DOWNVOTE_CLICKED_KEY, downvote_class);
 
+    const char* author_name = get_map_value_str(comment_info->hm, FIELD_COMMENT_AUTHOR_NAME);
+
+    // add css visibility values for post options
+    char* edit_vis = "hidden";
+    char* delete_vis = "hidden";
+    if (client_info != NULL)
+    {
+      // check if client wrote this comment
+      if (strcmp(author_name, client_info->user_name) == 0)
+      {
+        edit_vis = "visible";
+        delete_vis = "visible";
+      }
+      // check if client is amdin, mod, or community owner
+      else if (can_delete)
+      {
+        delete_vis = "visible";
+      }
+    }
+    add_map_value_str(comment_info->hm, EDIT_OPTION_VISIBILITY_KEY, edit_vis);
+    add_map_value_str(comment_info->hm, DELETE_OPTION_VISIBILITY_KEY, delete_vis);
+
     // add post info map to vote wrapper map
     add_map_value_hm(wrapper, COMMENT_KEY, comment_info->hm);
     comment_info->hm = NULL;
@@ -82,6 +105,7 @@ struct response* get_post(const char* post_id, const struct auth_token* client_i
     return response_error(STAT404);
   }
 
+  // check if client has voted on this post
   char* upvote_class = UPVOTE_NOTCLICKED_STATE;
   char* downvote_class = DOWNVOTE_NOTCLICKED_STATE;
   if (client_info != NULL)
@@ -90,14 +114,45 @@ struct response* get_post(const char* post_id, const struct auth_token* client_i
     upvote_class = vt == UPVOTE ? UPVOTE_CLICKED_STATE : upvote_class;
     downvote_class = vt == DOWNVOTE ? DOWNVOTE_CLICKED_STATE : downvote_class;
   }
-
   add_map_value_str(page_data, UPVOTE_CLICKED_KEY, upvote_class);
   add_map_value_str(page_data, DOWNVOTE_CLICKED_KEY, downvote_class);
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_POST);
 
+  // add css visibility values for post options
+  bool can_delete = false;
+  char* edit_vis = "hidden";
+  char* delete_vis = "hidden";
+  if (client_info != NULL)
+  {
+    const char* author_name = get_map_value_str(page_data, FIELD_POST_AUTHOR_NAME);
+    const char* community_id = get_map_value_str(page_data, FIELD_POST_COMMUNITY_ID);
+    ks_hashmap* community_info = query_community_by_id(community_id);
+    const char* owner_id = get_map_value_str(community_info, FIELD_COMMUNITY_OWNER_ID);
+    ks_hashmap* mod_info = query_moderator_by_community_id_user_id(community_id, client_info->user_id);
+    ks_hashmap* admin_info = query_administrator_by_user_id(client_info->user_id);
+
+    can_delete = (mod_info != NULL) || (admin_info != NULL) || (strcmp(owner_id, client_info->user_id) == 0);
+
+    ks_hashmap_delete(mod_info);
+    ks_hashmap_delete(admin_info);
+    ks_hashmap_delete(community_info);
+
+    if (strcmp(author_name, client_info->user_name) == 0)
+    {
+      edit_vis = "visible";
+      delete_vis = "visible";
+    }
+    else if (can_delete)
+    {
+      delete_vis = "visible";
+    }
+  }
+  add_map_value_str(page_data, EDIT_OPTION_VISIBILITY_KEY, edit_vis);
+  add_map_value_str(page_data, DELETE_OPTION_VISIBILITY_KEY, delete_vis);
+
   // get post comments
   ks_list* comments;
-  if ((comments = get_post_comments(post_id, client_info)) != NULL)
+  if ((comments = get_post_comments(post_id, can_delete, client_info)) != NULL)
   {
     add_map_value_ls(page_data, POST_COMMENT_LIST_KEY, comments);
   }

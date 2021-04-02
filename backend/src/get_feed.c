@@ -72,6 +72,7 @@ struct response* get_feed(const enum feed_type ft, const struct auth_token* clie
 
   ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 8);
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_FEED);
+  add_map_value_str(page_data, NEW_OPTION_VISIBILITY_KEY, "hidden");
 
   // get list of posts
   ks_list* posts = NULL;
@@ -149,6 +150,13 @@ struct response* get_communities(const struct auth_token* client_info)
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_FEED);
   add_map_value_str(page_data, FEED_TITLE_KEY, "Communities");
   add_map_value_ls(page_data, FEED_ITEM_LIST_KEY, communities);
+
+  char* new_vis = "hidden";
+  if (client_info != NULL)
+  {
+    new_vis = "visible";
+  }
+  add_map_value_str(page_data, NEW_OPTION_VISIBILITY_KEY, new_vis);
 
   // put page data together
   page_data = wrap_page_data(client_info, page_data);

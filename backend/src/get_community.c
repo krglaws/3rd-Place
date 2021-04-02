@@ -83,12 +83,47 @@ struct response* get_community(const char* community_name, const struct auth_tok
   }
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_COMMUNITY);
 
+  // check if client is subscribed
+  char* substatus = "subscribe";
+  const char* community_id = get_map_value_str(page_data, FIELD_COMMUNITY_ID);
+  ks_hashmap* sub_info;
+  if (client_info != NULL &&
+      (sub_info = query_subscription_by_community_id_user_id(community_id, client_info->user_id)) != NULL)
+  {
+    ks_hashmap_delete(sub_info);
+    substatus = "unsubscribe";
+  }
+  add_map_value_str(page_data, COMMUNITY_SUBSCRIPTION_STATUS_KEY, substatus);
+
   // get community posts
   ks_list* community_posts;
   if ((community_posts = get_community_posts(community_name, client_info)) != NULL)
   {
     add_map_value_ls(page_data, COMMUNITY_POST_LIST_KEY, community_posts);
   }
+
+  bool can_delete = false;
+  char* edit_vis = "hidden"; 
+  char* delete_vis = "hidden";
+  if (client_info != NULL)
+  {
+    const char* owner_id = get_map_value_str(page_data, FIELD_COMMUNITY_OWNER_ID);
+
+    ks_hashmap* admin_info;
+    if ((admin_info = query_administrator_by_user_id(client_info->user_id)) != NULL ||
+         strcmp(owner_id, client_info->user_id) == 0)
+    {
+      ks_hashmap_delete(admin_info);
+      edit_vis = "visible";
+      delete_vis = "visible";
+    }
+    else if (can_delete)
+    {
+      delete_vis = "visible";
+    }
+  }
+  add_map_value_str(page_data, EDIT_OPTION_VISIBILITY_KEY, edit_vis);
+  add_map_value_str(page_data, DELETE_OPTION_VISIBILITY_KEY, delete_vis);
 
   // put page data together
   page_data = wrap_page_data(client_info, page_data);

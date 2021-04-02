@@ -178,7 +178,7 @@ struct response* get_edit_user(const char* submitted_about, enum user_form_error
 }
 
 
-struct response* get_new_post(const char* submitted_title, const char* submitted_body, const char* community_name, enum post_form_error err, const struct auth_token* client_info)
+struct response* get_new_post(const char* submitted_title, const char* submitted_body, const char* community_id, enum post_form_error err, const struct auth_token* client_info)
 {
   if (client_info == NULL)
   {
@@ -187,7 +187,7 @@ struct response* get_new_post(const char* submitted_title, const char* submitted
 
   // get community info
   ks_hashmap* page_data;
-  if (community_name == NULL || (page_data = query_community_by_name(community_name)) == NULL)
+  if (community_id == NULL || (page_data = query_community_by_id(community_id)) == NULL)
   {
     return response_error(STAT404);
   }
