@@ -232,7 +232,7 @@ static struct response* delete_comment(const char* comment_id, const struct auth
 }
 
 
-static struct response* delete_community(const char* community_name, const struct auth_token* client_info)
+static struct response* delete_community(const char* community_id, const struct auth_token* client_info)
 {
   if (client_info == NULL)
   {
@@ -241,7 +241,7 @@ static struct response* delete_community(const char* community_name, const struc
 
   // get community info
   ks_hashmap* community_info;
-  if (community_name == NULL || (community_info = query_community_by_name(community_name)) == NULL)
+  if (community_id == NULL || (community_info = query_community_by_id(community_id)) == NULL)
   {
     // not found
     return response_error(STAT404);
@@ -264,7 +264,6 @@ static struct response* delete_community(const char* community_name, const struc
   }
 
   // remove community from DB
-  const char* community_id = get_map_value_str(community_info, FIELD_COMMUNITY_ID);
   if (sql_delete_community(community_id) != 0)
   {
     log_err("delete_community(): failed on call to sql_delete_community(): community_id=%s", community_id);
