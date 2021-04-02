@@ -256,7 +256,7 @@ BEGIN
 END;$$
 
 
-CREATE FUNCTION CreateCommunity(uid INT, name VARCHAR(32), about VARCHAR(512))
+CREATE FUNCTION CreateCommunity(uid INT, cname VARCHAR(32), about VARCHAR(512))
 RETURNS INT
 BEGIN
 
@@ -267,7 +267,7 @@ BEGIN
 
   # create new community
   INSERT INTO communities (owner_id, owner_name, name, about, date_created)
-  VALUES (uid, user_name, name, about, UNIX_TIMESTAMP());
+  VALUES (uid, user_name, cname, about, UNIX_TIMESTAMP());
 
   RETURN LAST_INSERT_ID();
 
