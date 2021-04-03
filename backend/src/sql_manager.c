@@ -833,7 +833,7 @@ void init_sql_manager()
   stmt_query_comment_by_id = build_prepared_statement(sqlcon, "SELECT * FROM comments WHERE id = ?;");
   stmt_query_comments_by_author_name = build_prepared_statement(sqlcon, "SELECT * FROM comments WHERE author_name = ?;");
   stmt_query_comments_by_post_id = build_prepared_statement(sqlcon, "SELECT * FROM comments WHERE post_id = ?;");
-  stmt_create_comment = build_prepared_statement(sqlcon, "SELECT CreateComment(?, ?, ?, ?);");
+  stmt_create_comment = build_prepared_statement(sqlcon, "SELECT CreateComment(?, ?, ?);");
   stmt_update_comment_body = build_prepared_statement(sqlcon, "UPDATE comments SET body = ? WHERE id = ?;");
   stmt_delete_comment = build_prepared_statement(sqlcon, "CALL DeleteComment(?);");
 
