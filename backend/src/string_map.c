@@ -15,59 +15,54 @@ ks_hashmap* string_to_map(char* str, const char* delim1, const char* delim2)
 
   ks_list* line_list = ks_list_new();
 
-  char* token;
-  if ((token = strtok(str, delim1)) == NULL)
+  char* tmp = str;
+  while (*tmp != '\0')
   {
-    ks_list_delete(line_list);
-    return map;
-  }
-
-  if (ks_list_add(line_list, ks_datacont_new(token, KS_CHARP, strlen(token))) == -1)
-  {
-    ks_list_delete(line_list);
-    return map;
-  }
-
-  while (1)
-  {
-    if ((token = strtok(NULL, delim1)) == NULL)
+    char* end_of_line;
+    if ((end_of_line = strstr(tmp, delim1)) == NULL)
     {
-      break;
+      end_of_line = tmp + strlen(tmp);
     }
 
-    ks_list_add(line_list, ks_datacont_new(token, KS_CHARP, strlen(token)));
+    const ks_datacont* line_dc = ks_datacont_new(tmp, KS_CHARP, end_of_line - tmp);
+    ks_list_add(line_list, line_dc);
+
+    tmp = *(end_of_line) == '\0' ? 
+          end_of_line : end_of_line + strlen(delim1);
   }
 
-  ks_datacont* key, *val;
-  int num_lines = ks_list_length(line_list);
-
-  for (int i = 0; i < num_lines; i++)
+  const ks_datacont* line_dc;
+  ks_iterator* iter = ks_iterator_new(line_list, KS_LIST);
+  while ((line_dc = ks_iterator_next(iter)) != NULL)
   {
-    if ((token = strtok(ks_list_get(line_list, i)->cp, delim2)) == NULL ||
-          (key = ks_datacont_new(token, KS_CHARP, strlen(token))) == NULL)
+    char* end_of_key;
+    if ((end_of_key = strstr(line_dc->cp, delim2)) == NULL)
     {
-      ks_list_delete(line_list);
-      return map;
+      end_of_key = line_dc->cp + line_dc->size;
     }
 
-    if ((token = strtok(NULL, delim2)) == NULL ||
-          (val = ks_datacont_new(token, KS_CHARP, strlen(token))) == NULL)
+    int keylen = end_of_key - line_dc->cp;
+    if (keylen == 0)
     {
-      ks_datacont_delete(key);
-      ks_list_delete(line_list);
-      return map;
+      continue;
+    }
+    const ks_datacont* key = ks_datacont_new(line_dc->cp, KS_CHARP, keylen);
+
+    int vallen = line_dc->size - (strlen(delim2) + keylen);
+    const ks_datacont* val;
+    if (vallen != 0)
+    {
+      end_of_key += strlen(delim2);
+      val = ks_datacont_new(end_of_key, KS_CHARP, vallen);
+    }
+    else
+    {
+      val = ks_datacont_new("", KS_CHARP, 0);
     }
 
-    if (ks_hashmap_add(map, key, val) == -1)
-    {
-      ks_datacont_delete(key);
-      ks_datacont_delete(val);
-      ks_list_delete(line_list);
-
-      return map;
-    }
+    ks_hashmap_add(map, key, val);
   }
-
+  ks_iterator_delete(iter);
   ks_list_delete(line_list);
 
   return map;
