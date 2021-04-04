@@ -12,7 +12,7 @@
 #define TOKENLIFESPAN (86400 * 7)
 
 
-/* struct containing a user authorization token */
+/* struct containing a user auth token */
 struct auth_token
 {
   time_t last_active;
@@ -48,7 +48,7 @@ void remove_token(const char* token);
 
 
 /* Returns auth_token struct that contains token if present, else NULL.
- * This function is called whenever a client request has a logintoken
+ * This function is called whenever a client request has an auth token
  * defined in its header.
  */
 const struct auth_token* valid_token(const char* token);
