@@ -61,7 +61,7 @@ static void log_all(const char* logtype, const char* fmt, va_list ap)
 void init_log_manager(const char* path)
 {
 
-  if (path == NULL)
+  if (path == NULL || strlen(path) == 0)
   {
     logfile = stdout;
   }
