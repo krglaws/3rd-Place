@@ -15,6 +15,7 @@
 #define STAT400 HTTPVERSION " 400 Bad Request\r\n"
 #define STAT403 HTTPVERSION " 403 Permission Denied\r\n"
 #define STAT404 HTTPVERSION " 404 Not Found\r\n"
+#define STAT405 HTTPVERSION " 405 Method Not Allowed\r\n"
 #define STAT413 HTTPVERSION " 413 Payload Too Large\r\n"
 #define STAT414 HTTPVERSION " 414 URI Too Long\r\n"
 

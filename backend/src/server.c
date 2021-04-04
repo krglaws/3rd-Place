@@ -16,15 +16,12 @@
 #include <auth_manager.h>
 #include <http_post.h>
 #include <http_get.h>
-#include <http_patch.h>
-#include <http_delete.h>
 #include <server.h>
 
 /* Fills out an options structure with information from args
    passed via commandline. Uses default options if no args 
    passed. */
 static void get_options(const int argc, char* const* argv, struct options* opts);
-static void delete_options(struct options* opts);
 
 /* Initializes services, signal handling, and sets up server socket */
 static void init_server(struct options* opts);
@@ -58,11 +55,13 @@ static void serve();
 int main(int argc, char** argv)
 {
   // process CLI args
-  struct options* opts = calloc(1, sizeof(struct options));
-  get_options(argc, argv, opts);
+  //struct options* opts = calloc(1, sizeof(struct options));
+  struct options opts;
+  memset(&opts, 0, sizeof(opts));
+  get_options(argc, argv, &opts);
 
   // set things up
-  init_server(opts);
+  init_server(&opts);
 
   // enter server loop
   serve();
@@ -97,14 +96,17 @@ static void get_options(const int argc, char* const* argv, struct options* opts)
       if (port < 1 || port > 65535)
       {
         fprintf(stderr, "Invalid port: %d", port);
-        delete_options(opts);
         exit(EXIT_FAILURE);
       }
       opts->server_port = htons(port);
       break;
     case 'f':
       logpathlen = strlen(optarg);
-      opts->logpath = malloc((logpathlen * sizeof(char)) + 1);
+      if (logpathlen > 128)
+      {
+        fprintf(stderr, "log file path is too long (> 128 chars)\n");
+        exit(EXIT_FAILURE);
+      }
       memcpy(opts->logpath, optarg, logpathlen + 1);
       break;
     case 'c':
@@ -114,7 +116,6 @@ static void get_options(const int argc, char* const* argv, struct options* opts)
       if (inet_pton(AF_INET6, optarg, &ipv6addr) != 1) 
       {
         fprintf(stderr, "Invalid server IPv6 address: %s\n", optarg);
-        delete_options(opts);
         exit(EXIT_FAILURE);
       }
       opts->server_addr = ipv6addr;
@@ -122,7 +123,6 @@ static void get_options(const int argc, char* const* argv, struct options* opts)
     case '?':
     default:
       usage(argv[0]);
-      delete_options(opts);
       exit(EXIT_FAILURE);
     }
   }
@@ -131,20 +131,8 @@ static void get_options(const int argc, char* const* argv, struct options* opts)
   {
     fprintf(stderr, "%s: unknown argument -- '%s'\n", argv[0], argv[optind]);
     usage(argv[0]);
-    delete_options(opts);
     exit(EXIT_FAILURE);
   }
-}
-
-
-void delete_options(struct options* opts)
-{
-  if (opts->logpath != NULL)
-  {
-    free(opts->logpath);
-  }
-
-  free(opts);
 }
 
 
@@ -162,13 +150,13 @@ static void init_server(struct options* opts)
   sigaction(SIGINT, &sa, NULL);
 
   // init remaining services
+  init_http_post();
+
   init_auth_manager();
 
   init_sql_manager();
 
   init_socket_manager(&(opts->server_addr), opts->server_port, opts->max_clients);
-
-  delete_options(opts);
 }
 
 
@@ -294,10 +282,10 @@ static struct request* parse_request(char* req_buf)
   }
 
   // get client info
-  const char* login_token;
-  if ((login_token = get_map_value_str(req->cookies, "logintoken")) != NULL)
+  const char* auth;
+  if ((auth = get_map_value_str(req->cookies, "auth")) != NULL)
   {
-    req->client_info = (struct auth_token* ) valid_token(login_token);
+    req->client_info = (struct auth_token* ) valid_token(auth);
   }
 
   return req;
@@ -335,6 +323,8 @@ static struct response* process_request(const int sock)
     return NULL;
   }
 
+  log_info(req_buf);
+
   if (req_len == 0)
   {
     remove_socket(sock);
@@ -356,32 +346,21 @@ static struct response* process_request(const int sock)
 
   struct response* resp;
 
+  log_info("Request from %s (socket number %d): %s %s", ipstr, sock, req->method, (req->uri + 1));
+
   // send request object to appropriate handler
   if (strcmp(req->method, "GET") == 0 ||
            strcmp(req->method, "HEAD") == 0)
   {
-    log_info("Request from %s (socket number %d): %s %s", ipstr, sock, req->method, (req->uri + 1));
     resp = http_get(req);
   }
   else if (strcmp(req->method, "POST") == 0)
   {
-    log_info("Request from %s(socket number %d): POST %s", ipstr, sock, (req->uri + 1));
     resp = http_post(req);
-  }
-  else if (strcmp(req->method, "PATCH") == 0)
-  {
-    log_info("Request from %s(socket number %d): PATCH %s", ipstr, sock, (req->uri + 1));
-    resp = http_patch(req);
-  }
-  else if (strcmp(req->method, "DELETE") == 0)
-  {
-    log_info("Request from %s(socket number %d): DELETE %s", ipstr, sock, (req->uri + 1));
-    resp = http_delete(req);
   }
   else
   {
-    log_info("Bad request from %s", ipstr);
-    resp = response_error(STAT400);
+    resp = response_error(STAT405);
   }
 
   delete_request(req);

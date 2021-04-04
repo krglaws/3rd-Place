@@ -32,7 +32,7 @@ struct options
   struct in6_addr server_addr;
   uint16_t server_port;
   int max_clients;
-  char* logpath;
+  char logpath[129];
 };
 
 
