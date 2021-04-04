@@ -100,6 +100,15 @@ void add_map_value_str(ks_hashmap* hm, const char* key, const char* val)
 }
 
 
+void add_map_value_vp(ks_hashmap* hm, const char* key, const void* val)
+{
+  ks_datacont* key_dc = ks_datacont_new(key, KS_CHARP, strlen(key));
+  ks_datacont* val_dc = ks_datacont_new(val, KS_VOIDP, strlen(val));
+
+  ks_hashmap_add(hm, key_dc, val_dc);
+}
+
+
 void add_map_value_ls(ks_hashmap* hm, const char* key, const ks_list* val)
 {
   ks_datacont* key_dc = ks_datacont_new(key, KS_CHARP, strlen(key));

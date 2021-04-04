@@ -39,6 +39,7 @@ const char* get_map_value_str(const ks_hashmap* map, const char* key);
 /* Various helper functions for adding values to ks_hashmap
  */
 void add_map_value_str(ks_hashmap* hm, const char* key, const char* val);
+void add_map_value_vp(ks_hashmap* hm, const char* key, const void* val);
 void add_map_value_ls(ks_hashmap* hm, const char* key, const ks_list* val);
 void add_map_value_hm(ks_hashmap* hm, const char* key, const ks_hashmap* val);
 
