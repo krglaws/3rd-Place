@@ -379,20 +379,46 @@ struct response* get_edit_comment(const char* submitted_body, const char* commen
   }
 
   // get comment info
-  ks_hashmap* page_data;
-  if (comment_id == NULL || (page_data = query_comment_by_id(comment_id)) == NULL)
+  ks_hashmap* comment_info;
+  if (comment_id == NULL || (comment_info = query_comment_by_id(comment_id)) == NULL)
   {
     return response_error(STAT404);
   }
 
-  // make sure client is the author
-  const char* author_id = get_map_value_str(page_data, FIELD_COMMENT_AUTHOR_ID);
-  if (strcmp(client_info->user_id, author_id) != 0)
+  // get post info
+  const char* post_id = get_map_value_str(comment_info, FIELD_COMMENT_POST_ID);
+  ks_hashmap* page_data;
+  if ((page_data = query_post_by_id(post_id)) == NULL)
   {
+    ks_hashmap_delete(comment_info);
+    // if a comment's parent post is missing, something went wrong
+    return response_error(STAT500);
+  }
+
+  // check if post has been deleted
+  const char* post_author_id = get_map_value_str(page_data, FIELD_POST_AUTHOR_ID);
+  if (strcmp(post_author_id, "1") == 0)
+  {
+    // can't edit comments belonging to deleted posts
+    ks_hashmap_delete(comment_info);
     ks_hashmap_delete(page_data);
     return response_error(STAT403);
   }
-  add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_NEW_COMMENT);
+
+  // make sure client is the author
+  const char* author_id = get_map_value_str(comment_info, FIELD_COMMENT_AUTHOR_ID);
+  if (strcmp(client_info->user_id, author_id) != 0)
+  {
+    ks_hashmap_delete(comment_info);
+    ks_hashmap_delete(page_data);
+    return response_error(STAT403);
+  }
+
+  // add html template path
+  add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_EDIT_COMMENT);
+
+  // add comment ID to page data
+  add_map_value_str(page_data, FIELD_COMMENT_ID, comment_id);
 
   // copy previously submitted comment body, or else existing comment body
   if (submitted_body != NULL)
@@ -401,9 +427,10 @@ struct response* get_edit_comment(const char* submitted_body, const char* commen
   }
   else
   {
-    const char* existing_body = get_map_value_str(page_data, FIELD_COMMENT_BODY);
+    const char* existing_body = get_map_value_str(comment_info, FIELD_COMMENT_BODY);
     add_map_value_str(page_data, SUBMITTED_COMMENT_BODY_KEY, existing_body);
   }
+  ks_hashmap_delete(comment_info);
 
   switch (err)
   {
