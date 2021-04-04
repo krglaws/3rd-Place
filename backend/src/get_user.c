@@ -29,7 +29,7 @@ static ks_list* get_user_posts(const char* user_name, const struct auth_token* c
   // iterate through each post
   ks_datacont* post_info;
   ks_iterator* iter = ks_iterator_new(posts, KS_LIST);
-  while ((post_info = (ks_datacont*) ks_iterator_get(iter)) != NULL)
+  while ((post_info = (ks_datacont*) ks_iterator_next(iter)) != NULL)
   {
     // add user post template path
     add_map_value_str(post_info->hm, TEMPLATE_PATH_KEY, HTML_USER_POST);
@@ -83,7 +83,7 @@ static ks_list* get_user_comments(const char* user_name, const struct auth_token
   // iterate through each post
   ks_datacont* comment_info;
   ks_iterator* iter = ks_iterator_new(comments, KS_LIST);
-  while ((comment_info = (ks_datacont*) ks_iterator_get(iter)) != NULL)
+  while ((comment_info = (ks_datacont*) ks_iterator_next(iter)) != NULL)
   {
     // add user comment template path
     add_map_value_str(comment_info->hm, TEMPLATE_PATH_KEY, HTML_USER_COMMENT);

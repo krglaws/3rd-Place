@@ -72,7 +72,7 @@ static void terminate_auth_manager()
   // ks_datacont_delete doesnt call free() on void pointer type.
   ks_datacont* curr;
   ks_iterator* iter = ks_iterator_new(token_list, KS_LIST);
-  while ((curr = (ks_datacont*)ks_iterator_get(iter)) != NULL)
+  while ((curr = (ks_datacont*)ks_iterator_next(iter)) != NULL)
   {
     free(curr->vp);
     curr->vp = NULL;
@@ -254,7 +254,7 @@ static const char* get_token(const char* user_name)
 
   const ks_datacont* curr;
   ks_iterator* iter = ks_iterator_new(token_list, KS_CHARP);
-  while ((curr = ks_iterator_get(iter)) != NULL)
+  while ((curr = ks_iterator_next(iter)) != NULL)
   {
     struct auth_token* at = curr->vp;
     if (strcmp(at->user_name, user_name) == 0)
@@ -281,7 +281,7 @@ void remove_token(const char* token)
   int index = 0;
   ks_datacont* curr;
   ks_iterator* iter = ks_iterator_new(token_list, KS_LIST);
-  while ((curr = (ks_datacont*) ks_iterator_get(iter)) != NULL)
+  while ((curr = (ks_datacont*) ks_iterator_next(iter)) != NULL)
   {
     struct auth_token* at = curr->vp;
     if (strcmp(token, at->token) == 0)
@@ -312,7 +312,7 @@ const struct auth_token* valid_token(const char* token)
 
   const ks_datacont* curr;
   ks_iterator* iter = ks_iterator_new(token_list, KS_LIST);
-  while ((curr = ks_iterator_get(iter)) != NULL)
+  while ((curr = ks_iterator_next(iter)) != NULL)
   {
     struct auth_token* at = curr->vp;
     if (strcmp(token, at->token) == 0)
@@ -339,7 +339,7 @@ void check_tokens()
   ks_datacont* curr;
   ks_list* dellist = ks_list_new();
   ks_iterator* iter = ks_iterator_new(token_list, KS_LIST);
-  while ((curr = (ks_datacont*) ks_iterator_get(iter)) != NULL)
+  while ((curr = (ks_datacont*) ks_iterator_next(iter)) != NULL)
   {
     struct auth_token* at = curr->vp;
     int elapsed = (currtime - at->last_active);
@@ -355,7 +355,7 @@ void check_tokens()
 
   // delete all expired tokens
   iter = ks_iterator_new(dellist, KS_LIST);
-  while ((curr = (ks_datacont*) ks_iterator_get(iter)) != NULL)
+  while ((curr = (ks_datacont*) ks_iterator_next(iter)) != NULL)
   {
     ks_list_remove_at(token_list, curr->i);
   }

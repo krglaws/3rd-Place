@@ -29,7 +29,7 @@ static ks_list* get_community_posts(const char* community_name, const struct aut
   // iterate through each post
   ks_datacont* post_info;
   ks_iterator* iter = ks_iterator_new(posts, KS_LIST);
-  while ((post_info = (ks_datacont*) ks_iterator_get(iter)) != NULL)
+  while ((post_info = (ks_datacont*) ks_iterator_next(iter)) != NULL)
   {
     // add user post template path
     add_map_value_str(post_info->hm, TEMPLATE_PATH_KEY, HTML_COMMUNITY_POST);

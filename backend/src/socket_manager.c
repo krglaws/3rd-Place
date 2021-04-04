@@ -76,7 +76,7 @@ static void terminate_socket_manager()
 
   ks_datacont* curr;
   ks_iterator* iter = ks_iterator_new(socket_list, KS_LIST);
-  while ((curr = (ks_datacont*) ks_iterator_get(iter)) != NULL)
+  while ((curr = (ks_datacont*) ks_iterator_next(iter)) != NULL)
   {
     close(curr->i);
   }
@@ -159,7 +159,7 @@ static int reload_socket_set()
 
   const ks_datacont* curr;
   ks_iterator* iter = ks_iterator_new(socket_list, KS_LIST);
-  while ((curr = ks_iterator_get(iter)) != NULL)
+  while ((curr = ks_iterator_next(iter)) != NULL)
   {
     FD_SET(curr->i, &socket_set);
 
@@ -186,7 +186,7 @@ static int get_active_socket()
   // look for active socket in ks_list
   const ks_datacont* curr;
   ks_iterator* iter = ks_iterator_new(socket_list, KS_LIST);
-  while ((curr = ks_iterator_get(iter)) != NULL)
+  while ((curr = ks_iterator_next(iter)) != NULL)
   {
     if (FD_ISSET(curr->i, &socket_set))
     {

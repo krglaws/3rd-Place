@@ -25,7 +25,7 @@ static ks_list* wrap_posts(ks_list* posts, const struct auth_token* client_info)
   // iterate through each post
   ks_datacont* post_info;
   ks_iterator* iter = ks_iterator_new(posts, KS_LIST);
-  while ((post_info = (ks_datacont*) ks_iterator_get(iter)) != NULL)
+  while ((post_info = (ks_datacont*) ks_iterator_next(iter)) != NULL)
   {
     // add user post template path
     add_map_value_str(post_info->hm, TEMPLATE_PATH_KEY, HTML_FEED_POST);
@@ -89,7 +89,7 @@ struct response* get_feed(const enum feed_type ft, const struct auth_token* clie
       // for each sub, get list of posts
       const ks_datacont* curr;
       ks_iterator* iter = ks_iterator_new(subs, KS_LIST);
-      while ((curr = ks_iterator_get(iter)) != NULL)
+      while ((curr = ks_iterator_next(iter)) != NULL)
       {
         const char* community_id = get_map_value_str(curr->hm, FIELD_SUB_COMMUNITY_ID);
         ks_list* temp = query_posts_by_community_id(community_id);
@@ -139,7 +139,7 @@ struct response* get_communities(const struct auth_token* client_info)
   // add html template path to each community
   const ks_datacont* curr;
   ks_iterator* iter = ks_iterator_new(communities, KS_LIST);
-  while ((curr = ks_iterator_get(iter)) != NULL)
+  while ((curr = ks_iterator_next(iter)) != NULL)
   {
     add_map_value_str(curr->hm, TEMPLATE_PATH_KEY, HTML_FEED_COMMUNITY);
   }

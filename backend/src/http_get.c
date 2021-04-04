@@ -251,7 +251,7 @@ ks_list* sort_items(ks_list* items, enum item_type it)
   ks_list* rev_list = ks_list_new();
   const ks_datacont* curr;
   ks_iterator* iter = ks_iterator_new(items, KS_LIST);
-  while ((curr = ks_iterator_get(iter)) != NULL)
+  while ((curr = ks_iterator_next(iter)) != NULL)
   {
     ks_list_insert(rev_list, ks_datacont_copy(curr), 0);
   }
@@ -306,10 +306,10 @@ ks_list* merge_items(ks_list* lsA, ks_list* lsB, enum item_type it)
 
   do
   {
-    itemA = ks_datacont_copy(ks_iterator_get(iterA));
+    itemA = ks_datacont_copy(ks_iterator_next(iterA));
     time_t tA = itemA ? get_item_date(itemA->hm, it) : 0;
 
-    itemB = ks_datacont_copy(ks_iterator_get(iterB));
+    itemB = ks_datacont_copy(ks_iterator_next(iterB));
     time_t tB = itemB ? get_item_date(itemB->hm, it) : 0;
 
     ks_datacont* first = tA < tB ? itemB : itemA;

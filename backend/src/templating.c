@@ -128,7 +128,7 @@ char* build_template(const ks_hashmap* page_data)
       // iterate through list, combine into single string
       const ks_datacont* curr;
       ks_iterator* iter = ks_iterator_new(val_dc->ls, KS_LIST);
-      while ((curr = ks_iterator_get(iter)) != NULL)
+      while ((curr = ks_iterator_next(iter)) != NULL)
       {
         char* temp_str;
         if ((temp_str = build_template(curr->hm)) == NULL)
