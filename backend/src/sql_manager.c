@@ -772,24 +772,28 @@ void init_sql_manager()
   const char* dbhost;
   if ((dbhost = get_map_value_str(args, "DBHOST")) == NULL)
   {
+    ks_hashmap_delete(args);
     log_crit("init_sql_manager(): missing DBHOST parameter");
   }
 
   const char* dbname;
   if ((dbname = get_map_value_str(args, "DBNAME")) == NULL)
   {
+    ks_hashmap_delete(args);
     log_crit("init_sql_manager(): missing DBNAME parameter");
   }
 
   const char* dbuser;
   if ((dbuser = get_map_value_str(args, "DBUSER")) == NULL)
   {
+    ks_hashmap_delete(args);
     log_crit("init_sql_manager(): missing DBUSER paramter");
   }
 
   const char* dbpass;
   if ((dbpass = get_map_value_str(args, "DBPASS")) == NULL)
   {
+    ks_hashmap_delete(args);
     log_crit("init_sql_manager(): missing DBPASS parameter");
   }
 
