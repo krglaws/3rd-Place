@@ -7,6 +7,35 @@ BIN := ./bin
 
 default: all
 
+
+POSTNEWDEP := $(SRC)/post_new.c
+POSTNEWTARG := $(BIN)/post_new.o
+
+$(POSTNEWTARG): $(POSTNEWDEP)
+	$(CC) -c $< -o $@ $(CFLAGS) 
+
+
+POSTDELETEDEP := $(SRC)/post_delete.c
+POSTDELETETARG := $(BIN)/post_delete.o
+
+$(POSTDELETETARG): $(POSTDELETEDEP)
+	$(CC) -c $< -o $@ $(CFLAGS) 
+
+
+POSTUPDATEDEP := $(SRC)/post_update.c
+POSTUPDATETARG := $(BIN)/post_update.o
+
+$(POSTUPDATETARG): $(POSTUPDATEDEP)
+	$(CC) -c $< -o $@ $(CFLAGS) 
+
+
+HTTPPOSTDEP := $(SRC)/http_post.c
+HTTPPOSTTARG := $(BIN)/http_post.o
+
+$(HTTPPOSTTARG): $(HTTPPOSTDEP)
+	$(CC) -c $< -o $@ $(CFLAGS) 
+
+
 VALIDATORDEP := $(SRC)/validator.c
 VALIDATORTARG := $(BIN)/validator.o
 
@@ -34,12 +63,6 @@ TEMPLATINGTARG := $(BIN)/templating.o
 $(TEMPLATINGTARG): $(TEMPLATINGDEP)
 	$(CC) -c $< -o $@ $(CFLAGS) 
 
-
-HTPDELDEP := $(SRC)/http_delete.c
-HTPDELTARG := $(BIN)/http_delete.o
-
-$(HTPDELTARG): $(HTPDELDEP)
-	$(CC) -c $< -o $@ $(CFLAGS) 
 
 
 HTPGETDEP := $(SRC)/http_get.c
@@ -84,18 +107,6 @@ $(GETCMTYTARG): $(GETCMTYDEP)
 	$(CC) -c $< -o $@ $(CFLAGS) 
 
 
-HTPPSTDEP := $(SRC)/http_post.c
-HTPPSTTARG := $(BIN)/http_post.o
-
-$(HTPPSTTARG): $(HTPPSTDEP)
-	$(CC) -c $< -o $@ $(CFLAGS) 
-
-
-HTPPATCHDEP := $(SRC)/http_patch.c
-HTPPATCHTARG := $(BIN)/http_patch.o
-
-$(HTPPATCHTARG): $(HTPPATCHDEP)
-	$(CC) -c $< -o $@ $(CFLAGS) 
 
 
 RESPONSEDEP := $(SRC)/response.c
@@ -141,8 +152,8 @@ $(LOGMGRTARG): $(LOGMGRDEP)
 
 
 ALLDEPS := $(LOADFILETARG) $(STRINGMAPTARG) $(TEMPLATINGTARG) $(LOGMGRTARG) $(SQLMGRTARG) $(AUTHMGRTARG) \
-	$(SOCKMGRTARG) $(RESPONSETARG) $(HTPDELTARG) $(HTPGETTARG) $(GETUSRTARG) $(GETPSTTARG) $(GETCMTYTARG) \
-	$(HTPPSTTARG) $(HTPPATCHTARG) $(SVRTARG) $(GETFEEDTARG) $(GETFORMTARG) $(VALIDATORTARG)
+	$(SOCKMGRTARG) $(RESPONSETARG) $(HTPGETTARG) $(GETUSRTARG) $(GETPSTTARG) $(GETCMTYTARG) \
+	$(HTTPPOSTTARG) $(POSTNEWTARG) $(POSTUPDATETARG) $(POSTDELETETARG) $(SVRTARG) $(GETFEEDTARG) $(GETFORMTARG) $(VALIDATORTARG)
 
 
 server: $(ALLDEPS)
