@@ -45,8 +45,8 @@ struct response* update_user_about(const struct request* req)
     return response_error(STAT500);
   }
 
-  char uri[32];
-  sprintf(uri, "/u/%s", req->client_info->user_name);
+  char uri[64];
+  sprintf(uri, "/user?id=%s", req->client_info->user_id);
 
   // redirect to user page
   return response_redirect(uri);
@@ -110,8 +110,8 @@ struct response* update_user_password(const struct request* req)
     return response_error(STAT500);
   }
 
-  char uri[32];
-  sprintf(uri, "/u/%s", req->client_info->user_name);
+  char uri[64];
+  sprintf(uri, "/user?id=%s", req->client_info->user_id);
 
   // redirect to user page
   return response_redirect(uri);
@@ -168,8 +168,8 @@ struct response* update_post(const struct request* req)
     return response_error(STAT500);
   }
 
-  char uri[32];
-  sprintf(uri, "/p/%s", post_id);
+  char uri[64];
+  sprintf(uri, "/post?id=%s", post_id);
 
   // redirect to post page
   return response_redirect(uri);
@@ -226,8 +226,8 @@ struct response* update_comment(const struct request* req)
   }
 
   const char* post_id = get_map_value_str(comment_info, FIELD_COMMENT_POST_ID);
-  char uri[32];
-  sprintf(uri, "/p/%s#%s", post_id, comment_id);
+  char uri[64];
+  sprintf(uri, "/post?id=%s#%s", post_id, comment_id);
   ks_hashmap_delete(comment_info);
 
   return response_redirect(uri);
@@ -270,6 +270,7 @@ struct response* update_community_about(const struct request* req)
     }
     ks_hashmap_delete(mod_info);
   }
+  ks_hashmap_delete(community_info);
 
   // validate about
   char about_decoded[COMMUNITY_ABOUT_BUF_LEN];
@@ -295,10 +296,8 @@ struct response* update_community_about(const struct request* req)
     return response_error(STAT500);
   }
 
-  const char* community_name = get_map_value_str(community_info, FIELD_COMMUNITY_NAME);
-  char uri[32];
-  sprintf(uri, "/c/%s", community_name);
-  ks_hashmap_delete(community_info);
+  char uri[64];
+  sprintf(uri, "/community?id=%s", community_id);
 
   return response_redirect(uri);
 }

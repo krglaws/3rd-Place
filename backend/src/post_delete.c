@@ -73,13 +73,13 @@ struct response* delete_post(const struct request* req)
     return response_error(STAT404);
   }
   const char* author_id = get_map_value_str(post_info, FIELD_POST_AUTHOR_ID);
+  const char* community_id = get_map_value_str(post_info, FIELD_POST_COMMUNITY_ID);
 
   // check if client user id == author id 
   if (strcmp(author_id, req->client_info->user_id) != 0)
   {
     // check if client is a moderator
     ks_hashmap* mod_info;
-    const char* community_id = get_map_value_str(post_info, FIELD_POST_COMMUNITY_ID);
     if ((mod_info = query_moderator_by_community_id_user_id(community_id, req->client_info->user_id)) == NULL)
     {
       // check if client is an administrator
@@ -112,10 +112,8 @@ struct response* delete_post(const struct request* req)
   }
 
   // build redirect URI
-  const char* community_name = get_map_value_str(post_info, FIELD_POST_COMMUNITY_NAME);
   char uri[64];
-  sprintf(uri, "/c/%s", community_name);
-
+  sprintf(uri, "/community?id=%s", community_id);
   ks_hashmap_delete(post_info);
 
   // change this to redirect to community page
@@ -180,8 +178,8 @@ struct response* delete_comment(const struct request* req)
 
   // build redirect URI
   const char* post_id = get_map_value_str(comment_info, FIELD_COMMENT_POST_ID);
-  char uri[32];
-  sprintf(uri, "/p/%s", post_id);
+  char uri[64];
+  sprintf(uri, "/post?id=%s", post_id);
 
   ks_hashmap_delete(comment_info);
 

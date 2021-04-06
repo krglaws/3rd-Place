@@ -309,8 +309,8 @@ struct response* new_comment(const struct request* req)
   }
 
   // build comment URI
-  char uri[32];
-  sprintf(uri, "/p/%s#%s", post_id, comment_id);
+  char uri[64];
+  sprintf(uri, "/post?id=%s#%s", post_id, comment_id);
   free(comment_id);
 
   return response_redirect(uri);
@@ -380,8 +380,8 @@ struct response* new_post(const struct request* req)
   }
 
   // build comment URI
-  char uri[32];
-  sprintf(uri, "/p/%s", post_id);
+  char uri[64];
+  sprintf(uri, "/post?id=%s", post_id);
   free(post_id);
 
   return response_redirect(uri);
@@ -439,8 +439,8 @@ struct response* new_community(const struct request* req)
   }
 
   // build post URI
-  char uri[32];
-  sprintf(uri, "/p/%s", post_id);
+  char uri[64];
+  sprintf(uri, "/post?id=%s", post_id);
   free(post_id);
 
   return response_redirect(uri);

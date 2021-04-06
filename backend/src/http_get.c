@@ -327,7 +327,7 @@ ks_hashmap* wrap_page_data(const struct auth_token* client_info, const ks_hashma
 
   if (client_info != NULL)
   {
-    sprintf(user_link, "/u/%s", client_info->user_name);
+    sprintf(user_link, "/user?id=%s", client_info->user_id);
     add_map_value_str(wrapper, CLIENT_LINK_KEY, user_link);
     add_map_value_str(wrapper, CLIENT_NAME_KEY, client_info->user_name);
   }

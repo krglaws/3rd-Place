@@ -31,7 +31,7 @@ struct response* response_error(const char* errstr)
   memcpy(resp->content, errstr, resp->content_length + 1);
 
   // print error response header
-  char contlenline[32];
+  char contlenline[64];
   int len = sprintf(contlenline, cont_len_tmplt, resp->content_length);
 
   // add response header

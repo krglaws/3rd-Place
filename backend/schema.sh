@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS $DBNAME.comment_down_votes(
 );
 
 
-# create /u/[deleted]
+# create user [deleted]
 INSERT INTO $DBNAME.users (id, name, password_hash, date_joined) VALUES (1, "[deleted]", "", UNIX_TIMESTAMP());
 
 
