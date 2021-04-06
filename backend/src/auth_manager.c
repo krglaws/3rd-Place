@@ -45,8 +45,6 @@ static const char base64[64] = "./0123456789ABCD" \
 
 void init_auth_manager()
 {
-  log_info("Initializing Auth Mananger...");
-
   if ((urandom = fopen("/dev/urandom", "r")) == NULL)
   {
     log_info("Failed to open /dev/urandom: %s\nUsing rand() instead", strerror(errno));

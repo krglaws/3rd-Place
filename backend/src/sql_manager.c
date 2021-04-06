@@ -757,8 +757,6 @@ static MYSQL_STMT* build_prepared_statement(MYSQL* sqlcon, const char* statement
 
 void init_sql_manager()
 {
-  log_info("Initializing SQL Manager...");
-
   // load db.config
   char* config;
   if ((config = load_file("backend/db.config")) == NULL)

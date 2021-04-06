@@ -324,8 +324,6 @@ static struct response* process_request(const int sock)
     return NULL;
   }
 
-  log_info(req_buf);
-
   if (req_len == 0)
   {
     remove_socket(sock);

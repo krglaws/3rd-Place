@@ -73,8 +73,6 @@ void init_log_manager(const char* path)
   }
 
   atexit(&terminate_log_manager);
-
-  log_info("Log Manager Initialized.");
 }
 
 

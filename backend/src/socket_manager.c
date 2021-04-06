@@ -20,8 +20,6 @@ static fd_set socket_set;
 
 void init_socket_manager(const struct in6_addr* server_addr, const uint16_t server_port, const int max_clients)
 {
-  log_info("Initializing Socket Manager...");
-
   socket_list = ks_list_new();
 
   struct sockaddr_in6 addr;

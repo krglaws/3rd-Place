@@ -28,7 +28,6 @@ static ks_hashmap* endpoints = NULL;
 
 void init_http_get()
 {
-  log_info("Initializing GET endpoints...");
   endpoints = ks_hashmap_new(KS_CHARP, 32);
 
   // from get_feed.c
