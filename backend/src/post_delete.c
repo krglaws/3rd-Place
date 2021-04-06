@@ -18,7 +18,7 @@ struct response* delete_user(const struct request* req)
     return response_redirect("/login");
   }
 
-  const char* user_id = get_map_value_str(req->query, "user_id");
+  const char* user_id = get_map_value_str(req->query, "id");
 
   ks_hashmap* user_info;
   if (user_id == NULL || (user_info = query_user_by_id(user_id)) == NULL)
@@ -47,7 +47,7 @@ struct response* delete_user(const struct request* req)
   // remove user from DB
   if (sql_delete_user(user_id) != 0)
   {
-    log_err("delete_user(): failed on call to sql_delete_user(): user_id=%s", user_id);
+    log_err("delete_user(): failed on call to sql_delete_user(): user id=%s", user_id);
     ks_hashmap_delete(user_info);
     return response_error(STAT500);
   }
@@ -63,7 +63,7 @@ struct response* delete_post(const struct request* req)
     return response_redirect("/login");
   }
 
-  const char* post_id = get_map_value_str(req->query, "post_id");
+  const char* post_id = get_map_value_str(req->query, "id");
 
   // get post info
   ks_hashmap* post_info;
@@ -106,7 +106,7 @@ struct response* delete_post(const struct request* req)
   // remove post from DB
   if (sql_delete_post(post_id) != 0)
   {
-    log_err("delete_post(): failed on call to sql_delete_post(): post_id=%s", post_id);
+    log_err("delete_post(): failed on call to sql_delete_post(): post id=%s", post_id);
     ks_hashmap_delete(post_info);
     return response_error(STAT500);
   }
@@ -130,7 +130,7 @@ struct response* delete_comment(const struct request* req)
     return response_redirect("/login");
   }
 
-  const char* comment_id = get_map_value_str(req->query, "comment_id");
+  const char* comment_id = get_map_value_str(req->query, "id");
 
   // get comment info
   ks_hashmap* comment_info;
@@ -173,7 +173,7 @@ struct response* delete_comment(const struct request* req)
   // remove comment from DB
   if (sql_delete_comment(comment_id) != 0)
   {
-    log_err("delete_comment(): failed on call to sql_delete_comment(): comment_id=%s", comment_id);
+    log_err("delete_comment(): failed on call to sql_delete_comment(): comment id=%s", comment_id);
     ks_hashmap_delete(comment_info);
     return response_error(STAT500);
   }
@@ -197,7 +197,7 @@ struct response* delete_community(const struct request* req)
     return response_redirect("/login");
   }
 
-  const char* community_id = get_map_value_str(req->query, "community_id");
+  const char* community_id = get_map_value_str(req->query, "id");
 
   // get community info
   ks_hashmap* community_info;
@@ -226,7 +226,7 @@ struct response* delete_community(const struct request* req)
   // remove community from DB
   if (sql_delete_community(community_id) != 0)
   {
-    log_err("delete_community(): failed on call to sql_delete_community(): community_id=%s", community_id);
+    log_err("delete_community(): failed on call to sql_delete_community(): community id=%s", community_id);
     ks_hashmap_delete(community_info);
     return response_error(STAT500);
   }
