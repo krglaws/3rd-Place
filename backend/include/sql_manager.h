@@ -164,11 +164,9 @@ ks_hashmap* query_post_by_id(const char* id);
 
 ks_list* query_all_posts();
 
-ks_list* query_posts_by_author_name(const char* user_name);
+ks_list* query_posts_by_author_id(const char* user_id);
 
 ks_list* query_posts_by_community_id(const char* community_id);
-
-ks_list* query_posts_by_community_name(const char* community_name);
 
 ks_hashmap* query_community_by_id(const char* community_id);
 
@@ -182,7 +180,7 @@ ks_hashmap* query_administrator_by_user_id(const char* user_id);
 
 ks_hashmap* query_comment_by_id(const char* comment_id);
 
-ks_list* query_comments_by_author_name(const char* author_name);
+ks_list* query_comments_by_author_id(const char* author_id);
 
 ks_list* query_comments_by_post_id(const char* post_id);
 

@@ -13,11 +13,11 @@
 #include <get_community.h>
 
 
-static ks_list* get_community_posts(const char* community_name, const struct auth_token* client_info)
+static ks_list* get_community_posts(const char* community_id, const struct auth_token* client_info)
 {
   // get community posts
   ks_list* posts;
-  if ((posts = query_posts_by_community_name(community_name)) == NULL)
+  if ((posts = query_posts_by_community_id(community_id)) == NULL)
   {
     return NULL;
   }
@@ -110,7 +110,7 @@ struct response* get_community(const struct request* req)
 
   // get community posts
   ks_list* community_posts;
-  if ((community_posts = get_community_posts(community_name, req->client_info)) != NULL)
+  if ((community_posts = get_community_posts(community_id, req->client_info)) != NULL)
   {
     add_map_value_ls(page_data, COMMUNITY_POST_LIST_KEY, community_posts);
   }

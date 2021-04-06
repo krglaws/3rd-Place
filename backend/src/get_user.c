@@ -13,11 +13,11 @@
 #include <get_user.h>
 
 
-static ks_list* get_user_posts(const char* user_name, const struct auth_token* client_info)
+static ks_list* get_user_posts(const char* user_id, const struct auth_token* client_info)
 {
   // get user posts
   ks_list* posts;
-  if ((posts = query_posts_by_author_name(user_name)) == NULL)
+  if ((posts = query_posts_by_author_id(user_id)) == NULL)
   {
     return NULL;
   }
@@ -67,11 +67,11 @@ static ks_list* get_user_posts(const char* user_name, const struct auth_token* c
 }
 
 
-static ks_list* get_user_comments(const char* user_name, const struct auth_token* client_info)
+static ks_list* get_user_comments(const char* user_id, const struct auth_token* client_info)
 {
   // get user comments
   ks_list* comments;
-  if ((comments = query_comments_by_author_name(user_name)) == NULL)
+  if ((comments = query_comments_by_author_id(user_id)) == NULL)
   {
     return NULL;
   }
@@ -153,14 +153,14 @@ struct response* get_user(const struct request* req)
 
   // get user posts
   ks_list* posts;
-  if ((posts = get_user_posts(user_name, req->client_info)) != NULL)
+  if ((posts = get_user_posts(user_id, req->client_info)) != NULL)
   {
     add_map_value_ls(page_data, USER_POST_LIST_KEY, posts);
   }
 
   // get user comments
   ks_list* comments;
-  if ((comments = get_user_comments(user_name, req->client_info)) != NULL)
+  if ((comments = get_user_comments(user_id, req->client_info)) != NULL)
   {
     add_map_value_ls(page_data, USER_COMMENT_LIST_KEY, comments);
   }

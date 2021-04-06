@@ -178,22 +178,16 @@ ks_list* query_all_posts()
   return sql_select(&posts_table_info, stmt_query_all_posts);
 }
 
-static MYSQL_STMT* stmt_query_posts_by_author_name = NULL;
-ks_list* query_posts_by_author_name(const char* author_name)
+static MYSQL_STMT* stmt_query_posts_by_author_id = NULL;
+ks_list* query_posts_by_author_id(const char* author_id)
 {
-  return sql_select(&posts_table_info, stmt_query_posts_by_author_name, author_name);
+  return sql_select(&posts_table_info, stmt_query_posts_by_author_id, author_id);
 }
 
 static MYSQL_STMT* stmt_query_posts_by_community_id = NULL;
 ks_list* query_posts_by_community_id(const char* community_id)
 {
   return sql_select(&posts_table_info, stmt_query_posts_by_community_id, community_id);
-}
-
-static MYSQL_STMT* stmt_query_posts_by_community_name = NULL;
-ks_list* query_posts_by_community_name(const char* community_name)
-{
-  return sql_select(&posts_table_info, stmt_query_posts_by_community_name, community_name);
 }
 
 static MYSQL_STMT* stmt_create_post = NULL;
@@ -269,10 +263,10 @@ ks_hashmap* query_comment_by_id(const char* comment_id)
   return row0;
 }
 
-static MYSQL_STMT* stmt_query_comments_by_author_name = NULL;
-ks_list* query_comments_by_author_name(const char* author_name)
+static MYSQL_STMT* stmt_query_comments_by_author_id = NULL;
+ks_list* query_comments_by_author_id(const char* author_id)
 {
-  return sql_select(&comments_table_info, stmt_query_comments_by_author_name, author_name);
+  return sql_select(&comments_table_info, stmt_query_comments_by_author_id, author_id);
 }
 
 static MYSQL_STMT* stmt_query_comments_by_post_id = NULL;
@@ -824,16 +818,15 @@ void init_sql_manager()
   // posts
   stmt_query_post_by_id = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE id = ?;");
   stmt_query_all_posts = build_prepared_statement(sqlcon, "SELECT * FROM posts;");
-  stmt_query_posts_by_author_name = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE author_name = ?;");
+  stmt_query_posts_by_author_id = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE author_id = ?;");
   stmt_query_posts_by_community_id = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE community_id = ?;");
-  stmt_query_posts_by_community_name = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE community_name = ?;");
   stmt_create_post = build_prepared_statement(sqlcon, "SELECT CreatePost(?, ?, ?, ?);");
   stmt_update_post_body = build_prepared_statement(sqlcon, "UPDATE posts SET body = ? WHERE id = ?;");
   stmt_delete_post = build_prepared_statement(sqlcon, "CALL DeletePost(?);");
 
   // comments
   stmt_query_comment_by_id = build_prepared_statement(sqlcon, "SELECT * FROM comments WHERE id = ?;");
-  stmt_query_comments_by_author_name = build_prepared_statement(sqlcon, "SELECT * FROM comments WHERE author_name = ?;");
+  stmt_query_comments_by_author_id = build_prepared_statement(sqlcon, "SELECT * FROM comments WHERE author_id = ?;");
   stmt_query_comments_by_post_id = build_prepared_statement(sqlcon, "SELECT * FROM comments WHERE post_id = ?;");
   stmt_create_comment = build_prepared_statement(sqlcon, "SELECT CreateComment(?, ?, ?);");
   stmt_update_comment_body = build_prepared_statement(sqlcon, "UPDATE comments SET body = ? WHERE id = ?;");
@@ -895,16 +888,15 @@ static void terminate_sql_manager()
   // posts
   mysql_stmt_close(stmt_query_post_by_id);
   mysql_stmt_close(stmt_query_all_posts);
-  mysql_stmt_close(stmt_query_posts_by_author_name);
+  mysql_stmt_close(stmt_query_posts_by_author_id);
   mysql_stmt_close(stmt_query_posts_by_community_id);
-  mysql_stmt_close(stmt_query_posts_by_community_name);
   mysql_stmt_close(stmt_create_post);
   mysql_stmt_close(stmt_update_post_body);
   mysql_stmt_close(stmt_delete_post);
 
   // comments
   mysql_stmt_close(stmt_query_comment_by_id);
-  mysql_stmt_close(stmt_query_comments_by_author_name);
+  mysql_stmt_close(stmt_query_comments_by_author_id);
   mysql_stmt_close(stmt_query_comments_by_post_id);
   mysql_stmt_close(stmt_create_comment);
   mysql_stmt_close(stmt_update_comment_body);
