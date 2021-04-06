@@ -19,8 +19,8 @@
     <div class="post-content">
       <div class="post-author">
         <div class="utc-timestamp"><<POST_DATE_POSTED>></div>
-        by <a href="/u/<<POST_AUTHOR_NAME>>"><<POST_AUTHOR_NAME>></a>
-        in <a href="/c/<<POST_COMMUNITY_NAME>>"><<POST_COMMUNITY_NAME>></a>
+        by <a href="/user?id=<<POST_AUTHOR_ID>>"><<POST_AUTHOR_NAME>></a>
+        in <a href="/community?id=<<POST_COMMUNITY_ID>>"><<POST_COMMUNITY_NAME>></a>
       </div>
       <div class="post-title">
         <<POST_TITLE>>
@@ -34,10 +34,10 @@
 
 <div class="options-container">
   <div class="option">
-    <a href="/new_comment?post_id=<<POST_ID>>">[write comment]</a>
+    <a href="/new_comment?id=<<POST_ID>>">[write comment]</a>
   </div>
   <div class="option" style="visibility: <<EDIT_OPTION_VISIBILITY>>;">
-    <a href="/edit_post?post_id=<<POST_ID>>">[edit post]</a>
+    <a href="/edit_post?id=<<POST_ID>>">[edit post]</a>
   </div>
   <div class="option" style="visibility: <<DELETE_OPTION_VISIBILITY>>;" onclick="deletePost('<<POST_ID>>');">
     [delete post]
@@ -51,4 +51,3 @@
 
   </div>
 </div>
-

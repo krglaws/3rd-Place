@@ -2,7 +2,7 @@
 
   <div class="comment-info">
     <div class="utc-timestamp"><<COMMENT_DATE_POSTED>></div>
-    <a href="/u/<<COMMENT_AUTHOR_NAME>>"><<COMMENT_AUTHOR_NAME>></a>
+    <a href="/user?id=<<COMMENT_AUTHOR_ID>>"><<COMMENT_AUTHOR_NAME>></a>
   </div>
 
   <div class="comment-body">
@@ -11,7 +11,7 @@
 
   <div class="options-container">
     <div class="option" style="visibility: <<EDIT_OPTION_VISIBILITY>>;">
-      <a href="/edit_comment?comment_id=<<COMMENT_ID>>">[edit comment]</a>
+      <a href="/edit_comment?id=<<COMMENT_ID>>">[edit comment]</a>
     </div>
     <div class="option" style="visibility: <<DELETE_OPTION_VISIBILITY>>;" onclick="deleteComment('<<COMMENT_ID>>');">
       [delete comment]

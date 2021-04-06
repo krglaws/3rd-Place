@@ -3,8 +3,8 @@
       <div class="post-content">
         <div class="post-author">
           <div class="utc-timestamp"><<POST_DATE_POSTED>></div>
-          by <a href="/u/<<POST_AUTHOR_NAME>>"><<POST_AUTHOR_NAME>></a>
-          in <a href="/c/<<POST_COMMUNITY_NAME>>"><<POST_COMMUNITY_NAME>></a>
+          by <a href="/user?id=<<POST_AUTHOR_ID>>"><<POST_AUTHOR_NAME>></a>
+          in <a href="/community?id=<<POST_COMMUNITY_ID>>"><<POST_COMMUNITY_NAME>></a>
         </div>
         <div class="post-title">
           <<POST_TITLE>>
@@ -16,7 +16,7 @@
     </div>
 
     <div class="form-container">
-      <<OPT_EDIT_COMMENT_FORM_ERR>>
+      <<OPT_COMMENT_FORM_ERR>>
       <form action="/new_comment" method="post">
         <input type="hidden" name="post_id" value="<<POST_ID>>">
         <label for="body">New comment:</label><br>
