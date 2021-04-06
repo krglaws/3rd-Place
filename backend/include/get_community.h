@@ -1,9 +1,9 @@
-#ifndef _GET_COMMUNITY_H_
-#define _GET_COMMUNITY_H_
+#ifndef GET_COMMUNITY_H
+#define GET_COMMUNITY_H
 
-#include <kylestructs.h>
-#include <auth_manager.h>
+#include <server.h>
+#include <response.h>
 
-struct response* get_community(const char* community_name, const struct auth_token* client_info);
+struct response* get_community(const struct request* req);
 
 #endif

@@ -1,16 +1,13 @@
 #ifndef GET_FEED_H
 #define GET_FEED_H
 
-#include <auth_manager.h>
+#include <server.h>
+#include <response.h>
 
-enum feed_type
-{
-  HOME_FEED,
-  POPULAR_FEED
-};
+struct response* get_home(const struct request* req);
 
-struct response* get_feed(const enum feed_type ft, const struct auth_token* client_info);
+struct response* get_all(const struct request* req);
 
-struct response* get_communities(const struct auth_token* client_info);
+struct response* get_communities(const struct request* req);
 
 #endif

@@ -121,32 +121,46 @@ static ks_list* get_user_comments(const char* user_name, const struct auth_token
 }
 
 
-struct response* get_user(const char* user_name, const struct auth_token* client_info)
+struct response* get_user(const struct request* req)
 {
-  if (user_name == NULL || strlen(user_name) == 0)
+  const char* user_name = get_map_value_str(req->query, "name");
+  const char* user_id = get_map_value_str(req->query, "id");
+
+  // get user info from DB
+  ks_hashmap* page_data;
+  if (user_id != NULL)
+  {
+    if ((page_data = query_user_by_id(user_id)) == NULL)
+    {
+      return response_error(STAT404);
+    }
+    user_name = get_map_value_str(page_data, FIELD_USER_NAME);
+  }
+  else if (user_name != NULL)
+  {
+    if ((page_data = query_user_by_name(user_name)) == NULL)
+    {
+      return response_error(STAT404);
+    }
+    user_id = get_map_value_str(page_data, FIELD_USER_ID);
+  }
+  else
   {
     return response_error(STAT404);
   }
 
-  // get user info from DB
-  ks_hashmap* page_data;
-  if ((page_data = query_user_by_name(user_name)) == NULL)
-  {
-    // user not found
-    return response_error(STAT404);
-  }
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_USER);
 
   // get user posts
   ks_list* posts;
-  if ((posts = get_user_posts(user_name, client_info)) != NULL)
+  if ((posts = get_user_posts(user_name, req->client_info)) != NULL)
   {
     add_map_value_ls(page_data, USER_POST_LIST_KEY, posts);
   }
 
   // get user comments
   ks_list* comments;
-  if ((comments = get_user_comments(user_name, client_info)) != NULL)
+  if ((comments = get_user_comments(user_name, req->client_info)) != NULL)
   {
     add_map_value_ls(page_data, USER_COMMENT_LIST_KEY, comments);
   }
@@ -155,16 +169,16 @@ struct response* get_user(const char* user_name, const struct auth_token* client
   char* edit_vis = "hidden";
   char* logout_vis = "hidden";
   char* delete_vis = "hidden";
-  if (client_info != NULL)
+  if (req->client_info != NULL)
   {
     ks_hashmap* admin_info;
-    if (strcmp(user_name, client_info->user_name) == 0)
+    if (strcmp(user_name, req->client_info->user_name) == 0)
     {
       edit_vis = "visible";
       logout_vis = "visible";
       delete_vis = "visible";
     }
-    else if ((admin_info = query_administrator_by_user_id(client_info->user_id)) != NULL)
+    else if ((admin_info = query_administrator_by_user_id(req->client_info->user_id)) != NULL)
     {
       ks_hashmap_delete(admin_info);
       delete_vis = "visible";
@@ -175,7 +189,7 @@ struct response* get_user(const char* user_name, const struct auth_token* client
   add_map_value_str(page_data, DELETE_OPTION_VISIBILITY_KEY, delete_vis);
  
   // put page data together
-  page_data = wrap_page_data(client_info, page_data);
+  page_data = wrap_page_data(req->client_info, page_data);
 
   // build template
   char* content;

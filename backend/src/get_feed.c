@@ -11,6 +11,14 @@
 #include <http_get.h>
 #include <get_feed.h>
 
+enum feed_type
+{
+  HOME_FEED,
+  ALL_FEED
+};
+
+static struct response* get_feed(const enum feed_type ft, const struct auth_token* client_info);
+
 
 static ks_list* wrap_posts(ks_list* posts, const struct auth_token* client_info)
 {
@@ -63,7 +71,7 @@ static ks_list* wrap_posts(ks_list* posts, const struct auth_token* client_info)
 }
 
 
-struct response* get_feed(const enum feed_type ft, const struct auth_token* client_info)
+static struct response* get_feed(const enum feed_type ft, const struct auth_token* client_info)
 {
   if (ft == HOME_FEED && client_info == NULL)
   {
@@ -130,7 +138,19 @@ struct response* get_feed(const enum feed_type ft, const struct auth_token* clie
 }
 
 
-struct response* get_communities(const struct auth_token* client_info)
+struct response* get_home(const struct request* req)
+{
+  return get_feed(HOME_FEED, req->client_info);
+}
+
+
+struct response* get_all(const struct request* req)
+{
+  return get_feed(ALL_FEED, req->client_info);
+}
+
+
+struct response* get_communities(const struct request* req)
 {
   // query communities and sort
   ks_list* communities = query_all_communities();
@@ -152,14 +172,14 @@ struct response* get_communities(const struct auth_token* client_info)
   add_map_value_ls(page_data, FEED_ITEM_LIST_KEY, communities);
 
   char* new_vis = "hidden";
-  if (client_info != NULL)
+  if (req->client_info != NULL)
   {
     new_vis = "visible";
   }
   add_map_value_str(page_data, NEW_OPTION_VISIBILITY_KEY, new_vis);
 
   // put page data together
-  page_data = wrap_page_data(client_info, page_data);
+  page_data = wrap_page_data(req->client_info, page_data);
 
   // build content
   char* content;

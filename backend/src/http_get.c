@@ -20,95 +20,68 @@
 #include <get_feed.h>
 #include <http_get.h>
 
+static void terminate_http_get();
+static struct response* get_file(const char* uri);
+
+static ks_hashmap* endpoints = NULL;
+
+
+void init_http_get()
+{
+  log_info("Initializing GET endpoints...");
+  endpoints = ks_hashmap_new(KS_CHARP, 32);
+
+  // from get_feed.c
+  add_map_value_vp(endpoints, "./", &get_home);
+  add_map_value_vp(endpoints, "./home", &get_home);
+  add_map_value_vp(endpoints, "./all", &get_all);
+  add_map_value_vp(endpoints, "./communities", &get_communities);
+
+  // from get_user.c 
+  add_map_value_vp(endpoints, "./user", &get_user);
+
+  // from get_post.c
+  add_map_value_vp(endpoints, "./post", &get_post);
+
+  // from get_community.c
+  add_map_value_vp(endpoints, "./community", &get_community);
+
+  // from get_form.c
+  add_map_value_vp(endpoints, "./login", &get_login);
+  add_map_value_vp(endpoints, "./edit_user", &get_edit_user);
+  add_map_value_vp(endpoints, "./new_post", &get_new_post);
+  add_map_value_vp(endpoints, "./edit_post", &get_edit_post);
+  add_map_value_vp(endpoints, "./new_comment", &get_new_comment);
+  add_map_value_vp(endpoints, "./edit_comment", &get_edit_comment);
+  add_map_value_vp(endpoints, "./new_community", &get_new_community);
+  add_map_value_vp(endpoints, "./edit_community", &get_edit_community);
+
+  atexit(&terminate_http_get);
+}
+
 
 struct response* http_get(const struct request* req)
 {
-  if (req == NULL)
+  const ks_datacont* func_dc;
+  if ((func_dc = get_map_value(endpoints, req->uri)) != NULL)
   {
-    log_crit("http_get(): NULL request object");
-  }
+    struct response* (*func) (const struct request*);
+    func = (struct response* (*) (const struct request*)) func_dc->vp;
 
-  if (strcmp(req->uri, "./") == 0 ||
-      strcmp(req->uri, "./home") == 0)
-  {
-    return get_feed(HOME_FEED, req->client_info);
-  }
-
-  if (strcmp(req->uri, "./all") == 0)
-  {
-    return get_feed(POPULAR_FEED, req->client_info);
-  }
-
-  if (strcmp(req->uri, "./communities") == 0)
-  {
-    return get_communities(req->client_info);
-  }
-
-  if (strcmp(req->uri, "./login") == 0)
-  {
-    return get_login(NULL, USER_FORM_ERR_NONE, req->client_info);
-  }
-
-  if (strcmp(req->uri, "./edit_user") == 0)
-  {
-    return get_edit_user(NULL, USER_FORM_ERR_NONE, req->client_info);
-  }
-
-  if (strcmp(req->uri, "./new_post") == 0)
-  {
-    const char* community_id = get_map_value_str(req->query, "community_id");
-    return get_new_post(NULL, NULL, community_id, POST_FORM_ERR_NONE, req->client_info);
-  }
-
-  if (strcmp(req->uri, "./edit_post") == 0)
-  {
-    const char* post_id = get_map_value_str(req->query, "post_id");
-    return get_edit_post(NULL, post_id, POST_FORM_ERR_NONE, req->client_info);
-  }
-
-  if (strcmp(req->uri, "./new_comment") == 0)
-  {
-    const char* post_id = get_map_value_str(req->query, "post_id");
-    return get_new_comment(NULL, post_id, COMMENT_FORM_ERR_NONE, req->client_info);
-  }
-
-  if (strcmp(req->uri, "./edit_comment") == 0)
-  {
-    const char* comment_id = get_map_value_str(req->query, "comment_id");
-    return get_edit_comment(NULL, comment_id, COMMENT_FORM_ERR_NONE, req->client_info);
-  }
-
-  if (strcmp(req->uri, "./new_community") == 0)
-  {
-    return get_new_community(NULL, NULL, COMMUNITY_FORM_ERR_NONE, req->client_info);
-  }
-
-  if (strcmp(req->uri, "./edit_community") == 0)
-  {
-    const char* community_id = get_map_value_str(req->query, "community_id");
-    return get_edit_community(NULL, community_id, COMMUNITY_FORM_ERR_NONE, req->client_info);
-  }
-
-  if (req->uri == strstr(req->uri, "./u/"))
-  {
-    return get_user(req->uri+4, req->client_info);
-  }
-
-  if (req->uri == strstr(req->uri, "./p/"))
-  {
-    return get_post(req->uri+4, req->client_info);
-  }
-
-  if (req->uri == strstr(req->uri, "./c/"))
-  {
-    return get_community(req->uri+4, req->client_info);
+    return func(req);
   }
 
   return get_file(req->uri);
 }
 
 
-struct response* get_file(const char* uri)
+static void terminate_http_get()
+{
+  ks_hashmap_delete(endpoints);
+}
+
+
+static struct response* get_file(const char* uri)
 {
   // no '..' allowed
   if (strstr(uri, "..") != NULL)

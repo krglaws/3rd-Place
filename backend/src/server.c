@@ -151,6 +151,7 @@ static void init_server(struct options* opts)
 
   // init remaining services
   init_http_post();
+  init_http_get();
 
   init_auth_manager();
 

@@ -67,28 +67,41 @@ static ks_list* get_community_posts(const char* community_name, const struct aut
 }
 
 
-struct response* get_community(const char* community_name, const struct auth_token* client_info)
+struct response* get_community(const struct request* req)
 {
-  if (community_name == NULL || strlen(community_name) == 0)
+  const char* community_id = get_map_value_str(req->query, "id");
+  const char* community_name = get_map_value_str(req->query, "name");
+
+  // get user info from DB
+  ks_hashmap* page_data;
+  if (community_id != NULL)
+  {
+    if ((page_data = query_community_by_id(community_id)) == NULL)
+    {
+      return response_error(STAT404);
+    }
+    community_name = get_map_value_str(page_data, FIELD_COMMUNITY_NAME);
+  }
+  else if (community_name != NULL)
+  {
+    if ((page_data = query_community_by_name(community_name)) == NULL)
+    {
+      return response_error(STAT404);
+    }
+    community_id = get_map_value_str(page_data, FIELD_COMMUNITY_ID);
+  }
+  else
   {
     return response_error(STAT404);
   }
 
-  // get community info
-  ks_hashmap* page_data;
-  if ((page_data = query_community_by_name(community_name)) == NULL)
-  {
-    // community does not exist
-    return response_error(STAT404);
-  }
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_COMMUNITY);
 
   // check if client is subscribed
   char* substatus = "subscribe";
-  const char* community_id = get_map_value_str(page_data, FIELD_COMMUNITY_ID);
   ks_hashmap* sub_info;
-  if (client_info != NULL &&
-      (sub_info = query_subscription_by_community_id_user_id(community_id, client_info->user_id)) != NULL)
+  if (req->client_info != NULL &&
+      (sub_info = query_subscription_by_community_id_user_id(community_id, req->client_info->user_id)) != NULL)
   {
     ks_hashmap_delete(sub_info);
     substatus = "unsubscribe";
@@ -97,7 +110,7 @@ struct response* get_community(const char* community_name, const struct auth_tok
 
   // get community posts
   ks_list* community_posts;
-  if ((community_posts = get_community_posts(community_name, client_info)) != NULL)
+  if ((community_posts = get_community_posts(community_name, req->client_info)) != NULL)
   {
     add_map_value_ls(page_data, COMMUNITY_POST_LIST_KEY, community_posts);
   }
@@ -105,13 +118,13 @@ struct response* get_community(const char* community_name, const struct auth_tok
   bool can_delete = false;
   char* edit_vis = "hidden"; 
   char* delete_vis = "hidden";
-  if (client_info != NULL)
+  if (req->client_info != NULL)
   {
     const char* owner_id = get_map_value_str(page_data, FIELD_COMMUNITY_OWNER_ID);
 
     ks_hashmap* admin_info;
-    if ((admin_info = query_administrator_by_user_id(client_info->user_id)) != NULL ||
-         strcmp(owner_id, client_info->user_id) == 0)
+    if ((admin_info = query_administrator_by_user_id(req->client_info->user_id)) != NULL ||
+         strcmp(owner_id, req->client_info->user_id) == 0)
     {
       ks_hashmap_delete(admin_info);
       edit_vis = "visible";
@@ -126,7 +139,7 @@ struct response* get_community(const char* community_name, const struct auth_tok
   add_map_value_str(page_data, DELETE_OPTION_VISIBILITY_KEY, delete_vis);
 
   // put page data together
-  page_data = wrap_page_data(client_info, page_data);
+  page_data = wrap_page_data(req->client_info, page_data);
 
   // build content
   char* content;

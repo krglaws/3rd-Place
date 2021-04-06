@@ -91,9 +91,11 @@ static ks_list* get_post_comments(const char* post_id, bool can_delete, const st
 }
 
 
-struct response* get_post(const char* post_id, const struct auth_token* client_info)
+struct response* get_post(const struct request* req)
 {
-  if (post_id == NULL || strlen(post_id) == 0)
+  const char* post_id = get_map_value_str(req->query, "id");
+
+  if (strlen(post_id) == 0)
   {
     return response_error(STAT404);
   }
@@ -108,9 +110,9 @@ struct response* get_post(const char* post_id, const struct auth_token* client_i
   // check if client has voted on this post
   char* upvote_class = UPVOTE_NOTCLICKED_STATE;
   char* downvote_class = DOWNVOTE_NOTCLICKED_STATE;
-  if (client_info != NULL)
+  if (req->client_info != NULL)
   {
-    enum vote_type vt = check_for_vote(POST_ITEM, post_id, client_info->user_id);
+    enum vote_type vt = check_for_vote(POST_ITEM, post_id, req->client_info->user_id);
     upvote_class = vt == UPVOTE ? UPVOTE_CLICKED_STATE : upvote_class;
     downvote_class = vt == DOWNVOTE ? DOWNVOTE_CLICKED_STATE : downvote_class;
   }
@@ -122,22 +124,22 @@ struct response* get_post(const char* post_id, const struct auth_token* client_i
   bool can_delete = false;
   char* edit_vis = "hidden";
   char* delete_vis = "hidden";
-  if (client_info != NULL)
+  if (req->client_info != NULL)
   {
     const char* author_name = get_map_value_str(page_data, FIELD_POST_AUTHOR_NAME);
     const char* community_id = get_map_value_str(page_data, FIELD_POST_COMMUNITY_ID);
     ks_hashmap* community_info = query_community_by_id(community_id);
     const char* owner_id = get_map_value_str(community_info, FIELD_COMMUNITY_OWNER_ID);
-    ks_hashmap* mod_info = query_moderator_by_community_id_user_id(community_id, client_info->user_id);
-    ks_hashmap* admin_info = query_administrator_by_user_id(client_info->user_id);
+    ks_hashmap* mod_info = query_moderator_by_community_id_user_id(community_id, req->client_info->user_id);
+    ks_hashmap* admin_info = query_administrator_by_user_id(req->client_info->user_id);
 
-    can_delete = (mod_info != NULL) || (admin_info != NULL) || (strcmp(owner_id, client_info->user_id) == 0);
+    can_delete = (mod_info != NULL) || (admin_info != NULL) || (strcmp(owner_id, req->client_info->user_id) == 0);
 
     ks_hashmap_delete(mod_info);
     ks_hashmap_delete(admin_info);
     ks_hashmap_delete(community_info);
 
-    if (strcmp(author_name, client_info->user_name) == 0)
+    if (strcmp(author_name, req->client_info->user_name) == 0)
     {
       edit_vis = "visible";
       delete_vis = "visible";
@@ -152,13 +154,13 @@ struct response* get_post(const char* post_id, const struct auth_token* client_i
 
   // get post comments
   ks_list* comments;
-  if ((comments = get_post_comments(post_id, can_delete, client_info)) != NULL)
+  if ((comments = get_post_comments(post_id, can_delete, req->client_info)) != NULL)
   {
     add_map_value_ls(page_data, POST_COMMENT_LIST_KEY, comments);
   }
 
   // put page data together
-  page_data = wrap_page_data(client_info, page_data);
+  page_data = wrap_page_data(req->client_info, page_data);
 
   // build template
   char* content;

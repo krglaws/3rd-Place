@@ -14,7 +14,13 @@
 #include <get_form.h>
 
 
-struct response* get_login(const char* submitted_user_name, enum user_form_error err, const struct auth_token* client_info)
+struct response* get_login(const struct request* req)
+{
+  return get_login_internal(NULL, USER_FORM_ERR_NONE, req->client_info);
+}
+
+
+struct response* get_login_internal(const char* submitted_user_name, enum user_form_error err, const struct auth_token* client_info)
 {
   ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 8);
 
@@ -103,7 +109,13 @@ struct response* get_login(const char* submitted_user_name, enum user_form_error
 }
 
 
-struct response* get_edit_user(const char* submitted_about, enum user_form_error err, const struct auth_token* client_info)
+struct response* get_edit_user(const struct request* req)
+{
+  return get_edit_user_internal(NULL, USER_FORM_ERR_NONE, req->client_info);
+}
+
+
+struct response* get_edit_user_internal(const char* submitted_about, enum user_form_error err, const struct auth_token* client_info)
 {
   if (client_info == NULL)
   {
@@ -178,7 +190,15 @@ struct response* get_edit_user(const char* submitted_about, enum user_form_error
 }
 
 
-struct response* get_new_post(const char* submitted_title, const char* submitted_body, const char* community_id, enum post_form_error err, const struct auth_token* client_info)
+struct response* get_new_post(const struct request* req)
+{
+  const char* community_id = get_map_value_str(req->query, "id");
+
+  return get_new_post_internal(NULL, NULL, community_id, POST_FORM_ERR_NONE, req->client_info);
+}
+
+
+struct response* get_new_post_internal(const char* submitted_title, const char* submitted_body, const char* community_id, enum post_form_error err, const struct auth_token* client_info)
 {
   if (client_info == NULL)
   {
@@ -247,7 +267,15 @@ struct response* get_new_post(const char* submitted_title, const char* submitted
 }
 
 
-struct response* get_edit_post(const char* submitted_body, const char* post_id, enum post_form_error err, const struct auth_token* client_info)
+struct response* get_edit_post(const struct request* req)
+{
+  const char* post_id = get_map_value_str(req->query, "id");
+
+  return get_edit_post_internal(NULL, post_id, POST_FORM_ERR_NONE, req->client_info);
+}
+
+
+struct response* get_edit_post_internal(const char* submitted_body, const char* post_id, enum post_form_error err, const struct auth_token* client_info)
 {
   if (client_info == NULL)
   {
@@ -317,7 +345,15 @@ struct response* get_edit_post(const char* submitted_body, const char* post_id, 
 }
 
 
-struct response* get_new_comment(const char* submitted_body, const char* post_id, enum comment_form_error err, const struct auth_token* client_info)
+struct response* get_new_comment(const struct request* req)
+{
+  const char* post_id = get_map_value_str(req->query, "id");
+
+  return get_new_comment_internal(NULL, post_id, COMMENT_FORM_ERR_NONE, req->client_info);
+}
+
+
+struct response* get_new_comment_internal(const char* submitted_body, const char* post_id, enum comment_form_error err, const struct auth_token* client_info)
 {
   if (client_info == NULL)
   {
@@ -371,7 +407,15 @@ struct response* get_new_comment(const char* submitted_body, const char* post_id
 }
 
 
-struct response* get_edit_comment(const char* submitted_body, const char* comment_id, enum comment_form_error err, const struct auth_token* client_info)
+struct response* get_edit_comment(const struct request* req)
+{
+  const char* comment_id = get_map_value_str(req->query, "id");
+
+  return get_edit_comment_internal(NULL, comment_id, COMMENT_FORM_ERR_NONE, req->client_info);
+}
+
+
+struct response* get_edit_comment_internal(const char* submitted_body, const char* comment_id, enum comment_form_error err, const struct auth_token* client_info)
 {
   if (client_info == NULL)
   {
@@ -466,7 +510,13 @@ struct response* get_edit_comment(const char* submitted_body, const char* commen
 }
 
 
-struct response* get_new_community(const char* submitted_name, const char* submitted_about, enum community_form_error err, const struct auth_token* client_info)
+struct response* get_new_community(const struct request* req)
+{
+  return get_new_community_internal(NULL, NULL, COMMUNITY_FORM_ERR_NONE, req->client_info);
+}
+
+
+struct response* get_new_community_internal(const char* submitted_name, const char* submitted_about, enum community_form_error err, const struct auth_token* client_info)
 {
   if (client_info == NULL)
   {
@@ -529,7 +579,15 @@ struct response* get_new_community(const char* submitted_name, const char* submi
 }
 
 
-struct response* get_edit_community(const char* submitted_about, const char* community_id, enum community_form_error err, const struct auth_token* client_info)
+struct response* get_edit_community(const struct request* req)
+{
+  const char* community_id = get_map_value_str(req->query, "id");
+
+  return get_edit_community_internal(NULL, community_id, COMMUNITY_FORM_ERR_NONE, req->client_info);
+}
+
+
+struct response* get_edit_community_internal(const char* submitted_about, const char* community_id, enum community_form_error err, const struct auth_token* client_info)
 {
   if (client_info == NULL)
   {

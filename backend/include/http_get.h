@@ -35,9 +35,9 @@
 #define HTML_EDIT_COMMENT "templates/forms/edit_comment.html"
 #define HTML_EDIT_COMMUNITY "templates/forms/edit_community.html"
 
-struct response* http_get(const struct request* req);
+void init_http_get();
 
-struct response* get_file(const char* uri);
+struct response* http_get(const struct request* req);
 
 #define UPVOTE_CLICKED_STATE "upvote-clicked"
 #define UPVOTE_NOTCLICKED_STATE "upvote-notclicked"
