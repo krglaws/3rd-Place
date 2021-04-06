@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <kylestructs.h>
 
+#include <log_manager.h>
 #include <server.h>
 #include <response.h>
 #include <string_map.h>
@@ -17,6 +18,7 @@ static ks_hashmap* endpoints = NULL;
 
 void init_http_post()
 {
+  log_info("Initializing POST endpoints...");
   endpoints = ks_hashmap_new(KS_CHARP, 32);
 
   // from post_new.c
