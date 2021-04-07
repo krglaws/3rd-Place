@@ -45,19 +45,19 @@ a:hover {
 }
 
 .upvote-clicked {
-  border-color: orange; !important;
+  border-color: orange !important;
 }
 
 .upvote-notclicked {
-  border-color: black; !important;
+  border-color: black !important;
 }
 
 .downvote-clicked {
-  border-color: orange; !important;
+  border-color: orange !important;
 }
 
 .downvote-notclicked {
-  border-color: black; !important;
+  border-color: black !important;
 }
 
 .arrow {
@@ -250,7 +250,11 @@ a:hover {
 }
 
 .form-container {
-  padding: 1% 30% 1% 35%;
+  padding: 0% 25% 0% 25%;
+}
+
+.login-form-container {
+  padding: 0% 0% 0% 44%;
 }
 
 .form-title {

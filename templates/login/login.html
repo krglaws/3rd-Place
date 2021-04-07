@@ -1,24 +1,26 @@
-
 <div class="form-container-container">
 
-  <div class="form-container">
+  <div class="login-form-container">
     <<OPT_LOGIN_ERROR>>
-    <h2>Log in</h2>
+    <p>Log in</p>
     <form action="/login" method="post">
-      <label for="user_name">Username:</label><br>
-      <input type="text" id="user_name" name="user_name" value="<<OPT_SUBMITTED_LOGIN_UNAME>>"><br>
+      <label for="username">Username:</label><br>
+      <input type="text" id="username" name="username" value="<<OPT_SUBMITTED_LOGIN_UNAME>>"><br>
       <label for="password">Password:</label><br>
       <input type="password" id="password" name="password" value=""><br>
       <input type="submit" value="Login"><br>
     </form>
   </div>
 
-  <div class="form-container">
+  <br>
+  <br>
+
+  <div class="login-form-container">
     <<OPT_SIGNUP_ERROR>>
-    <h2>Sign up</h2>
+    <div>Sign up</div>
     <form action="/signup" method="post">
-      <label for="user_name">Username:</label><br>
-      <input type="text" id="user_name" name="user_name" value="<<OPT_SUBMITTED_SIGNUP_UNAME>>"><br>
+      <label for="new_username">Username:</label><br>
+      <input type="text" id="new_username" name="username" value="<<OPT_SUBMITTED_SIGNUP_UNAME>>"><br>
       <label for="password1">Password:</label><br>
       <input type="password" id="password1" name="password1" value=""><br>
       <label for="password2">Retype password:</label><br>
