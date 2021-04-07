@@ -275,6 +275,50 @@ END;$$
 
 
 ###################
+# Update procedures
+###################
+
+CREATE PROCEDURE UpdateUserAbout(uid INT, new_about VARCHAR(512))
+BEGIN
+
+  UPDATE users SET about = new_about WHERE id = uid;
+
+END;$$
+
+
+CREATE PROCEDURE UpdateUserPassword(uid INT, new_pwh VARCHAR(128))
+BEGIN
+
+  UPDATE users SET password_hash = npw WHERE id = uid;
+
+END;$$
+
+
+CREATE PROCEDURE UpdatePost(post_id INT, new_body VARCHAR(512))
+BEGIN
+
+  UPDATE posts SET body = new_body WHERE id = post_id;
+
+END;$$
+
+
+CREATE PROCEDURE UpdateComment(comment_id INT, new_body VARCHAR(256))
+BEGIN
+
+  UPDATE comments SET body = new_body WHERE id = comment_id;
+
+END;
+
+
+CREATE PROCEDURE UpdateCommunityAbout(community_id INT, new_about VARCHAR(512))
+BEGIN
+
+  UPDATE communities SET about = new_about WHERE id = community_id;
+
+END;$$
+
+
+###################
 # Delete procedures
 ###################
 

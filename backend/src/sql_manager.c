@@ -811,7 +811,7 @@ void init_sql_manager()
   stmt_query_user_by_id = build_prepared_statement(sqlcon, "SELECT * FROM users WHERE id = ?;");
   stmt_query_user_by_name = build_prepared_statement(sqlcon, "SELECT * FROM users WHERE name = ?;");
   stmt_create_user = build_prepared_statement(sqlcon, "SELECT CreateUser(?, ?, ?);");
-  stmt_update_user_about = build_prepared_statement(sqlcon, "UPDATE users SET about = ? WHERE id = ?;");
+  stmt_update_user_about = build_prepared_statement(sqlcon, "CALL UpdateUserAbout(?, ?);");
   stmt_update_user_password_hash = build_prepared_statement(sqlcon, "UPDATE users SET password_hash = ? WHERE id = ?;");
   stmt_delete_user = build_prepared_statement(sqlcon, "CALL DeleteUser(?);");
 
@@ -821,7 +821,7 @@ void init_sql_manager()
   stmt_query_posts_by_author_id = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE author_id = ?;");
   stmt_query_posts_by_community_id = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE community_id = ?;");
   stmt_create_post = build_prepared_statement(sqlcon, "SELECT CreatePost(?, ?, ?, ?);");
-  stmt_update_post_body = build_prepared_statement(sqlcon, "UPDATE posts SET body = ? WHERE id = ?;");
+  stmt_update_post_body = build_prepared_statement(sqlcon, "CALL UpdatePost(?, ?);");
   stmt_delete_post = build_prepared_statement(sqlcon, "CALL DeletePost(?);");
 
   // comments
@@ -829,7 +829,7 @@ void init_sql_manager()
   stmt_query_comments_by_author_id = build_prepared_statement(sqlcon, "SELECT * FROM comments WHERE author_id = ?;");
   stmt_query_comments_by_post_id = build_prepared_statement(sqlcon, "SELECT * FROM comments WHERE post_id = ?;");
   stmt_create_comment = build_prepared_statement(sqlcon, "SELECT CreateComment(?, ?, ?);");
-  stmt_update_comment_body = build_prepared_statement(sqlcon, "UPDATE comments SET body = ? WHERE id = ?;");
+  stmt_update_comment_body = build_prepared_statement(sqlcon, "CALL UpdateComment(?, ?);");
   stmt_delete_comment = build_prepared_statement(sqlcon, "CALL DeleteComment(?);");
 
   // communities
@@ -837,7 +837,7 @@ void init_sql_manager()
   stmt_query_community_by_name = build_prepared_statement(sqlcon, "SELECT * FROM communities WHERE name = ?;");
   stmt_query_all_communities = build_prepared_statement(sqlcon, "SELECT * FROM communities;");
   stmt_create_community = build_prepared_statement(sqlcon, "SELECT CreateCommunity(?, ?, ?);");
-  stmt_update_community_about = build_prepared_statement(sqlcon, "UPDATE communities SET about = ? WHERE id = ?;");
+  stmt_update_community_about = build_prepared_statement(sqlcon, "CALL UpdateCommunity(?, ?);");
   stmt_delete_community = build_prepared_statement(sqlcon, "CALL DeleteCommunity(?);");
 
   // moderators
@@ -873,8 +873,6 @@ void init_sql_manager()
 
 static void terminate_sql_manager()
 {
-  log_info("Terminating SQL Manager...");
-
   // close prepared statements
 
   // users
