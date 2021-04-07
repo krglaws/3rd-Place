@@ -36,8 +36,6 @@ static int tmplt_end_len = sizeof(TEMPLATE_END)-1;
 
 char* build_template(const ks_hashmap* page_data)
 {
-  // these errors indicate issues in the code itself,
-  // which is why im calling log_crit here
   if (page_data == NULL)
   {
     log_err("build_template(): page data is NULL");
@@ -51,8 +49,6 @@ char* build_template(const ks_hashmap* page_data)
     return NULL;
   }
 
-  // this can be caused by a missing file in the project,
-  // so just return 404
   char* tmplt;
   if ((tmplt = load_file(tmplt_path->cp)) == NULL)
   {
@@ -60,28 +56,26 @@ char* build_template(const ks_hashmap* page_data)
     return NULL;
   }
 
-  char* next = tmplt;
   int tmplt_len = strlen(tmplt);
+  char* next = tmplt;
 
-  while ((next = strstr(next, TEMPLATE_BEGIN)) != NULL)
+  while ((next = strstr(tmplt, TEMPLATE_BEGIN)) != NULL)
   {
     // find key length
-    next += 2;
-    char* end = strstr(next, TEMPLATE_END);
+    char* end = strstr(next + tmplt_beg_len, TEMPLATE_END);
     char* next_next;
-    if (end == NULL || (((next_next = strstr(next, TEMPLATE_BEGIN)) != NULL) && next_next < end))
+    if (end == NULL || (((next_next = strstr(next + tmplt_beg_len, TEMPLATE_BEGIN)) != NULL) && next_next < end))
     {
       log_err("build_template(): TEMPLATE_BEGIN string is missing a corresponding TEMPLATE_END in file: %s\n%s", tmplt_path->cp, tmplt);
       free(tmplt);
       return NULL;
     }
-    int key_len = end - next;
+    int key_len = end - (next + tmplt_beg_len);
 
     // read key into buffer
     char key[key_len + 1];
-    memcpy(key, next, key_len);
+    memcpy(key, next + tmplt_beg_len, key_len);
     key[key_len] = '\0';
-    next -= 2;
 
     // get value from map
     const ks_datacont* val_dc = get_map_value(page_data, key);
@@ -102,7 +96,6 @@ char* build_template(const ks_hashmap* page_data)
       COPY_INTO_TEMPLATE();
 
       next += (key_len + tmplt_beg_len + tmplt_end_len);
-      continue;
     }
 
     else if (val_dc->type == KS_HASHMAP)
