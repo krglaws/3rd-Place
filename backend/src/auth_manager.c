@@ -59,8 +59,6 @@ void init_auth_manager()
 
 static void terminate_auth_manager()
 {
-  log_info("Terminating Auth Manager...");
-
   if (urandom != NULL)
   {
     fclose(urandom);

@@ -65,8 +65,6 @@ void init_socket_manager(const struct in6_addr* server_addr, const uint16_t serv
 
 static void terminate_socket_manager()
 {
-  log_info("Terminating Socket Manager...");
-
   if (server_socket != 0)
   {
     close(server_socket);

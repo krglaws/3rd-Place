@@ -78,7 +78,6 @@ void init_log_manager(const char* path)
 
 static void terminate_log_manager()
 {
-  log_info("Terminating Log Manager...");
   fclose(logfile);
 }
 
