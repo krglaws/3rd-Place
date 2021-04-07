@@ -30,7 +30,7 @@ struct response* login(const struct request* req)
   }
 
   // get args
-  const char* user_name = get_map_value_str(req->content, "user_name");
+  const char* user_name = get_map_value_str(req->content, "username");
   const char* password = get_map_value_str(req->content, "password");
   const char* token;
 

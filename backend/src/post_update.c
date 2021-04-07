@@ -197,7 +197,7 @@ struct response* update_comment(const struct request* req)
   const char* author_id = get_map_value_str(comment_info, FIELD_COMMENT_AUTHOR_ID);
   if (strcmp(author_id, req->client_info->user_id) != 0)
   {
-    return response_error(STAT400);
+    return response_error(STAT403);
   }
 
   // validate comment body
