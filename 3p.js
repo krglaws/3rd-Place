@@ -42,65 +42,98 @@ function selectOverview() {
 }
 
 
-function editUser() {
-
-  fetch("/edit_user", {
-    method: "GET",
-    redirect: "follow",
-    credentials: "same-origin"
-  }).then(response => {
-    if (response.ok) {
-      window.location.href = response.url;
-    }
-    else {
-      console.log(response);
-      alert("Error");
-    }
-  });
-}
-
-
 function logOut() {
 
   fetch("/logout", {
-    method: "POST",
-    redirect: "follow",
-    credentials: "same-origin"
+    method: "POST"
   }).then(response => {
     if (response.redirected) {
-      window.location.href = response.url;
+      window.history.pushState("", "", response.url);
+      return response.text();
     }
     else {
       console.log(response);
       alert("Error");
+      return null;
+    }
+  }).then(data => {
+    if (data !== null) {
+      var tempDom = new DOMParser()
+        .parseFromString(data, "text/html");
+      document.body.innerHTML = tempDom.body.innerHTML;
     }
   });
 }
 
 
-function deleteUser(user_name) {
+function subscribe(elem, community_id) {
 
-  if (confirm("Are you sure you want to delete your account?") == false) {
-    return;
-  }
-
-  fetch("/delete_user?user_name="+user_name, {
-    method: "DELETE",
-    redirect: "follow",
-    credentials: "same-origin"
-  }).then(response => {
+  fetch("/subscribe", {
+    method: "POST",
+    body: "id="+community_id
+  }).then(response => { 
     if (response.redirected) {
-      window.location.href = response.url;
+      window.history.pushState("", "", response.url);
+      return response.text();
     }
-    else if (response.status == 403) {
-      alert("Permission denied");
+    else if (response.ok) {
+      if (elem.textContent == "[subscribe]") {
+        elem.textContent = "[unsubscribe]";
+      }
+      else {
+        elem.textContent = "[subscribe]";
+      }
+      return null;
     }
     else if (response.status == 404) {
-      alert("User does not exist");
+      alert("this community does not exist");
     }
     else {
       console.log(response);
       alert("Error");
+      return null;
+    }
+  }).then(data => {
+    if (data != null) {
+      var tempDom = new DOMParser()
+        .parseFromString(data, "text/html");
+      document.body.innerHTML = tempDom.body.innerHTML;
+    }
+  });
+}
+
+
+function deleteObject(objType, id) {
+
+  if (confirm("Are you sure you want to delete this "+objType+"?") == false) {
+    return;
+  }
+
+  fetch("/delete_"+objType+"?id="+id, {
+    method: "POST"
+  }).then(response => {
+    if (response.redirected) {
+      window.history.pushState("", "", response.url);
+      return response.text();
+    }
+    else if (response.status == 403) {
+      alert("permission denied");
+      return null;
+    }
+    else if (response.status == 404) {
+      alert(objType+" does not exist");
+      return null;
+    }
+    else {
+      console.log(response);
+      alert("Error");
+      return null;
+    }
+  }).then(data => {
+    if (data != null) {
+      var tempDom = new DOMParser()
+      .parseFromString(data, "text/html");
+      document.body.innerHTML = tempDom.body.innerHTML;
     }
   });
 }
@@ -228,8 +261,6 @@ function vote(arrow, postOrComment, id) {
 
   fetch("/vote", {
     method: "POST",
-    redirect: "follow",
-    credentials: "same-origin",
     body: "type="+postOrComment+"&direction="+arrowDirection+"&id="+id
   }).then(response => {
     if (response.redirected) {
