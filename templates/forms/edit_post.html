@@ -1,14 +1,13 @@
     <div class="form-container-container">
-
-      <div class="post-content-container">
-        <div class="post-content" style="margin: 0% 0% 0% 20%;">
-          <div class="post-author">
-            <div class="utc-timestamp"><<POST_DATE_POSTED>></div>
+      <div class="form-header-container">
+        <div class="form-header">
+          <div class="form-header-info">
+            posted on <div class="utc-timestamp"><<POST_DATE_POSTED>></div>
             by <a href="/user?id=<<POST_AUTHOR_ID>>"><<POST_AUTHOR_NAME>></a>
             in <a href="/community?id=<<POST_COMMUNITY_ID>>"><<POST_COMMUNITY_NAME>></a>
           </div>
-          <div class="post-title">
-            <<POST_TITLE>>
+          <div class="form-header-title">
+            <a href="/post?id=<<POST_ID>>"><<POST_TITLE>></a>
           </div>
         </div>
       </div>
@@ -18,8 +17,8 @@
         <form action="/update_post" method="post">
           <input type="hidden" name="id" value="<<POST_ID>>">
           <label for="body">Edit post:</label><br>
-          <textarea id="body" class="form-body" type="text" name="body" maxlength="512" placeholder="512 character limit" rows="6"><<OPT_SUBMITTED_POST_BODY>></textarea><br>
-          <input type="submit" value="Submit"><br>
+          <textarea id="body" autofocus name="body" maxlength="512" placeholder="512 character limit" rows="6"><<OPT_SUBMITTED_POST_BODY>></textarea><br>
+          <input type="submit" value="Submit">
         </form>
       </div>
     </div>

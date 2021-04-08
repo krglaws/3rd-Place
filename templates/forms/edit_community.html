@@ -1,11 +1,23 @@
     <div class="form-container-container">
+
+      <div class="form-header-container">
+        <div class="form-header">
+          <div class="form-header-info">
+            created on <div class="utc-timestamp"><<COMMUNITY_DATE_CREATED>></div>
+            owned by <a href="/user?id=<<COMMUNITY_OWNER_ID>>"><<COMMUNITY_OWNER_NAME>></a>
+          </div>
+          <div class="form-header-title">
+            <a href="community?id=<<COMMUNITY_ID>>"><<COMMUNITY_NAME>></a>
+          </div>
+        </div>
+      </div>
+
       <div class="form-container">
-        <h2><<COMMUNITY_NAME>></h2>
 	      <<OPT_EDIT_COMMUNITY_FORM_ERR>>
-        <form id="form" action="/edit_community">
-          <input type="hidden" name="community_id" value="<<COMMUNITY_ID>>">
-          <label for="body">Edit about:</label><br>
-          <input id="body" class="form-body" type="text" name="about" value="<<OPT_SUBMITTED_COMMUNITY_ABOUT>>"><br>
+        <form id="form" class="form-body" action="/update_community" method="post">
+          <input type="hidden" name="id" value="<<COMMUNITY_ID>>">
+          <label for="about">Edit about:</label><br>
+          <textarea id="about" name="about" maxlength="512" placeholder="512 character limit" rows="6"><<OPT_SUBMITTED_COMMUNITY_ABOUT>></textarea><br>
           <input type="submit" value="Submit"><br>
         </form>
       </div>

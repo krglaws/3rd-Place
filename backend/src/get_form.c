@@ -35,7 +35,7 @@ struct response* get_login_internal(const char* submitted_user_name, enum user_f
       {
         add_map_value_str(page_data, SUBMITTED_LOGIN_UNAME_KEY, submitted_user_name);
       }
-      add_map_value_str(page_data, LOGIN_ERR_KEY, "<p>Bad login</p>");
+      add_map_value_str(page_data, LOGIN_ERR_KEY, "Bad login");
     }
 
     else if (err != USER_FORM_ERR_NONE)
@@ -47,40 +47,40 @@ struct response* get_login_internal(const char* submitted_user_name, enum user_f
       switch (err)
       {
         case USER_FORM_ERR_UNAME_TAKEN:
-          add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Username already exists</p>");
+          add_map_value_str(page_data, SIGNUP_ERR_KEY, "Username already exists");
           break;
         case USER_FORM_ERR_UNAME_TOO_SHORT:
-          add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Username too short</p>");
+          add_map_value_str(page_data, SIGNUP_ERR_KEY, "Username too short");
           break;
         case USER_FORM_ERR_UNAME_TOO_LONG:
-          add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Username too long</p>");
+          add_map_value_str(page_data, SIGNUP_ERR_KEY, "Username too long");
           break;
         case USER_FORM_ERR_UNAME_INV_CHAR:
-          add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Username contains invalid characters</p>");
+          add_map_value_str(page_data, SIGNUP_ERR_KEY, "Username contains invalid characters");
           break;
         case USER_FORM_ERR_PASSWD_MISMATCH:
-          add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Password inputs do not match</p>");
+          add_map_value_str(page_data, SIGNUP_ERR_KEY, "Password inputs do not match");
           break;
         case USER_FORM_ERR_PASSWD_TOO_SHORT:
-          add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Password too short</p>");
+          add_map_value_str(page_data, SIGNUP_ERR_KEY, "Password too short");
           break;
         case USER_FORM_ERR_PASSWD_TOO_LONG:
-          add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Password too long</p>");
+          add_map_value_str(page_data, SIGNUP_ERR_KEY, "Password too long");
           break;
         case USER_FORM_ERR_PASSWD_UNMET:
-          add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Password does not meet character requirement</p>");
+          add_map_value_str(page_data, SIGNUP_ERR_KEY, "Password does not meet character requirement");
           break;
         case USER_FORM_ERR_PASSWD_INV_ENC:
-          add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>Password contains invalid character encoding</p>");
+          add_map_value_str(page_data, SIGNUP_ERR_KEY, "Password contains invalid character encoding");
           break;
         case USER_FORM_ERR_ABOUT_TOO_SHORT:
-          add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>User about too short</p>");
+          add_map_value_str(page_data, SIGNUP_ERR_KEY, "User about too short");
           break;
         case USER_FORM_ERR_ABOUT_TOO_LONG:
-          add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>User about too long</p>");
+          add_map_value_str(page_data, SIGNUP_ERR_KEY, "User about too long");
           break;
         case USER_FORM_ERR_ABOUT_INV_ENC:
-          add_map_value_str(page_data, SIGNUP_ERR_KEY, "<p>User about contains invalid character encoding</p>");
+          add_map_value_str(page_data, SIGNUP_ERR_KEY, "User about contains invalid character encoding");
           break;
         default:
           log_crit("get_login(): invalid login error no.");
@@ -145,28 +145,28 @@ struct response* get_edit_user_internal(const char* submitted_about, enum user_f
     switch (err)
     {
       case USER_FORM_ERR_BAD_LOGIN:
-        add_map_value_str(page_data, EDIT_USER_PASSWD_ERR_KEY, "<p>Wrong password</p>");
+        add_map_value_str(page_data, EDIT_USER_PASSWD_ERR_KEY, "Wrong password");
         break;
       case USER_FORM_ERR_PASSWD_MISMATCH:
-        add_map_value_str(page_data, EDIT_USER_PASSWD_ERR_KEY, "<p>New password inputs do not match</p>");
+        add_map_value_str(page_data, EDIT_USER_PASSWD_ERR_KEY, "New password inputs do not match");
         break;
       case USER_FORM_ERR_PASSWD_TOO_SHORT:
-        add_map_value_str(page_data, EDIT_USER_PASSWD_ERR_KEY, "<p>New password too short</p>");
+        add_map_value_str(page_data, EDIT_USER_PASSWD_ERR_KEY, "New password too short");
         break;
       case USER_FORM_ERR_PASSWD_TOO_LONG:
-        add_map_value_str(page_data, EDIT_USER_PASSWD_ERR_KEY, "<p>New password too long</p>");
+        add_map_value_str(page_data, EDIT_USER_PASSWD_ERR_KEY, "New password too long");
         break;
       case USER_FORM_ERR_PASSWD_INV_ENC:
-        add_map_value_str(page_data, EDIT_USER_PASSWD_ERR_KEY, "<p>New password contains invalid encoding</p>");
+        add_map_value_str(page_data, EDIT_USER_PASSWD_ERR_KEY, "New password contains invalid encoding");
         break;
       case USER_FORM_ERR_ABOUT_TOO_SHORT:
-        add_map_value_str(page_data, EDIT_USER_ABOUT_ERR_KEY, "<p>User about too short</p>");
+        add_map_value_str(page_data, EDIT_USER_ABOUT_ERR_KEY, "User about too short");
         break;
       case USER_FORM_ERR_ABOUT_TOO_LONG:
-        add_map_value_str(page_data, EDIT_USER_ABOUT_ERR_KEY, "<p>User about too long</p>");
+        add_map_value_str(page_data, EDIT_USER_ABOUT_ERR_KEY, "User about too long");
         break;
       case USER_FORM_ERR_ABOUT_INV_ENC:
-        add_map_value_str(page_data, EDIT_USER_ABOUT_ERR_KEY, "<p>User about contains invalid encoding</p>");
+        add_map_value_str(page_data, EDIT_USER_ABOUT_ERR_KEY, "User about contains invalid encoding");
         break;
       default:
         log_crit("get_edit_user(): invalid edit user form error: %d", err); 
@@ -229,22 +229,22 @@ struct response* get_new_post_internal(const char* submitted_title, const char* 
     case POST_FORM_ERR_NONE:
       break;
     case POST_FORM_ERR_TITLE_TOO_SHORT:
-      add_map_value_str(page_data, POST_FORM_ERR_KEY, "<p>Title too short</p>");
+      add_map_value_str(page_data, POST_FORM_ERR_KEY, "Title too short");
       break;
     case POST_FORM_ERR_TITLE_TOO_LONG:
-      add_map_value_str(page_data, POST_FORM_ERR_KEY, "<p>Title too long</p>");
+      add_map_value_str(page_data, POST_FORM_ERR_KEY, "Title too long");
       break;
     case POST_FORM_ERR_TITLE_INV_ENC:
-      add_map_value_str(page_data, POST_FORM_ERR_KEY, "<p>Title contains invalid encoding</p>");
+      add_map_value_str(page_data, POST_FORM_ERR_KEY, "Title contains invalid encoding");
       break;
     case POST_FORM_ERR_BODY_TOO_SHORT:
-      add_map_value_str(page_data, POST_FORM_ERR_KEY, "<p>Body too short</p>");
+      add_map_value_str(page_data, POST_FORM_ERR_KEY, "Body too short");
       break;
     case POST_FORM_ERR_BODY_TOO_LONG:
-      add_map_value_str(page_data, POST_FORM_ERR_KEY, "<p>Body too long</p>");
+      add_map_value_str(page_data, POST_FORM_ERR_KEY, "Body too long");
       break;
     case POST_FORM_ERR_BODY_INV_ENC:
-      add_map_value_str(page_data, POST_FORM_ERR_KEY, "<p>Body contains invalid encoding</p>");
+      add_map_value_str(page_data, POST_FORM_ERR_KEY, "Body contains invalid encoding");
       break;
     default:
       log_crit("get_login(): invalid new post form error: %d", err);
@@ -316,13 +316,13 @@ struct response* get_edit_post_internal(const char* submitted_body, const char* 
     case POST_FORM_ERR_NONE:
       break;
     case POST_FORM_ERR_BODY_TOO_SHORT:
-      add_map_value_str(page_data, EDIT_POST_FORM_ERR_KEY, "<p>Post body too short</p>");
+      add_map_value_str(page_data, EDIT_POST_FORM_ERR_KEY, "Post body too short");
       break;
     case POST_FORM_ERR_BODY_TOO_LONG:
-      add_map_value_str(page_data, EDIT_POST_FORM_ERR_KEY, "<p>Post body too long</p>");
+      add_map_value_str(page_data, EDIT_POST_FORM_ERR_KEY, "Post body too long");
       break;
     case POST_FORM_ERR_BODY_INV_ENC:
-      add_map_value_str(page_data, EDIT_POST_FORM_ERR_KEY, "<p>Post body contains invalid encoding</p>");
+      add_map_value_str(page_data, EDIT_POST_FORM_ERR_KEY, "Post body contains invalid encoding");
       break;
     default:
       log_crit("get_edit_post(): invalid edit post form error %d", err);
@@ -378,13 +378,13 @@ struct response* get_new_comment_internal(const char* submitted_body, const char
     case COMMENT_FORM_ERR_NONE:
       break;
     case COMMENT_FORM_ERR_TOO_SHORT:
-      add_map_value_str(page_data, COMMENT_FORM_ERR_KEY, "<p>Comment body too short</p>");
+      add_map_value_str(page_data, COMMENT_FORM_ERR_KEY, "Comment body too short");
       break;
     case COMMENT_FORM_ERR_TOO_LONG:
-      add_map_value_str(page_data, COMMENT_FORM_ERR_KEY, "<p>Comment body too long</p>");
+      add_map_value_str(page_data, COMMENT_FORM_ERR_KEY, "Comment body too long");
       break;
     case COMMENT_FORM_ERR_INV_ENC:
-      add_map_value_str(page_data, COMMENT_FORM_ERR_KEY, "<p>Comment body contains invalid character encoding</p>");
+      add_map_value_str(page_data, COMMENT_FORM_ERR_KEY, "Comment body contains invalid character encoding");
       break;
     default:
       log_crit("get_new_comment(): invalid new comment form error: %d", err);
@@ -481,13 +481,13 @@ struct response* get_edit_comment_internal(const char* submitted_body, const cha
     case COMMENT_FORM_ERR_NONE:
       break;
     case COMMENT_FORM_ERR_TOO_SHORT:
-      add_map_value_str(page_data, EDIT_COMMENT_FORM_ERR_KEY, "<p>Comment body too short</p>");
+      add_map_value_str(page_data, EDIT_COMMENT_FORM_ERR_KEY, "Comment body too short");
       break;
     case COMMENT_FORM_ERR_TOO_LONG:
-      add_map_value_str(page_data, EDIT_COMMENT_FORM_ERR_KEY, "<p>Comment body too long</p>");
+      add_map_value_str(page_data, EDIT_COMMENT_FORM_ERR_KEY, "Comment body too long");
       break;
     case COMMENT_FORM_ERR_INV_ENC:
-      add_map_value_str(page_data, EDIT_COMMENT_FORM_ERR_KEY, "<p>Comment body contains invalid character encoding</p>");
+      add_map_value_str(page_data, EDIT_COMMENT_FORM_ERR_KEY, "Comment body contains invalid character encoding");
       break;
     default:
       log_crit("get_edit_comment(): invalid edit comment form error: %d", err);
@@ -541,22 +541,22 @@ struct response* get_new_community_internal(const char* submitted_name, const ch
     case COMMUNITY_FORM_ERR_NONE:
       break;
     case COMMUNITY_FORM_ERR_NAME_TOO_SHORT:
-      add_map_value_str(page_data, COMMUNITY_FORM_ERR_KEY, "<p>Community name too short</p>");
+      add_map_value_str(page_data, COMMUNITY_FORM_ERR_KEY, "Community name too short");
       break;
     case COMMUNITY_FORM_ERR_NAME_TOO_LONG:
-      add_map_value_str(page_data, COMMUNITY_FORM_ERR_KEY, "<p>Community name too long</p>");
+      add_map_value_str(page_data, COMMUNITY_FORM_ERR_KEY, "Community name too long");
       break;
     case COMMUNITY_FORM_ERR_NAME_INV_CHAR:
-      add_map_value_str(page_data, COMMUNITY_FORM_ERR_KEY, "<p>Community name contains invalid character</p>");
+      add_map_value_str(page_data, COMMUNITY_FORM_ERR_KEY, "Community name contains invalid character");
       break;
     case COMMUNITY_FORM_ERR_ABOUT_TOO_SHORT:
-      add_map_value_str(page_data, COMMUNITY_FORM_ERR_KEY, "<p>Community about too short</p>");
+      add_map_value_str(page_data, COMMUNITY_FORM_ERR_KEY, "Community about too short");
       break;
     case COMMUNITY_FORM_ERR_ABOUT_TOO_LONG:
-      add_map_value_str(page_data, COMMUNITY_FORM_ERR_KEY, "<p>Community about too long</p>");
+      add_map_value_str(page_data, COMMUNITY_FORM_ERR_KEY, "Community about too long");
       break;
     case COMMUNITY_FORM_ERR_ABOUT_INV_ENC:
-      add_map_value_str(page_data, COMMUNITY_FORM_ERR_KEY, "<p>Community about contains invalid character encoding</p>");
+      add_map_value_str(page_data, COMMUNITY_FORM_ERR_KEY, "Community about contains invalid character encoding");
       break;
     default:
       log_crit("get_new_community(): invalid community form error: %d", err);
@@ -638,13 +638,13 @@ struct response* get_edit_community_internal(const char* submitted_about, const 
     case COMMUNITY_FORM_ERR_NONE:
       break;
     case COMMUNITY_FORM_ERR_ABOUT_TOO_SHORT:
-      add_map_value_str(page_data, EDIT_COMMUNITY_FORM_ERR_KEY, "<p>Community about too short</p>");
+      add_map_value_str(page_data, EDIT_COMMUNITY_FORM_ERR_KEY, "Community about too short");
       break;
     case COMMUNITY_FORM_ERR_ABOUT_TOO_LONG:
-      add_map_value_str(page_data, EDIT_COMMUNITY_FORM_ERR_KEY, "<p>Community about too long</p>");
+      add_map_value_str(page_data, EDIT_COMMUNITY_FORM_ERR_KEY, "Community about too long");
       break;
     case COMMUNITY_FORM_ERR_ABOUT_INV_ENC:
-      add_map_value_str(page_data, EDIT_COMMUNITY_FORM_ERR_KEY, "<p>Community about contains invalid character encoding</p>");
+      add_map_value_str(page_data, EDIT_COMMUNITY_FORM_ERR_KEY, "Community about contains invalid character encoding");
       break;
     default:
       log_crit("get_new_community(): invalid community form error: %d", err);

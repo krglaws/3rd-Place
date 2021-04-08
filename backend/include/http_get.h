@@ -13,8 +13,8 @@
 
 /* html template paths */
 #define HTML_MAIN "templates/main/main.html"
-#define HTML_LOGIN "templates/login/login.html"
-#define HTML_ALREADY_LOGGED_IN "templates/login/already_logged_in.html"
+#define HTML_LOGIN "templates/forms/login.html"
+#define HTML_ALREADY_LOGGED_IN "templates/forms/already_logged_in.html"
 #define HTML_POST_VOTE_WRAPPER "templates/main/post_vote_wrapper.html"
 #define HTML_COMMENT_VOTE_WRAPPER "templates/main/comment_vote_wrapper.html"
 #define HTML_USER "templates/user/user.html"

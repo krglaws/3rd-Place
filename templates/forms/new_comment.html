@@ -1,15 +1,15 @@
   <div class="form-container-container">
-    <div class="post-content-container" style="margin: 0% 0% 0% 20%;">
-      <div class="post-content">
-        <div class="post-author">
-          <div class="utc-timestamp"><<POST_DATE_POSTED>></div>
+    <div class="form-header-container">
+      <div class="form-header">
+        <div class="form-header-info">
+          posted on <div class="utc-timestamp"><<POST_DATE_POSTED>></div>
           by <a href="/user?id=<<POST_AUTHOR_ID>>"><<POST_AUTHOR_NAME>></a>
           in <a href="/community?id=<<POST_COMMUNITY_ID>>"><<POST_COMMUNITY_NAME>></a>
         </div>
-        <div class="post-title">
-          <<POST_TITLE>>
+        <div class="form-header-title">
+          <a href="/post?id=<<POST_ID>>"><<POST_TITLE>></a>
         </div>
-        <div class="post-body">
+        <div class="form-header-subtitle">
           <<POST_BODY>>
         </div>
       </div>
@@ -17,10 +17,10 @@
 
     <div class="form-container">
       <<OPT_COMMENT_FORM_ERR>>
-      <form action="/new_comment" method="post">
+      <form class="form-body" action="/new_comment" method="post">
         <input type="hidden" name="id" value="<<POST_ID>>">
         <label for="body">New comment:</label><br>
-        <textarea id="body" class="form-body" autofocus type="text" name="body" maxlength="256" placeholder="256 character limit" rows="6"><<OPT_SUBMITTED_COMMENT_BODY>></textarea><br>
+        <textarea id="body" autofocus name="body" maxlength="255" placeholder="256 character limit" rows="6"><<OPT_SUBMITTED_COMMENT_BODY>></textarea><br>
         <input type="submit" value="Submit"><br>
       </form>
     </div>

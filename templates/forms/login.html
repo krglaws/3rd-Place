@@ -1,0 +1,32 @@
+<div class="form-container">
+
+  <div class="login-form">
+    <<OPT_LOGIN_ERROR>>
+    <div class="form-title">Log in</div>
+    <form action="/login" method="post">
+      <label for="username">Username:</label><br>
+      <input type="text" autofocus id="username" name="username" value="<<OPT_SUBMITTED_LOGIN_UNAME>>"><br>
+      <label for="password">Password:</label><br>
+      <input type="password" id="password" name="password" value=""><br>
+      <input type="submit" value="Login"><br>
+    </form>
+  </div>
+
+  <br>
+  <br>
+
+  <div class="login-form">
+    <<OPT_SIGNUP_ERROR>>
+    <div class="form-title">Sign up</div>
+    <form action="/signup" method="post">
+      <label for="new_username">Username:</label><br>
+      <input type="text" id="new_username" name="username"  maxlength="16" placeholder="[A-Za-z0-9_] minimum 3 characters, maximum 16" value="<<OPT_SUBMITTED_SIGNUP_UNAME>>"><br>
+      <label for="password1">Password:</label><br>
+      <input type="password" id="password1" name="password1" maxlength="72" placeholder="minimum 8 characters with at least 1 upper case, 1 lower case, and 1 number"><br>
+      <label for="password2">Retype password:</label><br>
+      <input type="password" id="password2" name="password2"><br>
+      <input type="submit" value="Sign Up"><br>
+    </form> 
+  </div>
+
+</div>

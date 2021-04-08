@@ -1,19 +1,38 @@
-    <div class="form-container-container">
-
-      <div class="post-content-container" style="margin: 0% 0% 0% 20%;">
-        <div class="post-content">
-          <div class="post-title">
-            Editing user '<<USER_NAME>>'
+      <div class="form-container-container">
+        <div class="form-header-container">
+          <div class="form-header">
+            <div class="form-header-info">
+              joined on <div class="utc-timestamp"><<USER_DATE_JOINED>></div>
+            </div>
+            <div class="form-header-title">
+              <a href="/user?id=<<USER_ID>>"><<USER_NAME>></a>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="form-container">
-        <<OPT_EDIT_USER_ABOUT_ERR>>
-        <form action="/update_user_about" method="post">
-          <label for="about">Edit about:</label><br>
-          <textarea id="about" class="form-body" autofocus type="text" name="about" maxlength="256" placeholder="256 character limit" rows="6"><<OPT_SUBMITTED_USER_ABOUT>></textarea><br>
-          <input type="submit" value="Submit"><br>
-        </form>
+        <div class="form-container">
+          <div class="form-title">Change about</div>
+          <div class="form-error"><<OPT_EDIT_USER_ABOUT_ERR>></div>
+          <form class="form-body" action="/update_user_about" method="post">
+            <textarea id="about" autofocus name="about" maxlength="256" placeholder="256 character limit" rows="6"><<OPT_SUBMITTED_USER_ABOUT>></textarea><br>
+            <input type="submit" value="Submit">
+          </form>
+        </div>
+
+        <br>
+        <br>
+
+        <div class="form-container">
+          <div class="form-title">Change password</div>
+          <div class="form-error"><<OPT_EDIT_USER_PASSWD_ERR>></div>
+          <form class="form-body" action="/update_user_password" method="post">
+            <label for="oldpass">Enter current password:</label><br>
+            <input type="password" id="oldpass" name="oldpass"><br>
+            <label for="password1">New password:</label><br>
+            <input type="password" id="password1" name="password1" maxlength="72" placeholder="minimum 8 characters with at least 1 upper case, 1 lower case, and 1 number"><br>
+            <label for="password2">Retype password:</label><br>
+            <input type="password" id="password2" name="password2"><br>
+            <input type="submit" value="Submit"><br>
+          </form>
+        </div>
       </div>
-    </div>

@@ -170,13 +170,7 @@ struct response* get_communities(const struct request* req)
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_FEED);
   add_map_value_str(page_data, FEED_TITLE_KEY, "Communities");
   add_map_value_ls(page_data, FEED_ITEM_LIST_KEY, communities);
-
-  char* new_vis = "hidden";
-  if (req->client_info != NULL)
-  {
-    new_vis = "visible";
-  }
-  add_map_value_str(page_data, NEW_OPTION_VISIBILITY_KEY, new_vis);
+  add_map_value_str(page_data, NEW_OPTION_VISIBILITY_KEY, "visible");
 
   // put page data together
   page_data = wrap_page_data(req->client_info, page_data);

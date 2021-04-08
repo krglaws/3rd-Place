@@ -1,11 +1,14 @@
     <div class="form-container-container">
-
-      <div class="post-content-container" style="margin: 0% 0% 0% 20%;">
-        <div class="post-content">
-          <div class="post-title">
-            New post in <<COMMUNITY_NAME>>
+      <div class="form-header-container">
+        <div class="form-header">
+          <div class="form-header-info">
+            created on <div class="utc-timestamp"><<COMMUNITY_DATE_CREATED>></div>
+            owned by: <a href="/user?id=<<COMMUNITY_OWNER_ID>>"><<COMMUNITY_OWNER_NAME>></a>
           </div>
-          <div class="post-body">
+          <div class="form-header-title">
+            <a href="/community?id=<<COMMUNITY_ID>>"><<COMMUNITY_NAME>></a>
+          </div>
+          <div class="form-subtitle">
             <<COMMUNITY_ABOUT>>
           </div>
         </div>
@@ -13,12 +16,12 @@
 
       <div class="form-container">
         <<OPT_POST_FORM_ERR>>
-        <form action="/new_post" method="post">
+        <form class="form-body" action="/new_post" method="post">
           <input type="hidden" name="id" value="<<COMMUNITY_ID>>">
           <label for="title">Title:</label><br>
-          <input id="title" class="form-title" autofocus type="text" maxlength="32" placeholder="32 character limit" name="title" value="<<OPT_SUBMITTED_POST_TITLE>>"><br><br>
+          <input id="title" autofocus type="text" maxlength="32" placeholder="32 character limit" name="title" value="<<OPT_SUBMITTED_POST_TITLE>>"><br><br>
           <label for="body">Body:</label><br>
-          <textarea id="body" class="form-body" type="text" name="body" maxlength="512" placeholder="512 character limit" rows="6"><<OPT_SUBMITTED_POST_BODY>></textarea><br>
+          <textarea id="body"  type="text" name="body" maxlength="512" placeholder="512 character limit" rows="6"><<OPT_SUBMITTED_POST_BODY>></textarea><br>
           <input type="submit" value="Submit"><br>
         </form>
       </div>
