@@ -53,7 +53,7 @@ a:hover {
 }
 
 .downvote-clicked {
-  border-color: orange !important;
+  border-color: blue !important;
 }
 
 .downvote-notclicked {
@@ -249,21 +249,61 @@ a:hover {
   padding: 1%;
 }
 
-.form-container {
-  padding: 0% 25% 0% 25%;
+.form-header-container {
+  width: 100%;
+  padding: 1%;
+  margin: 0% 0% 0% 20%;
 }
 
-.login-form-container {
-  padding: 0% 0% 0% 44%;
+.form-header {
+  width: 60%;
+  background-color: white;
+  border: 1px solid black;
+  padding: 1%;
+  display: table;
+  margin: 0%;
+}
+
+.form-header-info {
+  font-size: 12px;
+  text-align: left;
+}
+
+.form-header-title {
+  font-size: 20px;
+  text-align: center;
+  padding: 2% 5% 2% 5%;
+}
+
+.form-header-subtitle {
+  font-size: 16px;
+  text-align: left;
+}
+
+.form-container {
+  margin: 0% 25% 0% 25%;
+}
+
+.form-container * {
+  width: 100%;
+}
+
+.login-form {
+  padding: 0% 20% 0% 20%;
 }
 
 .form-title {
-  width: 100%;
+  font-size: 18px;
+  padding: 1% 0%;
 }
 
 .form-body {
   width: 100%;
   height: 100%;
+}
+
+.form-error {
+  color: red;
 }
 /* end form style */
 /******************/
