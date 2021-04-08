@@ -50,7 +50,7 @@ ks_hashmap* string_to_map(char* str, const char* delim1, const char* delim2)
 
     int vallen = line_dc->size - (strlen(delim2) + keylen);
     const ks_datacont* val;
-    if (vallen != 0)
+    if (vallen > 0)
     {
       end_of_key += strlen(delim2);
       val = ks_datacont_new(end_of_key, KS_CHARP, vallen);
