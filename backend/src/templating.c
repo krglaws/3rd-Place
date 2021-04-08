@@ -66,7 +66,7 @@ char* build_template(const ks_hashmap* page_data)
     char* next_next;
     if (end == NULL || (((next_next = strstr(next + tmplt_beg_len, TEMPLATE_BEGIN)) != NULL) && next_next < end))
     {
-      log_err("build_template(): TEMPLATE_BEGIN string is missing a corresponding TEMPLATE_END in file: %s\n%s", tmplt_path->cp, tmplt);
+      log_err("build_template(): TEMPLATE_BEGIN string is missing a corresponding TEMPLATE_END in file: '%s'", tmplt_path->cp);
       free(tmplt);
       return NULL;
     }
