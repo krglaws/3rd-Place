@@ -302,7 +302,7 @@ struct response* new_comment(const struct request* req)
 
   // create comment in database
   char* comment_id;
-  if ((comment_id = sql_create_comment(req->client_info->user_id, post_id, comment_body)) == NULL)
+  if ((comment_id = sql_create_comment(req->client_info->user_id, post_id, body_decoded)) == NULL)
   {
     log_err("post_comment(): failed on call to sql_create_comment()");
     return response_error(STAT500);
@@ -373,7 +373,7 @@ struct response* new_post(const struct request* req)
 
   // create comment in database
   char* post_id;
-  if ((post_id = sql_create_post(req->client_info->user_id, community_id, post_title, post_body)) == NULL)
+  if ((post_id = sql_create_post(req->client_info->user_id, community_id, post_title, body_decoded)) == NULL)
   {
     log_err("post_post(): failed on call to sql_create_post()");
     return response_error(STAT500);
