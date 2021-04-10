@@ -3,7 +3,6 @@
 
 #include <string_map.h>
 
-
 ks_hashmap* string_to_map(char* str, const char* delim1, const char* delim2)
 {
   ks_hashmap* map = ks_hashmap_new(KS_CHARP, 8);
@@ -86,6 +85,13 @@ const char* get_map_value_str(const ks_hashmap* hm, const char* key)
 }
 
 
+void* get_map_value_vp(const ks_hashmap* hm, const char* key)
+{
+  const ks_datacont* dc = get_map_value(hm, key);
+  return dc != NULL ? dc->vp : NULL;
+}
+
+
 void add_map_value_str(ks_hashmap* hm, const char* key, const char* val)
 {
   ks_datacont* key_dc = ks_datacont_new(key, KS_CHARP, strlen(key));
@@ -119,4 +125,14 @@ void add_map_value_hm(ks_hashmap* hm, const char* key, const ks_hashmap* val)
   ks_datacont* val_dc = ks_datacont_new(val, KS_HASHMAP, 1);
 
   ks_hashmap_add(hm, key_dc, val_dc);
+}
+
+
+void remove_map_value(ks_hashmap* hm, const char* key)
+{
+  ks_datacont* key_dc = ks_datacont_new(key, KS_CHARP, strlen(key));
+
+  ks_hashmap_remove(hm, key_dc);
+
+  ks_datacont_delete(key_dc);
 }

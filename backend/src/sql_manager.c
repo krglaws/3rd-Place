@@ -6,7 +6,7 @@
 #include <kylestructs.h>
 
 #include <log_manager.h>
-#include <load_file.h>
+#include <file_manager.h>
 #include <string_map.h>
 #include <sql_manager.h>
 
@@ -752,11 +752,13 @@ static MYSQL_STMT* build_prepared_statement(MYSQL* sqlcon, const char* statement
 void init_sql_manager()
 {
   // load db.config
-  char* config;
-  if ((config = load_file("backend/db.config")) == NULL)
+  struct file_pkg* pkg;
+  if ((pkg = load_file("backend/db.config")) == NULL)
   {
     log_crit("init_sql_manager(): failed to load db.config");
   }
+  char* config = pkg->contents;
+  free(pkg);
 
   ks_hashmap* args = string_to_map(config, "\n", "=");
   free(config);

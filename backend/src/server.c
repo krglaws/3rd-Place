@@ -10,6 +10,7 @@
 
 #include <response.h>
 #include <string_map.h>
+#include <file_manager.h>
 #include <log_manager.h>
 #include <socket_manager.h>
 #include <sql_manager.h>
@@ -152,6 +153,8 @@ static void init_server(struct options* opts)
   // init remaining services
   init_http_post();
   init_http_get();
+
+  init_file_manager();
 
   init_auth_manager();
 

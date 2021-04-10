@@ -11,7 +11,7 @@
 #include <templating.h>
 #include <string_map.h>
 #include <server.h>
-#include <load_file.h>
+#include <file_manager.h>
 #include <response.h>
 #include <get_form.h>
 #include <get_user.h>
@@ -88,46 +88,51 @@ static struct response* get_file(const char* uri)
     return response_error(STAT404);
   }
 
-  // get file
-  struct file_str* f;
-  if (access(uri, F_OK) != 0 || (f = load_file_str(uri)) == NULL)
+  int uri_len = strlen(uri);
+  char* content_type;
+
+  // determine file type
+  if (strstr(uri + (uri_len - 4), ".css") != NULL)
+  {
+    content_type = "Content-Type: text/css\r\n";
+  }
+  else if (strstr(uri + (uri_len - 3), ".js") != NULL)
+  {
+    content_type = "Content-Type: application/javascript\r\n";
+  }
+  else if (strstr(uri + (uri_len - 4), ".ico") != NULL)
+  {
+    content_type = "Content-Type: image/x-icon\r\n";
+  }
+  else
   {
     return response_error(STAT404);
   }
 
+  // get file from file manager
+  struct file_pkg* pkg;
+  if ((pkg = load_file(uri)) == NULL)
+  {
+    return response_error(STAT404);
+  }
   struct response* resp = calloc(1, sizeof(struct response));
-  char* content_type;
-
-  // determine file type
-  if (strstr(uri, ".css") != NULL)
-  {
-    content_type = "Content-Type: text/css\r\n";
-  }
-  else if (strstr(uri, ".js") != NULL)
-  {
-    content_type = "Content-Type: application/javascript\r\n";
-  }
-  else if (strstr(uri, ".ico") != NULL)
-  {
-    content_type = "Content-Type: image/x-icon\r\n";
-  }
 
   // expiration
   char* expiry = "Cache-Control: public, max-age=0\r\n";
 
   // build response object
   char contlenline[80];
-  int contlen = sprintf(contlenline, "Content-Length: %d\r\n", f->len);
+  int contlen = sprintf(contlenline, "Content-Length: %d\r\n", pkg->length);
   resp->header = ks_list_new();
   ks_list_add(resp->header, ks_datacont_new(STAT200, KS_CHARP, strlen(STAT200)));
   ks_list_add(resp->header, ks_datacont_new(expiry, KS_CHARP, strlen(expiry)));
   ks_list_add(resp->header, ks_datacont_new(content_type, KS_CHARP, strlen(content_type)));
   ks_list_add(resp->header, ks_datacont_new(contlenline, KS_CHARP, contlen));
 
-  resp->content = f->contents;
-  resp->content_length = f->len;
+  resp->content = pkg->contents;
+  resp->content_length = pkg->length;
 
-  free(f);
+  free(pkg);
 
   return resp;
 }

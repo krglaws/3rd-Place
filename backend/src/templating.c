@@ -4,7 +4,7 @@
 #include <kylestructs.h>
 
 #include <log_manager.h>
-#include <load_file.h>
+#include <file_manager.h>
 #include <string_map.h>
 #include <http_get.h>
 #include <templating.h>
@@ -49,14 +49,16 @@ char* build_template(const ks_hashmap* page_data)
     return NULL;
   }
 
-  char* tmplt;
-  if ((tmplt = load_file(tmplt_path->cp)) == NULL)
+  struct file_pkg* pkg;
+  if ((pkg = load_file(tmplt_path->cp)) == NULL)
   {
     log_err("build_template(): failed to load template file: '%s'", tmplt_path->cp);
     return NULL;
   }
+  char* tmplt = pkg->contents;
+  int tmplt_len = pkg->length;
+  free(pkg);
 
-  int tmplt_len = strlen(tmplt);
   char* next = tmplt;
 
   while ((next = strstr(tmplt, TEMPLATE_BEGIN)) != NULL)

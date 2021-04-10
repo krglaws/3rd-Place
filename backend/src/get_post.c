@@ -8,7 +8,6 @@
 #include <response.h>
 #include <string_map.h>
 #include <log_manager.h>
-#include <load_file.h>
 #include <auth_manager.h>
 #include <sql_manager.h>
 #include <http_get.h>
