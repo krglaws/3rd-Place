@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS $DBNAME.users(
   id INT NOT NULL AUTO_INCREMENT,
   name VARCHAR(16) NOT NULL,
   password_hash VARCHAR(128) NOT NULL,
-  about VARCHAR(256),
+  about VARCHAR(1280),
   points INT DEFAULT 0,
   posts INT DEFAULT 0,
   comments INT DEFAULT 0,
@@ -29,8 +29,8 @@ CREATE TABLE IF NOT EXISTS $DBNAME.posts(
   community_name VARCHAR(32) NOT NULL,
   author_id INT NOT NULL,
   author_name VARCHAR(16),
-  title VARCHAR(32) NOT NULL,
-  body VARCHAR(512),
+  title VARCHAR(160) NOT NULL,
+  body VARCHAR(2560),
   points INT DEFAULT 0,
   date_posted INT NOT NULL,
   PRIMARY KEY (id)
@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS $DBNAME.comments(
   community_name VARCHAR(32) NOT NULL,
   author_id INT NOT NULL,
   author_name VARCHAR(16),
-  body VARCHAR(512) NOT NULL,
+  body VARCHAR(1280) NOT NULL,
   points INT DEFAULT 0,
   date_posted INT NOT NULL,
   PRIMARY KEY (id)
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS $DBNAME.communities(
   owner_id INT NOT NULL,
   owner_name VARCHAR(16) NOT NULL,
   name VARCHAR(32) NOT NULL,
-  about VARCHAR(512) NOT NULL,
+  about VARCHAR(2560) NOT NULL,
   members INT DEFAULT 0,
   date_created INT NOT NULL,
   PRIMARY KEY (id)

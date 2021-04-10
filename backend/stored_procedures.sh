@@ -192,7 +192,7 @@ END;$$
 # Create procedures
 ###################
 
-CREATE FUNCTION CreateUser(name VARCHAR(16), pwh VARCHAR(128), about VARCHAR(256))
+CREATE FUNCTION CreateUser(name VARCHAR(16), pwh VARCHAR(128), about VARCHAR(1280))
 RETURNS INT
 BEGIN
 
@@ -204,12 +204,12 @@ BEGIN
 END;$$
 
 
-CREATE FUNCTION CreateComment(uid INT, pid INT, body VARCHAR(512))
+CREATE FUNCTION CreateComment(uid INT, pid INT, body VARCHAR(2560))
 RETURNS INT
 BEGIN
 
   DECLARE user_name VARCHAR(16);
-  DECLARE post_title VARCHAR(32);
+  DECLARE post_title VARCHAR(160);
   DECLARE cname VARCHAR(32);
   DECLARE cid INT;
 
@@ -231,7 +231,7 @@ BEGIN
 END;$$
 
 
-CREATE FUNCTION CreatePost(uid INT, cid INT, title VARCHAR(32), body VARCHAR(512))
+CREATE FUNCTION CreatePost(uid INT, cid INT, title VARCHAR(160), body VARCHAR(2560))
 RETURNS INT
 BEGIN
 
@@ -256,7 +256,7 @@ BEGIN
 END;$$
 
 
-CREATE FUNCTION CreateCommunity(uid INT, cname VARCHAR(32), about VARCHAR(512))
+CREATE FUNCTION CreateCommunity(uid INT, cname VARCHAR(32), about VARCHAR(2560))
 RETURNS INT
 BEGIN
 
@@ -278,7 +278,7 @@ END;$$
 # Update procedures
 ###################
 
-CREATE PROCEDURE UpdateUserAbout(uid INT, new_about VARCHAR(512))
+CREATE PROCEDURE UpdateUserAbout(uid INT, new_about VARCHAR(1280))
 BEGIN
 
   UPDATE users SET about = new_about WHERE id = uid;
@@ -294,7 +294,7 @@ BEGIN
 END;$$
 
 
-CREATE PROCEDURE UpdatePost(post_id INT, new_body VARCHAR(512))
+CREATE PROCEDURE UpdatePost(post_id INT, new_body VARCHAR(2560))
 BEGIN
 
   UPDATE posts SET body = new_body WHERE id = post_id;
@@ -302,7 +302,7 @@ BEGIN
 END;$$
 
 
-CREATE PROCEDURE UpdateComment(comment_id INT, new_body VARCHAR(256))
+CREATE PROCEDURE UpdateComment(comment_id INT, new_body VARCHAR(1280))
 BEGIN
 
   UPDATE comments SET body = new_body WHERE id = comment_id;
@@ -310,7 +310,7 @@ BEGIN
 END;
 
 
-CREATE PROCEDURE UpdateCommunityAbout(community_id INT, new_about VARCHAR(512))
+CREATE PROCEDURE UpdateCommunityAbout(community_id INT, new_about VARCHAR(2560))
 BEGIN
 
   UPDATE communities SET about = new_about WHERE id = community_id;
