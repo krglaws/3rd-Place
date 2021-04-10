@@ -199,8 +199,10 @@ static enum validation_result validate_name(const char* name, int min_len, int m
   // do not contain chars that would be encoded
   char c;
   int len = 0;
-  while ((c = name[len++]) != '\0')
+  while ((c = name[len]) != '\0')
   {
+    len++;
+
     if (len > max_len)
     {
       return VALRES_TOO_LONG;
@@ -235,6 +237,19 @@ enum validation_result validate_community_name(const char* community_name)
 
 static enum validation_result validate_content(char* dest, const char* src, int min_len, int max_len)
 {
+  if (src == NULL)
+  {
+    if (min_len > 0)
+    {
+      return VALRES_TOO_SHORT;
+    }
+    else
+    {
+      *dest = '\0';
+      return VALRES_OK;
+    }
+  }
+
   // decoded string will always be <= src length
   int len;
   char tmp[max_len+1];
