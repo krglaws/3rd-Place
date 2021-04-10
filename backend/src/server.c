@@ -163,6 +163,8 @@ static void init_server(struct options* opts)
 
 static void terminate_server(const int signum)
 {
+  log_info("Shutting down...");
+
   if (signum == SIGINT)
   {
     // assuming we received SIGINT (Ctrl-C) from terminal
