@@ -61,12 +61,9 @@ void init_http_get()
 
 struct response* http_get(const struct request* req)
 {
-  const ks_datacont* func_dc;
-  if ((func_dc = get_map_value(endpoints, req->uri)) != NULL)
+  struct response* (*func) (const struct request*);
+  if ((func = get_map_value_vp(endpoints, req->uri)) != NULL)
   {
-    struct response* (*func) (const struct request*);
-    func = (struct response* (*) (const struct request*)) func_dc->vp;
-
     return func(req);
   }
 
