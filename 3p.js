@@ -34,7 +34,10 @@ function openCommunityTab(pageName, button) {
 }
 
 
-function selectOverview() {
+function pageInit() {
+
+  processTimestamps();
+
   var tab = document.getElementById("default-tab");
   if (tab !== null) {
     tab.click();
@@ -274,4 +277,18 @@ function vote(arrow, postOrComment, id) {
       alert("Error");
     }
   });
+}
+
+
+function processTimestamps() {
+
+  var timestamplist = document.getElementsByClassName("utc-timestamp");
+  var date = new Date(0);
+
+  for (var i = 0; i < timestamplist.length; i++) {
+
+    var utcElem = timestamplist[i];
+    date.setUTCSeconds(utcElem.innerText);
+    utcElem.innerText = date.toDateString();
+  }
 }
