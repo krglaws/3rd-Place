@@ -1,5 +1,5 @@
-#ifndef VALIDATOR_H
-#define VALIDATOR_H
+#ifndef VALIDATION_H
+#define VALIDATION_H
 
 enum validation_result
 {

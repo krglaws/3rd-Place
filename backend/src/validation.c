@@ -3,7 +3,7 @@
 #include <kylestructs.h>
 
 #include <sql_manager.h>
-#include <validator.h>
+#include <validation.h>
 
 
 // used for converting percent encoded chars to ASCII
