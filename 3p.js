@@ -283,11 +283,11 @@ function vote(arrow, postOrComment, id) {
 function processTimestamps() {
 
   var timestamplist = document.getElementsByClassName("utc-timestamp");
-  var date = new Date(0);
 
   for (var i = 0; i < timestamplist.length; i++) {
 
     var utcElem = timestamplist[i];
+    var date = new Date(0);
     date.setUTCSeconds(utcElem.innerText);
     utcElem.innerText = date.toDateString();
   }
