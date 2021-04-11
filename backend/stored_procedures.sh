@@ -192,12 +192,12 @@ END;$$
 # Create procedures
 ###################
 
-CREATE FUNCTION CreateUser(name VARCHAR(16), pwh VARCHAR(128), about VARCHAR(1280))
+CREATE FUNCTION CreateUser(name VARCHAR(16), pwh VARCHAR(128))
 RETURNS INT
 BEGIN
 
   INSERT INTO users (name, password_hash, about, points, posts, comments, date_joined)
-  VALUES (name, pwh, about, 0, 0, 0, UNIX_TIMESTAMP());
+  VALUES (name, pwh, "", 0, 0, 0, UNIX_TIMESTAMP());
 
   RETURN LAST_INSERT_ID();
 

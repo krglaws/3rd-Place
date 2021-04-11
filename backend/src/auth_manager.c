@@ -160,7 +160,7 @@ const char* login_user(const char* user_name, const char* password)
 }
 
 
-const char* new_user(const char* user_name, const char* password, const char* about)
+const char* new_user(const char* user_name, const char* password)
 {
   if (user_name == NULL || password == NULL)
   {
@@ -184,7 +184,7 @@ const char* new_user(const char* user_name, const char* password, const char* ab
 
   // prepare insert query
   char* user_id;
-  if ((user_id = sql_create_user(user_name, pwhash, about)) == NULL)
+  if ((user_id = sql_create_user(user_name, pwhash)) == NULL)
   {
     log_err("new_user(): failed to create new user");
     return NULL;

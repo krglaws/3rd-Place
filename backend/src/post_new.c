@@ -80,7 +80,6 @@ struct response* signup(const struct request* req)
   const char* user_name = get_map_value_str(req->content, "username");
   const char* password1 = get_map_value_str(req->content, "password1");
   const char* password2 = get_map_value_str(req->content, "password2");
-  const char* about = get_map_value_str(req->content, "about");
 
   enum validation_result valres = validate_user_name(user_name);
 
@@ -128,26 +127,9 @@ struct response* signup(const struct request* req)
       log_crit("post_signup(): unexpected validation result value for password: '%s', errno: %d", password1, valres);
   }
 
-  char about_decoded[USER_ABOUT_BUF_LEN];
-  valres = validate_user_about(about_decoded, about);
-
-  switch (valres)
-  {
-    case VALRES_OK:
-      break;
-    case VALRES_TOO_SHORT:
-      return get_login_internal(user_name, USER_FORM_ERR_ABOUT_TOO_SHORT, NULL);
-    case VALRES_TOO_LONG:
-      return get_login_internal(user_name, USER_FORM_ERR_ABOUT_TOO_LONG, NULL);
-    case VALRES_INV_ENC:
-      return get_login_internal(user_name, USER_FORM_ERR_ABOUT_INV_ENC, NULL);
-    default:
-      log_crit("post_signup(): unexpected validation result value for about: '%s', errno: %d", about, valres);
-  }
-
   // create new user
   const char* token;
-  if ((token = new_user(user_name, password1, about)) == NULL)
+  if ((token = new_user(user_name, password1)) == NULL)
   {
     return get_login_internal(user_name, USER_FORM_ERR_UNAME_TAKEN, NULL);
   }

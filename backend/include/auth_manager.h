@@ -34,7 +34,7 @@ const char* login_user(const char* user_name, const char* password);
 
 /* Called by http_post when user signs up
  */
-const char* new_user(const char* user_name, const char* password, const char* about);
+const char* new_user(const char* user_name, const char* password);
 
 
 /* Called by http_patch when user changes password

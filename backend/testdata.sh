@@ -6,9 +6,14 @@ mysql -uroot <<TEST_USERS
 USE $DBNAME;
 
 # test users
-SET @foo = (Select CreateUser("testuser1", "", "this is test user 1"));
-SET @foo = (Select CreateUser("testuser2", "", "this is test user 2"));
-SET @foo = (Select CreateUser("testuser3", "", "this is test user 3"));
+SET @foo = (Select CreateUser("testuser1", ""));
+CALL UpdateUserAbout(@foo, "this is test user 1");
+
+SET @foo = (Select CreateUser("testuser2", ""));
+CALL UpdateUserAbout(@foo, "this is test user 2");
+
+SET @foo = (Select CreateUser("testuser3", ""));
+CALL UpdateUserAbout(@foo, "this is test user 3");
 
 TEST_USERS
 

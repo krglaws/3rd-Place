@@ -96,9 +96,9 @@ ks_hashmap* query_user_by_name(const char* user_name)
 }
 
 static MYSQL_STMT* stmt_create_user = NULL;
-char* sql_create_user(const char* user_name, const char* password_hash, const char* about)
+char* sql_create_user(const char* user_name, const char* password_hash)
 {
-  return sql_function(stmt_create_user, user_name, password_hash, about);
+  return sql_function(stmt_create_user, user_name, password_hash);
 }
 
 static MYSQL_STMT* stmt_update_user_about = NULL;
@@ -812,7 +812,7 @@ void init_sql_manager()
   // users
   stmt_query_user_by_id = build_prepared_statement(sqlcon, "SELECT * FROM users WHERE id = ?;");
   stmt_query_user_by_name = build_prepared_statement(sqlcon, "SELECT * FROM users WHERE name = ?;");
-  stmt_create_user = build_prepared_statement(sqlcon, "SELECT CreateUser(?, ?, ?);");
+  stmt_create_user = build_prepared_statement(sqlcon, "SELECT CreateUser(?, ?);");
   stmt_update_user_about = build_prepared_statement(sqlcon, "CALL UpdateUserAbout(?, ?);");
   stmt_update_user_password_hash = build_prepared_statement(sqlcon, "UPDATE users SET password_hash = ? WHERE id = ?;");
   stmt_delete_user = build_prepared_statement(sqlcon, "CALL DeleteUser(?);");
