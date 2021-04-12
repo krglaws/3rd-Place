@@ -9,13 +9,14 @@
 // used for converting percent encoded chars to ASCII
 static short get_hex_char_val(char c);
 static char hex_to_char(const char* hex);
-static int url_decode(char* dest, const char* src);
-
-static enum validation_result validate_content(char* dest, const char* src, int min_len, int max_len);
-static enum validation_result validate_name(const char* name, int min_len, int max_len);
+static int decode(char* dest, const char* src, int max_len);
 
 // encodes content into HTML-friendly form
-static void html_encode(char* dest, char* src);
+static void escape(char* dest, char* src);
+
+// underlying functions used by all non-static functions, except validate_password()
+static enum validation_result validate_content(char* dest, const char* src, int min_len, int max_len);
+static enum validation_result validate_name(const char* name, int min_len, int max_len);
 
 
 static short get_hex_char_val(char c)
@@ -62,12 +63,17 @@ static char hex_to_char(const char* hex)
 }
 
 
+#define DECODE_TOO_LONG (-1)
+#define DECODE_INV_ENC (-2)
+
+
 /* Returns the length of the decoded string,
    -1 if an invalid encoding was found. */
-static int url_decode(char* dest, const char* src)
+static int decode(char* dest, const char* src, int max_len)
 {
   if (src == NULL)
   {
+    *dest = '\0';
     return 0;
   }
 
@@ -75,12 +81,16 @@ static int url_decode(char* dest, const char* src)
   int i = 0, j = 0;
   while (src[i] != '\0')
   {
+    if (j == max_len)
+    {
+      return DECODE_TOO_LONG;
+    }
+
     if (src[i] == '%' && src[i + 1] != '\0' && src[i + 2] != '\0')
     {
       if ((c = hex_to_char(src+i+1)) == '\0')
       {
-        // invalid encoding
-        return -1;
+        return DECODE_INV_ENC;
       }
       dest[j++] = c; 
       i += 3;
@@ -96,8 +106,7 @@ static int url_decode(char* dest, const char* src)
     }
     else
     {
-      // invalid char
-      return -1;
+      return DECODE_INV_ENC;
     }
   }
 
@@ -107,7 +116,7 @@ static int url_decode(char* dest, const char* src)
 }
 
 
-static void html_encode(char* dest, char* src)
+static void escape(char* dest, char* src)
 {
   while (*src != '\0')
   {
@@ -140,10 +149,16 @@ enum validation_result validate_password(char* dest, const char* src)
 {
   // caller must allocate buffer for
   // decoded password string
-  int len;
-  if ((len = url_decode(dest, src)) == -1)
+  int len = decode(dest, src, MAX_PASSWD_LEN);
+
+  if (len == DECODE_INV_ENC)
   {
     return VALRES_INV_ENC;
+  }
+
+  if (len == DECODE_TOO_LONG)
+  {
+    return VALRES_TOO_LONG;
   }
 
   if (len < MIN_PASSWD_LEN)
@@ -168,12 +183,12 @@ enum validation_result validate_password(char* dest, const char* src)
       upper++;
     }
 
-    if (islower(c))
+    else if (islower(c))
     {
       lower++;
     }
 
-    if (isdigit(c))
+    else if (isdigit(c))
     {
       number++;
     }
@@ -195,8 +210,6 @@ static enum validation_result validate_name(const char* name, int min_len, int m
     return VALRES_TOO_SHORT;
   }
 
-  // no need to decode since valid name strings
-  // do not contain chars that would be encoded
   char c;
   int len = 0;
   while ((c = name[len]) != '\0')
@@ -237,28 +250,15 @@ enum validation_result validate_community_name(const char* community_name)
 
 static enum validation_result validate_content(char* dest, const char* src, int min_len, int max_len)
 {
-  if (src == NULL)
-  {
-    if (min_len > 0)
-    {
-      return VALRES_TOO_SHORT;
-    }
-    else
-    {
-      *dest = '\0';
-      return VALRES_OK;
-    }
-  }
-
-  // decoded string will always be <= src length
-  int len;
   char tmp[max_len+1];
-  if ((len = url_decode(tmp, src)) == -1)
+  int len = decode(tmp, src, max_len);
+
+  if (len == DECODE_INV_ENC)
   {
     return VALRES_INV_ENC;
   }
 
-  if (len > max_len)
+  if (len == DECODE_TOO_LONG)
   {
     return VALRES_TOO_LONG;
   }
@@ -268,7 +268,7 @@ static enum validation_result validate_content(char* dest, const char* src, int 
     return VALRES_TOO_SHORT;
   }
 
-  html_encode(dest, tmp);
+  escape(dest, tmp);
 
   return VALRES_OK;
 }

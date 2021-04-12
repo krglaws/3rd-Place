@@ -11,17 +11,19 @@ enum validation_result
   VALRES_UNMET // unmet requirements
 };
 
-/* These functions just check for valid characters,
- * character requirements, and lengths. Names can only
- * use alphanumeric characters, or the '_' character.
- * See include/sql_manager.h for length limits.
+
+/* Name strings can only contain alphanumeric characters
+ * or the '_' character. Input strings will not be decoded
+ * since valid names should not be encoded to begin with.
+ *
+ * If an input name contains an invalid character, the backend
+ * should not pass the invalid name back to the frontend.
  *
  * These two functions return: VALRES_OK, VALRES_TOO_LONG,
  * VALRES_TOO_SHORT, and VALRES_INV_CHAR.
  */
 enum validation_result validate_user_name(const char* user_name);
 enum validation_result validate_community_name(const char* community_name);
-
 
 
 /* The function that calls these functions will need

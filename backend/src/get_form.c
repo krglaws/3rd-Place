@@ -549,6 +549,9 @@ struct response* get_new_community_internal(const char* submitted_name, const ch
     case COMMUNITY_FORM_ERR_NAME_INV_CHAR:
       add_map_value_str(page_data, COMMUNITY_FORM_ERR_KEY, "Community name contains invalid character");
       break;
+    case COMMUNITY_FORM_ERR_NAME_ALREADY_EXISTS:
+      add_map_value_str(page_data, COMMUNITY_FORM_ERR_KEY, "Community name already exists");
+      break;
     case COMMUNITY_FORM_ERR_ABOUT_TOO_SHORT:
       add_map_value_str(page_data, COMMUNITY_FORM_ERR_KEY, "Community about too short");
       break;

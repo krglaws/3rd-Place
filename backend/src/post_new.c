@@ -88,11 +88,11 @@ struct response* signup(const struct request* req)
     case VALRES_OK:
       break;
     case VALRES_TOO_SHORT:
-      return get_login_internal(user_name, USER_FORM_ERR_UNAME_TOO_SHORT, NULL);
+      return get_login_internal(NULL, USER_FORM_ERR_UNAME_TOO_SHORT, NULL);
     case VALRES_TOO_LONG:
-      return get_login_internal(user_name, USER_FORM_ERR_UNAME_TOO_LONG, NULL);
+      return get_login_internal(NULL, USER_FORM_ERR_UNAME_TOO_LONG, NULL);
     case VALRES_INV_CHAR:
-      return get_login_internal(user_name, USER_FORM_ERR_UNAME_INV_CHAR, NULL);
+      return get_login_internal(NULL, USER_FORM_ERR_UNAME_INV_CHAR, NULL);
     default:
       log_crit("post_signup(): unexpected validation result value for username: '%s', errno: %d", user_name, valres);
   }
@@ -101,7 +101,7 @@ struct response* signup(const struct request* req)
   {
     return get_login_internal(user_name, USER_FORM_ERR_PASSWD_TOO_SHORT, NULL);
   }
-  
+
   if (password1 == NULL || password2 == NULL ||
       strcmp(password1, password2) != 0)
   {
@@ -136,8 +136,6 @@ struct response* signup(const struct request* req)
 
   // build redirect
   struct response* resp = response_redirect("/home");
-
-  // add token to response
   char token_hdr[128];
   sprintf(token_hdr, COOKIE_TEMPLATE, token);
   ks_list_add(resp->header, ks_datacont_new(token_hdr, KS_CHARP, strlen(token_hdr)));
@@ -387,13 +385,20 @@ struct response* new_community(const struct request* req)
     case VALRES_OK:
       break;
     case VALRES_TOO_LONG:
-      return get_new_community_internal(community_name, NULL, COMMUNITY_FORM_ERR_NAME_TOO_LONG, req->client_info);
+      return get_new_community_internal(NULL, NULL, COMMUNITY_FORM_ERR_NAME_TOO_LONG, req->client_info);
     case VALRES_TOO_SHORT:
-      return get_new_community_internal(community_name, NULL, COMMUNITY_FORM_ERR_NAME_TOO_SHORT, req->client_info);
+      return get_new_community_internal(NULL, NULL, COMMUNITY_FORM_ERR_NAME_TOO_SHORT, req->client_info);
     case VALRES_INV_CHAR:
-      return get_new_community_internal(community_name, NULL, COMMUNITY_FORM_ERR_NAME_INV_CHAR, req->client_info);
+      return get_new_community_internal(NULL, NULL, COMMUNITY_FORM_ERR_NAME_INV_CHAR, req->client_info);
     default:
       log_crit("post_community(): unexpected validation result value for community name: '%s', errno: %d", community_name, valres);
+  }
+
+  ks_hashmap* community_info;
+  if ((community_info = query_community_by_name(community_name)) != NULL)
+  {
+    ks_hashmap_delete(community_info);
+    return get_new_community_internal(NULL, NULL, COMMUNITY_FORM_ERR_NAME_ALREADY_EXISTS, req->client_info);
   }
 
   char about_decoded[COMMUNITY_ABOUT_BUF_LEN];
@@ -404,17 +409,17 @@ struct response* new_community(const struct request* req)
     case VALRES_OK:
       break;
     case VALRES_TOO_LONG:
-      return get_new_community_internal(community_name, about_decoded, COMMUNITY_FORM_ERR_ABOUT_TOO_LONG, req->client_info);
+      return get_new_community_internal(community_name, NULL, COMMUNITY_FORM_ERR_ABOUT_TOO_LONG, req->client_info);
     case VALRES_TOO_SHORT:
-      return get_new_community_internal(community_name, about_decoded, COMMUNITY_FORM_ERR_ABOUT_TOO_SHORT, req->client_info);
+      return get_new_community_internal(community_name, NULL, COMMUNITY_FORM_ERR_ABOUT_TOO_SHORT, req->client_info);
     case VALRES_INV_ENC:
       return get_new_community_internal(community_name, NULL, COMMUNITY_FORM_ERR_ABOUT_INV_ENC, req->client_info);
     default:
       log_crit("post_community(): unexpected validation result value for commuity about: '%s', errno: %d", community_about, valres);
   }
 
-  char* post_id;
-  if ((post_id = sql_create_community(req->client_info->user_id, community_name, about_decoded)) == NULL)
+  char* community_id;
+  if ((community_id = sql_create_community(req->client_info->user_id, community_name, about_decoded)) == NULL)
   {
     log_err("post_community(): failed on call to sql_create_community()");
     return response_error(STAT500);
@@ -422,8 +427,8 @@ struct response* new_community(const struct request* req)
 
   // build post URI
   char uri[64];
-  sprintf(uri, "/post?id=%s", post_id);
-  free(post_id);
+  sprintf(uri, "/community?id=%s", community_id);
+  free(community_id);
 
   return response_redirect(uri);
 }
