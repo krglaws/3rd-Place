@@ -100,13 +100,9 @@ static int decode(char* dest, const char* src, int max_len)
       dest[j++] = ' ';
       i++;
     }
-    else if(isalnum(src[i]) || src[i] == '*' || src[i] == '-' || src[i] == '_')
-    {
-      dest[j++] = src[i++];
-    }
     else
     {
-      return DECODE_INV_ENC;
+      dest[j++] = src[i++];
     }
   }
 
