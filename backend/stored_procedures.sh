@@ -21,6 +21,7 @@ DELIMITER $$
 # Toggle* procedures
 ###################
 
+DROP PROCEDURE IF EXISTS ToggleSubscription;
 CREATE PROCEDURE ToggleSubscription (IN cid INT, IN uid INT) NOT DETERMINISTIC
 BEGIN
 
@@ -36,6 +37,7 @@ BEGIN
 END;$$
 
 
+DROP PROCEDURE IF EXISTS TogglePostUpVote;
 CREATE PROCEDURE TogglePostUpVote (IN pid INT, IN uid INT) NOT DETERMINISTIC
 proc_label:BEGIN
 
@@ -74,6 +76,7 @@ proc_label:BEGIN
 END;$$
 
 
+DROP PROCEDURE IF EXISTS TogglePostDownVote;
 CREATE PROCEDURE TogglePostDownVote (IN pid INT, IN uid INT) NOT DETERMINISTIC
 proc_label:BEGIN
 
@@ -112,6 +115,7 @@ proc_label:BEGIN
 END;$$
 
 
+DROP PROCEDURE IF EXISTS ToggleCommentUpVote;
 CREATE PROCEDURE ToggleCommentUpVote(IN cid INT, IN uid INT) NOT DETERMINISTIC
 proc_label:BEGIN
 
@@ -150,6 +154,7 @@ proc_label:BEGIN
 END;$$
 
 
+DROP PROCEDURE IF EXISTS ToggleCommentDownVote;
 CREATE PROCEDURE ToggleCommentDownVote(IN cid INT, IN uid INT) NOT DETERMINISTIC
 proc_label:BEGIN
 
@@ -192,6 +197,7 @@ END;$$
 # Create procedures
 ###################
 
+DROP FUNCTION IF EXISTS CreateUser;
 CREATE FUNCTION CreateUser(name VARCHAR(16), pwh VARCHAR(128))
 RETURNS INT
 BEGIN
@@ -204,6 +210,7 @@ BEGIN
 END;$$
 
 
+DROP FUNCTION IF EXISTS CreateComment;
 CREATE FUNCTION CreateComment(uid INT, pid INT, body VARCHAR(2560))
 RETURNS INT
 BEGIN
@@ -231,6 +238,7 @@ BEGIN
 END;$$
 
 
+DROP FUNCTION IF EXISTS CreatePost;
 CREATE FUNCTION CreatePost(uid INT, cid INT, title VARCHAR(160), body VARCHAR(2560))
 RETURNS INT
 BEGIN
@@ -256,6 +264,7 @@ BEGIN
 END;$$
 
 
+DROP FUNCTION IF EXISTS CreateCommunity;
 CREATE FUNCTION CreateCommunity(uid INT, cname VARCHAR(32), about VARCHAR(2560))
 RETURNS INT
 BEGIN
@@ -278,6 +287,7 @@ END;$$
 # Update procedures
 ###################
 
+DROP PROCEDURE IF EXISTS UpdateUserAbout;
 CREATE PROCEDURE UpdateUserAbout(uid INT, new_about VARCHAR(1280))
 BEGIN
 
@@ -286,6 +296,7 @@ BEGIN
 END;$$
 
 
+DROP PROCEDURE IF EXISTS UpdateUserPassword;
 CREATE PROCEDURE UpdateUserPassword(uid INT, new_pwh VARCHAR(128))
 BEGIN
 
@@ -294,6 +305,7 @@ BEGIN
 END;$$
 
 
+DROP PROCEDURE IF EXISTS UpdatePost;
 CREATE PROCEDURE UpdatePost(post_id INT, new_body VARCHAR(2560))
 BEGIN
 
@@ -302,6 +314,7 @@ BEGIN
 END;$$
 
 
+DROP PROCEDURE IF EXISTS UpdateComment;
 CREATE PROCEDURE UpdateComment(comment_id INT, new_body VARCHAR(1280))
 BEGIN
 
@@ -310,6 +323,7 @@ BEGIN
 END;
 
 
+DROP PROCEDURE IF EXISTS UpdateCommunityAbout;
 CREATE PROCEDURE UpdateCommunityAbout(community_id INT, new_about VARCHAR(2560))
 BEGIN
 
@@ -322,6 +336,7 @@ END;$$
 # Delete procedures
 ###################
 
+DROP PROCEDURE IF EXISTS DeleteUser;
 CREATE PROCEDURE DeleteUser(IN uid INT) NOT DETERMINISTIC
 BEGIN
 
@@ -370,6 +385,7 @@ BEGIN
 END;$$
 
 
+DROP PROCEDURE IF EXISTS DeleteComment;
 CREATE PROCEDURE DeleteComment (IN cid INT) NOT DETERMINISTIC
 BEGIN
 
@@ -386,6 +402,7 @@ BEGIN
 END;$$
 
 
+DROP PROCEDURE IF EXISTS DeletePost;
 CREATE PROCEDURE DeletePost (IN pid INT) NOT DETERMINISTIC
 BEGIN
 
@@ -406,10 +423,12 @@ BEGIN
 END;$$
 
 
+DROP PROCEDURE IF EXISTS DeleteCommunity;
 CREATE PROCEDURE DeleteCommunity (IN cid INT) NOT DETERMINISTIC
 proc_label:BEGIN
 
-  DECLARE id INT;
+  DECLARE post_id INT;
+  DECLARE comment_id INT;
   DECLARE finished INT DEFAULT 0;
   DECLARE post_cursor CURSOR FOR SELECT id FROM posts WHERE community_id = cid;
   DECLARE comment_cursor CURSOR FOR SELECT id FROM comments WHERE community_id = cid;
@@ -428,13 +447,13 @@ proc_label:BEGIN
   OPEN post_cursor;
   get_post:LOOP
 
-    FETCH post_cursor INTO id;
+    FETCH post_cursor INTO post_id;
 
     IF finished = 1 THEN
       LEAVE get_post;
     END IF;
 
-    CALL DeletePost(id);
+    CALL DeletePost(post_id);
 
   END LOOP get_post;
   CLOSE post_cursor;
@@ -445,13 +464,13 @@ proc_label:BEGIN
   OPEN comment_cursor;
   get_comment:LOOP
 
-    FETCH comment_cursor INTO id;
+    FETCH comment_cursor INTO comment_id;
 
     IF finished = 1 THEN
       LEAVE get_comment;
     END IF;
 
-    CALL DeleteComment(id);
+    CALL DeleteComment(comment_id);
 
   END LOOP get_comment;
   CLOSE comment_cursor;
