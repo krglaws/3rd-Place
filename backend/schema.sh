@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS $DBNAME.posts(
 CREATE TABLE IF NOT EXISTS $DBNAME.comments(
   id INT NOT NULL AUTO_INCREMENT,
   post_id INT NOT NULL,
-  post_title VARCHAR(32) NOT NULL,
+  post_title VARCHAR(160) NOT NULL,
   community_id INT NOT NULL,
   community_name VARCHAR(32) NOT NULL,
   author_id INT NOT NULL,
