@@ -109,8 +109,16 @@ CREATE TABLE IF NOT EXISTS $DBNAME.comment_down_votes(
 );
 
 
-# create user [deleted]
-INSERT INTO $DBNAME.users (id, name, password_hash, date_joined) VALUES (1, "[deleted]", "", UNIX_TIMESTAMP());
+# create user [nemo], owner of deleted communities and posts
+INSERT INTO $DBNAME.users (id, name, password_hash, date_joined) VALUES (1, "[nemo]", "ab", UNIX_TIMESTAMP());
+
+# create admin user
+INSERT INTO $DBNAME.users (id, name, password_hash, date_joined) VALUES(2, "$ADMINUNAME", "`mkpasswd -S $ADMINPWSALT $ADMINPW`", UNIX_TIMESTAMP());
+INSERT INTO $DBNAME.administrators (user_id) VALUES (2);
+
+# create community [deleted], parent of posts/comments with deleted community
+INSERT INTO $DBNAME.communities (id, name, owner_id, owner_name, about, date_created)
+VALUES (1, "[deleted]", 1, "[nemo]", "[deleted]", UNIX_TIMESTAMP());
 
 
 CREATE USER IF NOT EXISTS $DBUSER@$DBHOST IDENTIFIED BY '$DBPASS';

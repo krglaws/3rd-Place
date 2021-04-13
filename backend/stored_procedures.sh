@@ -353,13 +353,13 @@ BEGIN
   DELETE FROM administrators WHERE user_id = uid;
 
   # remove references in posts
-  UPDATE posts SET author_name = "[deleted]", author_id = 0 WHERE author_id = uid;
+  UPDATE posts SET author_name = "[nemo]", author_id = 1 WHERE author_id = uid;
 
   # remove references in comments
-  UPDATE comments SET author_name = "[deleted]", author_id = 0 WHERE author_id = uid;
+  UPDATE comments SET author_name = "[nemo]", author_id = 1 WHERE author_id = uid;
 
   # remove references in communities
-  UPDATE communities SET owner_name = "[deleted]", owner_id = 0 WHERE owner_id = uid;
+  UPDATE communities SET owner_name = "[nemo]", owner_id = 1 WHERE owner_id = uid;
 
   # remove references from votes
   UPDATE post_up_votes SET user_id = 0 WHERE user_id = uid;
@@ -414,7 +414,7 @@ BEGIN
   IF NOT EXISTS (SELECT * FROM comments WHERE post_id = pid) THEN
     DELETE FROM posts WHERE id = pid;
   ELSE
-    UPDATE posts SET author_id = 1, author_name = "[deleted]", body = "[deleted]" WHERE id = pid;
+    UPDATE posts SET author_id = 1, author_name = "[nemo]", body = "[deleted]" WHERE id = pid;
   END IF;
 
   # decrement user post count
@@ -425,55 +425,17 @@ END;$$
 
 DROP PROCEDURE IF EXISTS DeleteCommunity;
 CREATE PROCEDURE DeleteCommunity (IN cid INT) NOT DETERMINISTIC
-proc_label:BEGIN
+BEGIN
 
-  DECLARE post_id INT;
-  DECLARE comment_id INT;
-  DECLARE finished INT DEFAULT 0;
-  DECLARE post_cursor CURSOR FOR SELECT id FROM posts WHERE community_id = cid;
-  DECLARE comment_cursor CURSOR FOR SELECT id FROM comments WHERE community_id = cid;
-  DECLARE CONTINUE HANDLER FOR NOT FOUND SET finished = 1;
-
-  # delete subscriptions
-  DELETE FROM subscriptions WHERE community_id = cid;
+  # set community posts and comments to [deleted] community
+  UPDATE posts SET community_id = 1, community_name = "[deleted]" WHERE community_id = cid;
+  UPDATE comments SET community_id = 1, community_name = "[deleted]" WHERE community_id = cid;
 
   # delete moderators
   DELETE FROM moderators WHERE community_id = cid;
 
   # delete community
   DELETE FROM communities WHERE id = cid;
-
-  # delete all community posts
-  OPEN post_cursor;
-  get_post:LOOP
-
-    FETCH post_cursor INTO post_id;
-
-    IF finished = 1 THEN
-      LEAVE get_post;
-    END IF;
-
-    CALL DeletePost(post_id);
-
-  END LOOP get_post;
-  CLOSE post_cursor;
-
-  SET finished = 0;
-
-  # delete all community comments
-  OPEN comment_cursor;
-  get_comment:LOOP
-
-    FETCH comment_cursor INTO comment_id;
-
-    IF finished = 1 THEN
-      LEAVE get_comment;
-    END IF;
-
-    CALL DeleteComment(comment_id);
-
-  END LOOP get_comment;
-  CLOSE comment_cursor;
 
 END;$$
 
