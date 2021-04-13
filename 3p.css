@@ -5,6 +5,7 @@
 
 html, body {
   background-color: #CACBCC;
+  word-break: break-word;
 }
 
 a {
