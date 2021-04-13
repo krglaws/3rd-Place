@@ -810,8 +810,8 @@ void init_sql_manager()
   // build prepared statements
 
   // users
-  stmt_query_user_by_id = build_prepared_statement(sqlcon, "SELECT * FROM users WHERE id = ?;");
-  stmt_query_user_by_name = build_prepared_statement(sqlcon, "SELECT * FROM users WHERE name = ?;");
+  stmt_query_user_by_id = build_prepared_statement(sqlcon, "SELECT * FROM users WHERE id = ? AND NOT id = 1;");
+  stmt_query_user_by_name = build_prepared_statement(sqlcon, "SELECT * FROM users WHERE name = ? AND NOT name = '[deleted]';");
   stmt_create_user = build_prepared_statement(sqlcon, "SELECT CreateUser(?, ?);");
   stmt_update_user_about = build_prepared_statement(sqlcon, "CALL UpdateUserAbout(?, ?);");
   stmt_update_user_password_hash = build_prepared_statement(sqlcon, "UPDATE users SET password_hash = ? WHERE id = ?;");
@@ -819,9 +819,9 @@ void init_sql_manager()
 
   // posts
   stmt_query_post_by_id = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE id = ?;");
-  stmt_query_all_posts = build_prepared_statement(sqlcon, "SELECT * FROM posts;");
+  stmt_query_all_posts = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE NOT author_id = 1 AND NOT community_id = 1;");
   stmt_query_posts_by_author_id = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE author_id = ?;");
-  stmt_query_posts_by_community_id = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE community_id = ?;");
+  stmt_query_posts_by_community_id = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE community_id = ? AND NOT author_id = 1;");
   stmt_create_post = build_prepared_statement(sqlcon, "SELECT CreatePost(?, ?, ?, ?);");
   stmt_update_post_body = build_prepared_statement(sqlcon, "CALL UpdatePost(?, ?);");
   stmt_delete_post = build_prepared_statement(sqlcon, "CALL DeletePost(?);");
@@ -835,9 +835,9 @@ void init_sql_manager()
   stmt_delete_comment = build_prepared_statement(sqlcon, "CALL DeleteComment(?);");
 
   // communities
-  stmt_query_community_by_id = build_prepared_statement(sqlcon, "SELECT * FROM communities WHERE id = ?;");
-  stmt_query_community_by_name = build_prepared_statement(sqlcon, "SELECT * FROM communities WHERE name = ?;");
-  stmt_query_all_communities = build_prepared_statement(sqlcon, "SELECT * FROM communities;");
+  stmt_query_community_by_id = build_prepared_statement(sqlcon, "SELECT * FROM communities WHERE id = ? AND NOT id = 1;");
+  stmt_query_community_by_name = build_prepared_statement(sqlcon, "SELECT * FROM communities WHERE name = ? AND NOT name = '[deleted]';");
+  stmt_query_all_communities = build_prepared_statement(sqlcon, "SELECT * FROM communities WHERE NOT id = 1;");
   stmt_create_community = build_prepared_statement(sqlcon, "SELECT CreateCommunity(?, ?, ?);");
   stmt_update_community_about = build_prepared_statement(sqlcon, "CALL UpdateCommunity(?, ?);");
   stmt_delete_community = build_prepared_statement(sqlcon, "CALL DeleteCommunity(?);");

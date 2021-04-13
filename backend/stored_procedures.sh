@@ -353,13 +353,13 @@ BEGIN
   DELETE FROM administrators WHERE user_id = uid;
 
   # remove references in posts
-  UPDATE posts SET author_name = "[nemo]", author_id = 1 WHERE author_id = uid;
+  UPDATE posts SET author_name = "[deleted]", author_id = 1 WHERE author_id = uid;
 
   # remove references in comments
-  UPDATE comments SET author_name = "[nemo]", author_id = 1 WHERE author_id = uid;
+  UPDATE comments SET author_name = "[deleted]", author_id = 1 WHERE author_id = uid;
 
   # remove references in communities
-  UPDATE communities SET owner_name = "[nemo]", owner_id = 1 WHERE owner_id = uid;
+  UPDATE communities SET owner_name = "[deleted]", owner_id = 1 WHERE owner_id = uid;
 
   # remove references from votes
   UPDATE post_up_votes SET user_id = 0 WHERE user_id = uid;
@@ -414,7 +414,7 @@ BEGIN
   IF NOT EXISTS (SELECT * FROM comments WHERE post_id = pid) THEN
     DELETE FROM posts WHERE id = pid;
   ELSE
-    UPDATE posts SET author_id = 1, author_name = "[nemo]", body = "[deleted]" WHERE id = pid;
+    UPDATE posts SET author_id = 1, author_name = "[deleted]", body = "[deleted]" WHERE id = pid;
   END IF;
 
   # decrement user post count
