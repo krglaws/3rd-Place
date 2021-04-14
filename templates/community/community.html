@@ -5,15 +5,11 @@
     </div>
 
     <div class="options-container">
-      <div class="option" onclick="subscribe(this, '<<COMMUNITY_ID>>');">[<<COMMUNITY_SUBSCRIPTION_STATUS>>]</div>
-      <div class="option">
-        <a href="/new_post?id=<<COMMUNITY_ID>>">[write post]</a>
-      </div>
-      <div class="option" style="visibility: <<EDIT_OPTION_VISIBILITY>>;">
-        <a href="/edit_community?id=<<COMMUNITY_ID>>">[edit community]</a>
-      </div>
-      <div class="option" style="visibility: <<DELETE_OPTION_VISIBILITY>>;" onclick="deleteObject('community', '<<COMMUNITY_ID>>');">
-        [delete community]
+      <div class="community-options">
+        <a href="javascript:subscribe(this, '<<COMMUNITY_ID>>');">[<<COMMUNITY_SUBSCRIPTION_STATUS>>]</a>
+        <a href="/new_post?id=<<COMMUNITY_ID>>">[new post]</a>
+        <a href="/edit_community?id=<<COMMUNITY_ID>>" style="visibility: <<EDIT_OPTION_VISIBILITY>>;">[edit community]</a>
+        <a href="javascript:deleteObject('community', '<<COMMUNITY_ID>>');" style="visibility: <<DELETE_OPTION_VISIBILITY>>;">[delete community]</a>
       </div>
     </div>
 

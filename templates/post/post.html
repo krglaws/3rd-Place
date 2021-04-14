@@ -33,14 +33,10 @@
 </div>
 
 <div class="options-container">
-  <div class="option">
-    <a href="/new_comment?id=<<POST_ID>>">[write comment]</a>
-  </div>
-  <div class="option" style="visibility: <<EDIT_OPTION_VISIBILITY>>;">
-    <a href="/edit_post?id=<<POST_ID>>">[edit post]</a>
-  </div>
-  <div class="option" style="visibility: <<DELETE_OPTION_VISIBILITY>>;" onclick="deleteObject('post', '<<POST_ID>>');">
-    [delete post]
+  <div class="post-options">
+    <a href="/new_comment?id=<<POST_ID>>">[new comment]</a>
+    <a href="/edit_post?id=<<POST_ID>>" style="visibility: <<EDIT_OPTION_VISIBILITY>>;">[edit post]</a>
+    <a href="javascript:deleteObject('post', '<<POST_ID>>');" style="visibility: <<DELETE_OPTION_VISIBILITY>>;">[delete post]</a>
   </div>
 </div>
 

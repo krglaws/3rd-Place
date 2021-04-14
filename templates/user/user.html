@@ -5,14 +5,11 @@
 </div>
 
 <div class="options-container">
-  <div class="option" style="visibility: <<EDIT_OPTION_VISIBILITY>>;">
-    <a href="/edit_user">[edit user]</a>
-  </div>
-  <div class="option" style="visibility: <<LOGOUT_OPTION_VISIBILITY>>;" onclick="logOut();">
-    [logout]
-  </div>
-  <div class="option" style="visibility: <<DELETE_OPTION_VISIBILITY>>;" onclick="deleteObject('user', '<<USER_ID>>');">
-    [delete account]
+  <div class="user-options">
+    <a href="/edit_user" style="visibility: <<EDIT_OPTION_VISIBILITY>>;">[edit user]</a>
+    <a href="/subscriptions" style="visibility: <<SUBSCRIPTIONS_OPTION_VISIBILITY>>;">[subscriptions]</a>
+    <a href="javascript:logOut();" style="visibility: <<LOGOUT_OPTION_VISIBILITY>>;">[logout]</a>
+    <a href="javascript:deleteObject('user', '<<USER_ID>>');" style="visibility: <<DELETE_OPTION_VISIBILITY>>;">[delete account]</a>
   </div>
 </div>
 

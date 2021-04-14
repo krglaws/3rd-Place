@@ -169,6 +169,7 @@ struct response* get_user(const struct request* req)
   char* edit_vis = "hidden";
   char* logout_vis = "hidden";
   char* delete_vis = "hidden";
+  char* sub_vis = "hidden";
   if (req->client_info != NULL)
   {
     ks_hashmap* admin_info;
@@ -177,6 +178,7 @@ struct response* get_user(const struct request* req)
       edit_vis = "visible";
       logout_vis = "visible";
       delete_vis = "visible";
+      sub_vis = "visible";
     }
     else if ((admin_info = query_administrator_by_user_id(req->client_info->user_id)) != NULL)
     {
@@ -187,6 +189,7 @@ struct response* get_user(const struct request* req)
   add_map_value_str(page_data, EDIT_OPTION_VISIBILITY_KEY, edit_vis);
   add_map_value_str(page_data, LOGOUT_OPTION_VISIBILITY_KEY, logout_vis);
   add_map_value_str(page_data, DELETE_OPTION_VISIBILITY_KEY, delete_vis);
+  add_map_value_str(page_data, SUBSCRIPTIONS_OPTION_VISIBILITY_KEY, sub_vis);
  
   // put page data together
   page_data = wrap_page_data(req->client_info, page_data);
