@@ -39,6 +39,7 @@ a:hover {
   height: 100%;
   padding: 1%;
   flex: 2%;
+  word-break: normal;
 }
 
 .arrow-wrapper {
