@@ -432,3 +432,60 @@ struct response* new_community(const struct request* req)
 
   return response_redirect(uri);
 }
+
+
+struct response* new_moderator(const struct request* req)
+{
+  if (req->client_info == NULL)
+  {
+    return response_redirect("/login");
+  }
+
+  const char* community_id = get_map_value_str(req->content, "id");
+  const char* user_name = get_map_value_str(req->content, "name");
+
+  // check if community exists
+  ks_hashmap* community_info;
+  if ((community_info = query_community_by_id(community_id)) == NULL)
+  {
+    return response_error(STAT404);
+  }
+
+  // make sure client has permission
+  const char* owner_id = get_map_value_str(community_info, FIELD_COMMUNITY_OWNER_ID);
+  if (strcmp(owner_id, req->client_info->user_id) != 0)
+  {
+    ks_hashmap_delete(community_info);
+    return get_edit_community_internal(NULL, community_id, COMMUNITY_FORM_ERR_MOD_OWNER_ONLY, req->client_info);
+  }
+  ks_hashmap_delete(community_info);
+
+  // check if user exists
+  ks_hashmap* user_info;
+  if ((user_info = query_user_by_name(user_name)) == NULL)
+  {
+    return get_edit_community_internal(NULL, community_id, COMMUNITY_FORM_ERR_MOD_USER_NOT_EXIST, req->client_info);
+  }
+
+  // check if user is already a mod
+  const char* user_id = get_map_value_str(user_info, FIELD_USER_ID);
+  ks_hashmap* mod_info;
+  if ((mod_info = query_moderator_by_community_id_user_id(community_id, user_id)) != NULL)
+  {
+    ks_hashmap_delete(user_info);
+    ks_hashmap_delete(mod_info);
+    return get_edit_community_internal(NULL, community_id, COMMUNITY_FORM_ERR_MOD_USER_ALREADY, req->client_info);
+  }
+
+  // add mod entry to DB
+  if (sql_create_moderator(user_id, community_id) == -1)
+  {
+    ks_hashmap_delete(user_info);
+    return response_error(STAT500);
+  }
+  ks_hashmap_delete(user_info);
+
+  char uri[64];
+  sprintf(uri, "/community?id=%s", community_id);
+  return response_redirect(uri);
+}

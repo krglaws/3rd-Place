@@ -14,10 +14,22 @@
 
       <div class="form-container">
 	      <div class="form-error"><<OPT_EDIT_COMMUNITY_FORM_ERR>></div>
-        <form id="form" class="form-body" action="/update_community" method="post">
+        <form action="/update_community_about" method="post">
           <input type="hidden" name="id" value="<<COMMUNITY_ID>>">
           <label for="about">Edit about:</label><br>
-          <textarea id="about" name="about" maxlength="512" placeholder="512 character limit" rows="6"><<OPT_SUBMITTED_COMMUNITY_ABOUT>></textarea><br>
+          <textarea id="about" autofocus name="about" maxlength="512" placeholder="512 character limit" rows="6"><<OPT_SUBMITTED_COMMUNITY_ABOUT>></textarea><br>
+          <input type="submit" value="Submit"><br>
+        </form>
+      </div>
+
+      <br>
+
+      <div class="form-container">
+        <div class="form-error"><<OPT_NEW_MOD_FORM_ERR>></div>
+        <form action="/new_moderator" method="post">
+          <input type="hidden" name="id" value="<<COMMUNITY_ID>>">
+          <label for="name">Add new moderator:</label><br>
+          <input type="text" id="name" name="name" maxlength="16" placeholder="User name"><br>
           <input type="submit" value="Submit"><br>
         </form>
       </div>

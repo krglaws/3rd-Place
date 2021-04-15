@@ -20,4 +20,6 @@ struct response* new_post(const struct request* req);
 
 struct response* new_community(const struct request* req);
 
+struct response* new_moderator(const struct request* req);
+
 #endif

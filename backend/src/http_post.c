@@ -29,6 +29,7 @@ void init_http_post()
   add_map_value_vp(endpoints, "./new_comment", &new_comment);
   add_map_value_vp(endpoints, "./new_post", &new_post);
   add_map_value_vp(endpoints, "./new_community", &new_community);
+  add_map_value_vp(endpoints, "./new_moderator", &new_moderator);
 
   // from post_update.c
   add_map_value_vp(endpoints, "./update_user_about", &update_user_about);

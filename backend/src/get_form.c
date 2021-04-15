@@ -649,6 +649,15 @@ struct response* get_edit_community_internal(const char* submitted_about, const 
     case COMMUNITY_FORM_ERR_ABOUT_INV_ENC:
       add_map_value_str(page_data, EDIT_COMMUNITY_FORM_ERR_KEY, "Community about contains invalid character encoding");
       break;
+    case COMMUNITY_FORM_ERR_MOD_USER_NOT_EXIST:
+      add_map_value_str(page_data, NEW_MOD_FORM_ERR_KEY, "User not found");
+      break;
+    case COMMUNITY_FORM_ERR_MOD_USER_ALREADY:
+      add_map_value_str(page_data, NEW_MOD_FORM_ERR_KEY, "User is already a moderator of this community");
+      break;
+    case COMMUNITY_FORM_ERR_MOD_OWNER_ONLY:
+      add_map_value_str(page_data, NEW_MOD_FORM_ERR_KEY, "Only the community owner can add moderators");
+      break;
     default:
       log_crit("get_new_community(): invalid community form error: %d", err);
   }
