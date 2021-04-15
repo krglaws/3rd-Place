@@ -425,9 +425,9 @@ ks_hashmap* query_moderator_by_community_id_user_id(const char* community_id, co
 }
 
 static MYSQL_STMT* stmt_create_moderator = NULL;
-char* sql_create_moderator(const char* user_id, const char* community_id)
+int sql_create_moderator(const char* user_id, const char* community_id)
 {
-  return sql_function(stmt_create_moderator, user_id, community_id);
+  return sql_procedure(stmt_create_moderator, user_id, community_id);
 }
 
 static MYSQL_STMT* stmt_delete_moderator = NULL;
@@ -471,18 +471,6 @@ ks_hashmap* query_administrator_by_user_id(const char* user_id)
   ks_list_delete(ls);
 
   return row0;
-}
-
-static MYSQL_STMT* stmt_create_administrator = NULL;
-char* sql_create_administrator(const char* user_id)
-{
-  return sql_function(stmt_create_administrator, user_id);
-}
-
-static MYSQL_STMT* stmt_delete_administrator = NULL;
-int sql_delete_administrator(const char* user_id)
-{
-  return sql_procedure(stmt_delete_administrator, user_id);
 }
 
 
@@ -839,7 +827,7 @@ void init_sql_manager()
   stmt_query_community_by_name = build_prepared_statement(sqlcon, "SELECT * FROM communities WHERE name = ? AND NOT name = '[deleted]';");
   stmt_query_all_communities = build_prepared_statement(sqlcon, "SELECT * FROM communities WHERE NOT id = 1;");
   stmt_create_community = build_prepared_statement(sqlcon, "SELECT CreateCommunity(?, ?, ?);");
-  stmt_update_community_about = build_prepared_statement(sqlcon, "CALL UpdateCommunity(?, ?);");
+  stmt_update_community_about = build_prepared_statement(sqlcon, "CALL UpdateCommunityAbout(?, ?);");
   stmt_delete_community = build_prepared_statement(sqlcon, "CALL DeleteCommunity(?);");
 
   // moderators
@@ -849,8 +837,6 @@ void init_sql_manager()
 
   // administrators
   stmt_query_administrator_by_user_id = build_prepared_statement(sqlcon, "SELECT * FROM administrators WHERE user_id = ?;");
-  stmt_create_administrator = build_prepared_statement(sqlcon, "INSERT INTO administrators (user_id) VALUES (?);");
-  stmt_delete_administrator = build_prepared_statement(sqlcon, "DELETE FROM administrators WHERE user_id = ?;");
 
   // subscriptions
   stmt_query_subscription_by_community_id_user_id = build_prepared_statement(sqlcon, "SELECT * FROM subscriptions WHERE community_id = ? AND user_id = ?;");
@@ -917,8 +903,6 @@ static void terminate_sql_manager()
 
   // administrators
   mysql_stmt_close(stmt_query_administrator_by_user_id);
-  mysql_stmt_close(stmt_create_administrator);
-  mysql_stmt_close(stmt_delete_administrator);
 
   // subscriptions
   mysql_stmt_close(stmt_query_subscription_by_community_id_user_id);

@@ -234,7 +234,6 @@ int sql_update_community_about(const char* community_id, const char* about);
 int sql_delete_community(const char* community_id);
 
 int sql_delete_moderator(const char* community_id, const char* user_id);
-
-int sql_delete_administrator(const char* user_id);
+int sql_create_moderator(const char* user_id, const char* community_id);
 
 #endif
