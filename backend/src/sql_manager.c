@@ -1073,8 +1073,8 @@ static ks_list* sql_select(const struct table_info* table_info, MYSQL_STMT* stmt
       }
     }
 
-    ks_hashmap* row = ks_hashmap_new(KS_CHARP, num_cols);
-    ks_list_add(result, ks_datacont_new(row, KS_HASHMAP, num_cols));
+    ks_hashmap* row = ks_hashmap_new(KS_CHARP, num_cols * 2);
+    ks_list_add(result, ks_datacont_new(row, KS_HASHMAP, num_cols * 2));
 
     for (int j = 0; j < num_cols; j++)
     {
