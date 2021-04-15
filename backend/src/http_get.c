@@ -35,6 +35,7 @@ void init_http_get()
   add_map_value_vp(endpoints, "./home", &get_home);
   add_map_value_vp(endpoints, "./all", &get_all);
   add_map_value_vp(endpoints, "./communities", &get_communities);
+  add_map_value_vp(endpoints, "./subscriptions", &get_subscriptions);
 
   // from get_user.c 
   add_map_value_vp(endpoints, "./user", &get_user);

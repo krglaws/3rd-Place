@@ -101,7 +101,7 @@
 #define POST_COMMENT_LIST_KEY (OPTIONAL_PREFIX "POST_COMMENT_LIST")
 
 /* Feed HTML keys */
-#define FEED_ITEM_LIST_KEY (OPTIONAL_PREFIX "FEED_ITEM_LIST")
+#define FEED_ITEM_LIST_KEY "FEED_ITEM_LIST"
 #define FEED_TITLE_KEY "FEED_TITLE"
 
 char* build_template(const ks_hashmap* hm);

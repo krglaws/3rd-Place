@@ -19,7 +19,6 @@ enum feed_type
 
 static struct response* get_feed(const enum feed_type ft, const struct auth_token* client_info);
 
-
 static ks_list* wrap_posts(ks_list* posts, const struct auth_token* client_info)
 {
   if (posts == NULL)
@@ -121,6 +120,13 @@ static struct response* get_feed(const enum feed_type ft, const struct auth_toke
   {
     add_map_value_ls(page_data, FEED_ITEM_LIST_KEY, posts);
   }
+  else
+  {
+    char* empty_msg = ft == HOME_FEED ?
+    "<p>Subscribe to some communities to see posts here.</p>" :
+    "<p>Nothing to see here...</p>";
+    add_map_value_str(page_data, FEED_ITEM_LIST_KEY, empty_msg);
+  }
 
   // put page data together
   page_data = wrap_page_data(client_info, page_data);
@@ -152,30 +158,89 @@ struct response* get_all(const struct request* req)
 
 struct response* get_communities(const struct request* req)
 {
-  // query communities and sort
-  ks_list* communities = query_all_communities();
-  communities = sort_items(communities, COMMUNITY_ITEM);
-
-  // add html template path to each community
-  const ks_datacont* curr;
-  ks_iterator* iter = ks_iterator_new(communities, KS_LIST);
-  while ((curr = ks_iterator_next(iter)) != NULL)
-  {
-    add_map_value_str(curr->hm, TEMPLATE_PATH_KEY, HTML_FEED_COMMUNITY);
-  }
-  ks_iterator_delete(iter);
-
-  // build feed data
-  ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 4);
+  // build page data
+  ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 8);
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_FEED);
   add_map_value_str(page_data, FEED_TITLE_KEY, "Communities");
-  add_map_value_ls(page_data, FEED_ITEM_LIST_KEY, communities);
   add_map_value_str(page_data, NEW_OPTION_VISIBILITY_KEY, "visible");
+
+  // query communities and sort
+  ks_list* communities;
+  if ((communities = query_all_communities()) != NULL)
+  {
+    communities = sort_items(communities, COMMUNITY_ITEM);
+    add_map_value_ls(page_data, FEED_ITEM_LIST_KEY, communities);
+
+    // add html template path to each community
+    const ks_datacont* curr;
+    ks_iterator* iter = ks_iterator_new(communities, KS_LIST);
+    while ((curr = ks_iterator_next(iter)) != NULL)
+    {
+      add_map_value_str(curr->hm, TEMPLATE_PATH_KEY, HTML_FEED_COMMUNITY);
+    }
+    ks_iterator_delete(iter);
+  }
+  else
+  {
+    add_map_value_str(page_data, FEED_ITEM_LIST_KEY, "<p>Nothing to see here...</p>");
+  }
 
   // put page data together
   page_data = wrap_page_data(req->client_info, page_data);
 
   // build content
+  char* content;
+  if ((content = build_template(page_data)) == NULL)
+  {
+    ks_hashmap_delete(page_data);
+    return response_error(STAT500);
+  }
+  ks_hashmap_delete(page_data);
+
+  return response_ok(content);
+}
+
+
+struct response* get_subscriptions(const struct request* req)
+{
+  if (req->client_info == NULL)
+  {
+    return response_redirect("/login");
+  }
+
+  ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 8);
+  add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_FEED);
+  add_map_value_str(page_data, FEED_TITLE_KEY, "Subscriptions");
+  add_map_value_str(page_data, NEW_OPTION_VISIBILITY_KEY, "visible");
+
+  // query user subscriptions
+  ks_list* subs;
+  if ((subs = query_subscriptions_by_user_id(req->client_info->user_id)) != NULL)
+  {
+    // get each community and store into list
+    ks_list* communities = ks_list_new();
+
+    const ks_datacont* curr;
+    ks_iterator* iter = ks_iterator_new(subs, KS_LIST);
+    while ((curr = ks_iterator_next(iter)) != NULL)
+    {
+      const char* community_id = get_map_value_str(curr->hm, FIELD_SUB_COMMUNITY_ID);
+      ks_hashmap* curr_community = query_community_by_id(community_id);
+      add_map_value_str(curr_community, TEMPLATE_PATH_KEY, HTML_FEED_COMMUNITY);
+      ks_list_add(communities, ks_datacont_new(curr_community, KS_HASHMAP, 8));
+    }
+    ks_iterator_delete(iter);
+    ks_list_delete(subs);
+
+    add_map_value_ls(page_data, FEED_ITEM_LIST_KEY, communities);
+  }
+  else
+  {
+    add_map_value_str(page_data, FEED_ITEM_LIST_KEY, "<p>Nothing to see here...</p>");
+  }
+
+  page_data = wrap_page_data(req->client_info, page_data);
+
   char* content;
   if ((content = build_template(page_data)) == NULL)
   {

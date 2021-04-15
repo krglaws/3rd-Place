@@ -10,4 +10,6 @@ struct response* get_all(const struct request* req);
 
 struct response* get_communities(const struct request* req);
 
+struct response* get_subscriptions(const struct request* req);
+
 #endif
