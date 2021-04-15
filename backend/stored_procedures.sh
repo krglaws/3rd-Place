@@ -431,6 +431,9 @@ BEGIN
   UPDATE posts SET community_id = 1, community_name = "[deleted]" WHERE community_id = cid;
   UPDATE comments SET community_id = 1, community_name = "[deleted]" WHERE community_id = cid;
 
+  # delete subscriptions
+  DELETE FROM subscriptions WHERE community_id = cid;
+
   # delete moderators
   DELETE FROM moderators WHERE community_id = cid;
 
