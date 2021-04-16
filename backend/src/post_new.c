@@ -418,11 +418,18 @@ struct response* new_community(const struct request* req)
       log_crit("post_community(): unexpected validation result value for commuity about: '%s', errno: %d", community_about, valres);
   }
 
+  // create community
   char* community_id;
   if ((community_id = sql_create_community(req->client_info->user_id, community_name, about_decoded)) == NULL)
   {
     log_err("post_community(): failed on call to sql_create_community()");
     return response_error(STAT500);
+  }
+
+  // subscribe to community
+  if (sql_toggle_subscription(community_id, req->client_info->user_id) == -1)
+  {
+    log_err("post_community(): failed on call to sql_toggle_subscription()");
   }
 
   // build post URI
