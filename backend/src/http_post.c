@@ -43,6 +43,7 @@ void init_http_post()
   add_map_value_vp(endpoints, "./delete_post", &delete_post);
   add_map_value_vp(endpoints, "./delete_comment", &delete_comment);
   add_map_value_vp(endpoints, "./delete_community", &delete_community);
+  add_map_value_vp(endpoints, "./delete_moderator", &delete_moderator);
 
   atexit(&terminate_http_post);
 }

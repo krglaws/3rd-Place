@@ -233,3 +233,50 @@ struct response* delete_community(const struct request* req)
   // redirect to post page
   return response_redirect("/communities");
 }
+
+
+struct response* delete_moderator(const struct request* req)
+{
+  if (req->client_info == NULL)
+  {
+    return response_redirect("/login");
+  }
+
+  const char* community_id = get_map_value_str(req->query, "cid");
+  const char* user_id = get_map_value_str(req->query, "uid");
+
+  // make sure community exists
+  ks_hashmap* community_info;
+  if ((community_info = query_community_by_id(community_id)) == NULL)
+  {
+    return response_error(STAT404);
+  }
+
+  // make sure client is owner
+  const char* owner_id = get_map_value_str(community_info, FIELD_COMMUNITY_OWNER_ID);
+  if (strcmp(req->client_info->user_id, owner_id) != 0)
+  {
+    ks_hashmap_delete(community_info);
+    return response_error(STAT403);
+  }
+  ks_hashmap_delete(community_info);
+
+  // check if moderator exists
+  ks_hashmap* mod_info;
+  if ((mod_info = query_moderator_by_community_id_user_id(community_id, user_id)) == NULL)
+  {
+    return response_error(STAT404);
+  }
+  ks_hashmap_delete(mod_info);
+
+  // delete mod
+  if (sql_delete_moderator(user_id, community_id) == -1)
+  {
+    log_err("delete_moderator(): failed on call to sql_delete_moderator(): user_id=%s, community_id=%s", user_id, community_id);
+    return response_error(STAT500);
+  }
+
+  char uri[64];
+  sprintf(uri, "/community?id=%s", community_id);
+  return response_redirect(uri);
+}

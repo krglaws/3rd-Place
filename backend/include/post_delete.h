@@ -12,4 +12,6 @@ struct response* delete_comment(const struct request* req);
 
 struct response* delete_community(const struct request* req);
 
+struct response* delete_moderator(const struct request* req);
+
 #endif
