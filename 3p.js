@@ -142,6 +142,42 @@ function deleteObject(objType, id) {
 }
 
 
+function deleteModerator(user_id, community_id) {
+
+  if (confirm("Are you sure you want to remove this moderator?") == false) {
+    return;
+  }
+
+  fetch("/delete_moderator?uid="+user_id+"&cid="+community_id, {
+    method: "POST"
+  }).then(response => {
+    if (response.redirected) {
+      window.history.pushState("", "", response.url);
+      return response.text();
+    }
+    else if (response.status == 403) {
+      alert("permission denied");
+      return null;
+    }
+    else if (response.status == 404) {
+      alert(objType+" does not exist");
+      return null;
+    }
+    else {
+      console.log(response);
+      alert("Error");
+      return null;
+    }
+  }).then(data => {
+    if (data != null) {
+      var tempDom = new DOMParser()
+      .parseFromString(data, "text/html");
+      document.body.innerHTML = tempDom.body.innerHTML;
+    }
+  });
+}
+
+
 function findSibling(arrow, upOrDown) {
 
   var voteWrapper = arrow.parentElement.parentElement;

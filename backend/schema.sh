@@ -64,7 +64,9 @@ CREATE TABLE IF NOT EXISTS $DBNAME.communities(
 CREATE TABLE IF NOT EXISTS $DBNAME.moderators(
   id INT NOT NULL AUTO_INCREMENT,
   user_id INT NOT NULL,
+  user_name VARCHAR(16) NOT NULL,
   community_id INT NOT NULL,
+  community_name VARCHAR(16) NOT NULL,
   PRIMARY KEY (id)
 );
 

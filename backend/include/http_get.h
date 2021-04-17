@@ -23,6 +23,7 @@
 #define HTML_POST "templates/post/post.html"
 #define HTML_POST_COMMENT "templates/post/comment.html"
 #define HTML_COMMUNITY "templates/community/community.html"
+#define HTML_COMMUNITY_MOD_ENTRY "templates/community/mod_entry.html"
 #define HTML_COMMUNITY_POST "templates/community/post.html"
 #define HTML_FEED "templates/feed/feed.html"
 #define HTML_FEED_POST "templates/feed/post.html"

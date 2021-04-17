@@ -283,6 +283,26 @@ BEGIN
 END;$$
 
 
+DROP FUNCTION IF EXISTS CreateModerator;
+CREATE FUNCTION CreateModerator(uid INT, cid INT)
+RETURNS INT
+BEGIN
+
+  DECLARE uname VARCHAR(16);
+  DECLARE cname VARCHAR(16);
+
+  # get names
+  SELECT name INTO uname FROM users WHERE id = uid;
+  SELECT name INTO cname FROM communities WHERE id = cid;
+
+  INSERT INTO moderators (user_id, user_name, community_id, community_name)
+  VALUES (uid, uname, cid, cname);
+
+  RETURN LAST_INSERT_ID();
+
+END;$$
+
+
 ###################
 # Update procedures
 ###################
@@ -439,6 +459,15 @@ BEGIN
 
   # delete community
   DELETE FROM communities WHERE id = cid;
+
+END;$$
+
+
+DROP PROCEDURE IF EXISTS DeleteModerator;
+CREATE PROCEDURE DeleteModerator (uid INT, cid INT) NOT DETERMINISTIC
+BEGIN
+
+  DELETE FROM moderators WHERE user_id = uid AND community_id = cid;
 
 END;$$
 

@@ -391,14 +391,18 @@ static const char* moderators_field_table[MODERATORS_NUM_FIELDS] =
 {
   FIELD_MODERATOR_ID,
   FIELD_MODERATOR_USER_ID,
-  FIELD_MODERATOR_COMMUNITY_ID
+  FIELD_MODERATOR_USER_NAME,
+  FIELD_MODERATOR_COMMUNITY_ID,
+  FIELD_MODERATOR_COMMUNITY_NAME
 };
 
 static const int moderators_field_lengths[MODERATORS_NUM_FIELDS] =
 {
   INT_BUF_LEN,
   INT_BUF_LEN,
-  INT_BUF_LEN
+  USER_NAME_BUF_LEN,
+  INT_BUF_LEN,
+  COMMUNITY_NAME_BUF_LEN
 };
 
 static const struct table_info moderators_table_info =
@@ -406,6 +410,12 @@ static const struct table_info moderators_table_info =
   moderators_field_table,
   moderators_field_lengths
 };
+
+static MYSQL_STMT* stmt_query_moderators_by_community_id = NULL;
+ks_list* query_moderators_by_community_id(const char* community_id)
+{
+  return sql_select(&moderators_table_info, stmt_query_moderators_by_community_id, community_id);
+}
 
 static MYSQL_STMT* stmt_query_moderator_by_community_id_user_id = NULL;
 ks_hashmap* query_moderator_by_community_id_user_id(const char* community_id, const char* user_id)
@@ -831,9 +841,10 @@ void init_sql_manager()
   stmt_delete_community = build_prepared_statement(sqlcon, "CALL DeleteCommunity(?);");
 
   // moderators
+  stmt_query_moderators_by_community_id = build_prepared_statement(sqlcon, "SELECT * FROM moderators WHERE community_id = ?;");
   stmt_query_moderator_by_community_id_user_id = build_prepared_statement(sqlcon, "SELECT * FROM moderators WHERE community_id = ? AND user_id = ?;");
-  stmt_create_moderator = build_prepared_statement(sqlcon, "INSERT INTO moderators (user_id, community_id) VALUES (?, ?);");
-  stmt_delete_moderator = build_prepared_statement(sqlcon, "DELETE FROM moderators WHERE community_id = ? AND user_id = ?;");
+  stmt_create_moderator = build_prepared_statement(sqlcon, "SELECT CreateModerator(?, ?)");
+  stmt_delete_moderator = build_prepared_statement(sqlcon, "CALL DeleteModerator(?, ?)");
 
   // administrators
   stmt_query_administrator_by_user_id = build_prepared_statement(sqlcon, "SELECT * FROM administrators WHERE user_id = ?;");
@@ -897,6 +908,7 @@ static void terminate_sql_manager()
   mysql_stmt_close(stmt_delete_community);
 
   // moderators
+  mysql_stmt_close(stmt_query_moderators_by_community_id);
   mysql_stmt_close(stmt_query_moderator_by_community_id_user_id);
   mysql_stmt_close(stmt_create_moderator);
   mysql_stmt_close(stmt_delete_moderator);

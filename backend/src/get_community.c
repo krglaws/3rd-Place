@@ -66,6 +66,29 @@ static ks_list* get_community_posts(const char* community_id, const struct auth_
 }
 
 
+static ks_list* get_community_moderators(const char* community_id, bool is_owner)
+{
+  ks_list* mod_list;
+  if ((mod_list = query_moderators_by_community_id(community_id)) == NULL)
+  {
+    return NULL;
+  }
+
+  char* vis_key = is_owner ? "visible" : "hidden";
+
+  const ks_datacont* curr;
+  ks_iterator* iter = ks_iterator_new(mod_list, KS_LIST);
+  while ((curr = ks_iterator_next(iter)) != NULL)
+  {
+    add_map_value_str(curr->hm, TEMPLATE_PATH_KEY, HTML_COMMUNITY_MOD_ENTRY);
+    add_map_value_str(curr->hm, DELETE_OPTION_VISIBILITY_KEY, vis_key);
+  }
+  ks_iterator_delete(iter);
+
+  return mod_list;
+}
+
+
 struct response* get_community(const struct request* req)
 {
   const char* community_id = get_map_value_str(req->query, "id");
@@ -114,7 +137,7 @@ struct response* get_community(const struct request* req)
     add_map_value_ls(page_data, COMMUNITY_POST_LIST_KEY, community_posts);
   }
 
-  bool can_delete = false;
+  bool is_owner = false;
   char* edit_vis = "hidden"; 
   char* delete_vis = "hidden";
   if (req->client_info != NULL)
@@ -122,20 +145,34 @@ struct response* get_community(const struct request* req)
     const char* owner_id = get_map_value_str(page_data, FIELD_COMMUNITY_OWNER_ID);
 
     ks_hashmap* admin_info;
-    if ((admin_info = query_administrator_by_user_id(req->client_info->user_id)) != NULL ||
-         strcmp(owner_id, req->client_info->user_id) == 0)
+
+    // check if client is owner
+    if (strcmp(owner_id, req->client_info->user_id) == 0)
     {
-      ks_hashmap_delete(admin_info);
       edit_vis = "visible";
       delete_vis = "visible";
+      is_owner = true;
     }
-    else if (can_delete)
+    // check if client is admin
+    else if ((admin_info = query_administrator_by_user_id(req->client_info->user_id)) != NULL)
     {
+      ks_hashmap_delete(admin_info);
       delete_vis = "visible";
     }
   }
   add_map_value_str(page_data, EDIT_OPTION_VISIBILITY_KEY, edit_vis);
   add_map_value_str(page_data, DELETE_OPTION_VISIBILITY_KEY, delete_vis);
+
+  // get community moderators
+  ks_list* community_mods;
+  if ((community_mods = get_community_moderators(community_id, is_owner)) != NULL)
+  {
+    add_map_value_ls(page_data, COMMUNITY_MOD_LIST_KEY, community_mods);
+  }
+  else
+  {
+    add_map_value_str(page_data, COMMUNITY_MOD_LIST_KEY, "No moderators yet<br>");
+  }
 
   // put page data together
   page_data = wrap_page_data(req->client_info, page_data);

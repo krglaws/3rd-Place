@@ -53,10 +53,12 @@
 
 
 /* moderator sql field names */
-#define MODERATORS_NUM_FIELDS          (3)
-#define FIELD_MODERATOR_ID             "MODERATOR_ID"
-#define FIELD_MODERATOR_USER_ID        "MODERATOR_USER_ID"
-#define FIELD_MODERATOR_COMMUNITY_ID   "MODERATOR_COMMUNITY_ID"
+#define MODERATORS_NUM_FIELDS            (5)
+#define FIELD_MODERATOR_ID               "MODERATOR_ID"
+#define FIELD_MODERATOR_USER_ID          "MODERATOR_USER_ID"
+#define FIELD_MODERATOR_USER_NAME        "MODERATOR_USER_NAME"
+#define FIELD_MODERATOR_COMMUNITY_ID     "MODERATOR_COMMUNITY_ID"
+#define FIELD_MODERATOR_COMMUNITY_NAME   "MODERATOR_COMMUNITY_NAME"
 
 
 /* administrator sql fields */
@@ -65,7 +67,7 @@
 
 
 /* subscription field names */
-#define SUBSCRIPTIONS_NUM_FIELDS     (5)
+#define SUBSCRIPTIONS_NUM_FIELDS     (3)
 #define FIELD_SUB_ID                 "SUB_ID"
 #define FIELD_SUB_USER_ID            "SUB_USER_ID"
 #define FIELD_SUB_COMMUNITY_ID       "SUB_COMMUNITY_ID"
@@ -174,6 +176,8 @@ ks_hashmap* query_community_by_name(const char* community_name);
 
 ks_list* query_all_communities();
 
+ks_list* query_moderators_by_community_id(const char* community_id);
+
 ks_hashmap* query_moderator_by_community_id_user_id(const char* community_id, const char* user_id);
 
 ks_hashmap* query_administrator_by_user_id(const char* user_id);
@@ -233,7 +237,7 @@ int sql_delete_post(const char* post_id);
 int sql_update_community_about(const char* community_id, const char* about);
 int sql_delete_community(const char* community_id);
 
-int sql_delete_moderator(const char* community_id, const char* user_id);
+int sql_delete_moderator(const char* user_id, const char* community_id);
 int sql_create_moderator(const char* user_id, const char* community_id);
 
 #endif
