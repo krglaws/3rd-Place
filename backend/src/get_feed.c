@@ -116,15 +116,20 @@ static struct response* get_feed(const enum feed_type ft, const struct auth_toke
     posts = sort_items(posts, POST_ITEM);
   }
 
-  if ((posts = wrap_posts(posts, client_info)) != NULL)
+  if (posts != NULL && ks_list_length(posts) > 0)
   {
+    posts = wrap_posts(posts, client_info);
     add_map_value_ls(page_data, FEED_ITEM_LIST_KEY, posts);
   }
   else
   {
+    if (posts != NULL)
+    {
+      ks_list_delete(posts);
+    }
     char* empty_msg = ft == HOME_FEED ?
-    "<p>Subscribe to some communities to see posts here.</p>" :
-    "<p>Nothing to see here...</p>";
+    "<p><em>Subscribe to some communities to see posts here.</em></p>" :
+    "<p><em>Nothing to see here...</em></p>";
     add_map_value_str(page_data, FEED_ITEM_LIST_KEY, empty_msg);
   }
 
@@ -182,7 +187,7 @@ struct response* get_communities(const struct request* req)
   }
   else
   {
-    add_map_value_str(page_data, FEED_ITEM_LIST_KEY, "<p>Nothing to see here...</p>");
+    add_map_value_str(page_data, FEED_ITEM_LIST_KEY, "<p><em>Nothing to see here...</em></p>");
   }
 
   // put page data together
@@ -236,7 +241,7 @@ struct response* get_subscriptions(const struct request* req)
   }
   else
   {
-    add_map_value_str(page_data, FEED_ITEM_LIST_KEY, "<p>Nothing to see here...</p>");
+    add_map_value_str(page_data, FEED_ITEM_LIST_KEY, "<p><em>Nothing to see here...</em></p>");
   }
 
   page_data = wrap_page_data(req->client_info, page_data);

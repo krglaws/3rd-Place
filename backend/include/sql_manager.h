@@ -176,9 +176,13 @@ ks_hashmap* query_community_by_name(const char* community_name);
 
 ks_list* query_all_communities();
 
+ks_list* query_communities_by_owner_id(const char* owner_id);
+
 ks_list* query_moderators_by_community_id(const char* community_id);
 
-ks_hashmap* query_moderator_by_community_id_user_id(const char* community_id, const char* user_id);
+ks_list* query_moderators_by_user_id(const char* community_id);
+
+ks_hashmap* query_moderator_by_user_id_community_id(const char* user_id, const char* community_id);
 
 ks_hashmap* query_administrator_by_user_id(const char* user_id);
 

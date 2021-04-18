@@ -25,10 +25,13 @@
 
     <div id="overview" class="user-tab-content-container">
       <div class="user-tab-content border-box">
-        <div class="user-info-item">Points: <<USER_POINTS>></div><br>
-        <div class="user-info-item">Posts: <<USER_POST_COUNT>></div><br>
-        <div class="user-info-item">Comments: <<USER_COMMENT_COUNT>></div><br>
-        <div class="user-info-item">Joined: <div class="utc-timestamp" style="display: inline;"><<USER_DATE_JOINED>></div></div>
+        <<OPT_USER_ADMIN>><br>
+        <<OPT_USER_OWNER_LIST>><br>
+        <<OPT_USER_MOD_LIST>><br>
+        <div class="user-info-item"><em>Points:</em> <<USER_POINTS>></div><br>
+        <div class="user-info-item"><em>Posts:</em> <<USER_POST_COUNT>></div><br>
+        <div class="user-info-item"><em>Comments:</em> <<USER_COMMENT_COUNT>></div><br>
+        <div class="user-info-item"><em>Joined:</em> <div class="utc-timestamp" style="display: inline;"><<USER_DATE_JOINED>></div></div>
       </div>
     </div>
 

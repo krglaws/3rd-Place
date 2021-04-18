@@ -610,7 +610,7 @@ struct response* get_edit_community_internal(const char* submitted_about, const 
   {
     // check if client is moderator of this community
     ks_hashmap* mod_info;
-    if ((mod_info = query_moderator_by_community_id_user_id(community_id, client_info->user_id)) == NULL)
+    if ((mod_info = query_moderator_by_user_id_community_id(client_info->user_id, community_id)) == NULL)
     {
       // check if client is an admin
       ks_hashmap* admin_info;

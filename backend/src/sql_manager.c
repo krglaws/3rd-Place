@@ -365,6 +365,12 @@ ks_list* query_all_communities()
   return sql_select(&communities_table_info, stmt_query_all_communities);
 }
 
+static MYSQL_STMT* stmt_query_communities_by_owner_id = NULL;
+ks_list* query_communities_by_owner_id(const char* owner_id)
+{
+  return sql_select(&communities_table_info, stmt_query_communities_by_owner_id, owner_id);
+}
+
 static MYSQL_STMT* stmt_create_community = NULL;
 char* sql_create_community(const char* user_id, const char* community_name, const char* about)
 {
@@ -417,11 +423,17 @@ ks_list* query_moderators_by_community_id(const char* community_id)
   return sql_select(&moderators_table_info, stmt_query_moderators_by_community_id, community_id);
 }
 
-static MYSQL_STMT* stmt_query_moderator_by_community_id_user_id = NULL;
-ks_hashmap* query_moderator_by_community_id_user_id(const char* community_id, const char* user_id)
+static MYSQL_STMT* stmt_query_moderators_by_user_id = NULL;
+ks_list* query_moderators_by_user_id(const char* user_id)
+{
+  return sql_select(&moderators_table_info, stmt_query_moderators_by_user_id, user_id);
+}
+
+static MYSQL_STMT* stmt_query_moderator_by_user_id_community_id = NULL;
+ks_hashmap* query_moderator_by_user_id_community_id(const char* user_id, const char* community_id)
 {
   ks_list* ls;
-  if ((ls = sql_select(&moderators_table_info, stmt_query_moderator_by_community_id_user_id, community_id, user_id)) == NULL)
+  if ((ls = sql_select(&moderators_table_info, stmt_query_moderator_by_user_id_community_id, user_id, community_id)) == NULL)
   {
     return NULL;
   }
@@ -836,13 +848,15 @@ void init_sql_manager()
   stmt_query_community_by_id = build_prepared_statement(sqlcon, "SELECT * FROM communities WHERE id = ? AND NOT id = 1;");
   stmt_query_community_by_name = build_prepared_statement(sqlcon, "SELECT * FROM communities WHERE name = ? AND NOT name = '[deleted]';");
   stmt_query_all_communities = build_prepared_statement(sqlcon, "SELECT * FROM communities WHERE NOT id = 1;");
+  stmt_query_communities_by_owner_id = build_prepared_statement(sqlcon, "SELECT * FROM communities WHERE owner_id = ?;");
   stmt_create_community = build_prepared_statement(sqlcon, "SELECT CreateCommunity(?, ?, ?);");
   stmt_update_community_about = build_prepared_statement(sqlcon, "CALL UpdateCommunityAbout(?, ?);");
   stmt_delete_community = build_prepared_statement(sqlcon, "CALL DeleteCommunity(?);");
 
   // moderators
   stmt_query_moderators_by_community_id = build_prepared_statement(sqlcon, "SELECT * FROM moderators WHERE community_id = ?;");
-  stmt_query_moderator_by_community_id_user_id = build_prepared_statement(sqlcon, "SELECT * FROM moderators WHERE community_id = ? AND user_id = ?;");
+  stmt_query_moderators_by_user_id = build_prepared_statement(sqlcon, "SELECT * FROM moderators WHERE user_id = ?;");
+  stmt_query_moderator_by_user_id_community_id = build_prepared_statement(sqlcon, "SELECT * FROM moderators WHERE user_id = ? AND community_id = ?;");
   stmt_create_moderator = build_prepared_statement(sqlcon, "SELECT CreateModerator(?, ?)");
   stmt_delete_moderator = build_prepared_statement(sqlcon, "CALL DeleteModerator(?, ?)");
 
@@ -903,13 +917,15 @@ static void terminate_sql_manager()
   mysql_stmt_close(stmt_query_community_by_id);
   mysql_stmt_close(stmt_query_community_by_name);
   mysql_stmt_close(stmt_query_all_communities);
+  mysql_stmt_close(stmt_query_communities_by_owner_id);
   mysql_stmt_close(stmt_create_community);
   mysql_stmt_close(stmt_update_community_about);
   mysql_stmt_close(stmt_delete_community);
 
   // moderators
   mysql_stmt_close(stmt_query_moderators_by_community_id);
-  mysql_stmt_close(stmt_query_moderator_by_community_id_user_id);
+  mysql_stmt_close(stmt_query_moderators_by_user_id);
+  mysql_stmt_close(stmt_query_moderator_by_user_id_community_id);
   mysql_stmt_close(stmt_create_moderator);
   mysql_stmt_close(stmt_delete_moderator);
 

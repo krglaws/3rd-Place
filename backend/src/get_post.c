@@ -129,7 +129,7 @@ struct response* get_post(const struct request* req)
     const char* community_id = get_map_value_str(page_data, FIELD_POST_COMMUNITY_ID);
     ks_hashmap* community_info = query_community_by_id(community_id);
     const char* owner_id = get_map_value_str(community_info, FIELD_COMMUNITY_OWNER_ID);
-    ks_hashmap* mod_info = query_moderator_by_community_id_user_id(community_id, req->client_info->user_id);
+    ks_hashmap* mod_info = query_moderator_by_user_id_community_id(req->client_info->user_id, community_id);
     ks_hashmap* admin_info = query_administrator_by_user_id(req->client_info->user_id);
 
     can_delete = (mod_info != NULL) || (admin_info != NULL) || (strcmp(owner_id, req->client_info->user_id) == 0);

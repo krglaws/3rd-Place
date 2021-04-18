@@ -477,7 +477,7 @@ struct response* new_moderator(const struct request* req)
   // check if user is already a mod
   const char* user_id = get_map_value_str(user_info, FIELD_USER_ID);
   ks_hashmap* mod_info;
-  if ((mod_info = query_moderator_by_community_id_user_id(community_id, user_id)) != NULL)
+  if ((mod_info = query_moderator_by_user_id_community_id(user_id, community_id)) != NULL)
   {
     ks_hashmap_delete(user_info);
     ks_hashmap_delete(mod_info);

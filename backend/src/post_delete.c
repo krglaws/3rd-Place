@@ -80,7 +80,7 @@ struct response* delete_post(const struct request* req)
   {
     // check if client is a moderator
     ks_hashmap* mod_info;
-    if ((mod_info = query_moderator_by_community_id_user_id(community_id, req->client_info->user_id)) == NULL)
+    if ((mod_info = query_moderator_by_user_id_community_id(req->client_info->user_id, community_id)) == NULL)
     {
       // check if client is an administrator
       ks_hashmap* admin_info;
@@ -145,7 +145,7 @@ struct response* delete_comment(const struct request* req)
     // check if client is a moderator
     ks_hashmap* mod_info;
     const char* community_id = get_map_value_str(comment_info, FIELD_COMMENT_COMMUNITY_ID);
-    if ((mod_info = query_moderator_by_community_id_user_id(community_id, req->client_info->user_id)) == NULL)
+    if ((mod_info = query_moderator_by_user_id_community_id(req->client_info->user_id, community_id)) == NULL)
     {
       // check if client is an administrator
       ks_hashmap* admin_info;
@@ -263,7 +263,7 @@ struct response* delete_moderator(const struct request* req)
 
   // check if moderator exists
   ks_hashmap* mod_info;
-  if ((mod_info = query_moderator_by_community_id_user_id(community_id, user_id)) == NULL)
+  if ((mod_info = query_moderator_by_user_id_community_id(user_id, community_id)) == NULL)
   {
     return response_error(STAT404);
   }

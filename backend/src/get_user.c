@@ -121,6 +121,46 @@ static ks_list* get_user_comments(const char* user_id, const struct auth_token* 
 }
 
 
+static ks_list* get_user_owner_list(const char* user_id)
+{
+  ks_list* owner_list;
+  if ((owner_list = query_communities_by_owner_id(user_id)) == NULL)
+  {
+    return NULL;
+  }
+
+  const ks_datacont* curr;
+  ks_iterator* iter = ks_iterator_new(owner_list, KS_LIST);
+  while ((curr = ks_iterator_next(iter)) != NULL)
+  {
+    add_map_value_str(curr->hm, TEMPLATE_PATH_KEY, HTML_USER_OWNER_TITLE);
+  }
+  ks_iterator_delete(iter);
+
+  return owner_list;
+}
+
+
+static ks_list* get_user_mod_list(const char* user_id)
+{
+  ks_list* mod_list;
+  if ((mod_list = query_moderators_by_user_id(user_id)) == NULL)
+  {
+    return NULL;
+  }
+
+  const ks_datacont* curr;
+  ks_iterator* iter = ks_iterator_new(mod_list, KS_LIST);
+  while ((curr = ks_iterator_next(iter)) != NULL)
+  {
+    add_map_value_str(curr->hm, TEMPLATE_PATH_KEY, HTML_USER_MOD_TITLE);
+  }
+  ks_iterator_delete(iter);
+
+  return mod_list;
+}
+
+
 struct response* get_user(const struct request* req)
 {
   const char* user_name = get_map_value_str(req->query, "name");
@@ -157,12 +197,42 @@ struct response* get_user(const struct request* req)
   {
     add_map_value_ls(page_data, USER_POST_LIST_KEY, posts);
   }
+  else
+  {
+    add_map_value_str(page_data, USER_POST_LIST_KEY, "<p><em>Nothing to see here...</em></p>");
+  }
 
   // get user comments
   ks_list* comments;
   if ((comments = get_user_comments(user_id, req->client_info)) != NULL)
   {
     add_map_value_ls(page_data, USER_COMMENT_LIST_KEY, comments);
+  }
+  else
+  {
+    add_map_value_str(page_data, USER_COMMENT_LIST_KEY, "<p><em>Nothing to see here...</em></p>");
+  }
+
+  // is user an admin?
+  ks_hashmap* admin_info;
+  if ((admin_info = query_administrator_by_user_id(user_id)) != NULL)
+  {
+    add_map_value_str(admin_info, TEMPLATE_PATH_KEY, HTML_USER_ADMIN_TITLE);
+    add_map_value_hm(page_data, USER_ADMIN_KEY, admin_info);
+  }
+
+  // get owned community list
+  ks_list* owner_list;
+  if ((owner_list = get_user_owner_list(user_id)) != NULL)
+  {
+    add_map_value_ls(page_data, USER_OWNER_LIST_KEY, owner_list);
+  }
+
+  // get moderator list
+  ks_list* mod_list;
+  if ((mod_list = get_user_mod_list(user_id)) != NULL)
+  {
+    add_map_value_ls(page_data, USER_MOD_LIST_KEY, mod_list);
   }
 
   // add css visibility values for user options
@@ -172,7 +242,7 @@ struct response* get_user(const struct request* req)
   char* sub_vis = "hidden";
   if (req->client_info != NULL)
   {
-    ks_hashmap* admin_info;
+    ks_hashmap* user_admin_info;
     if (strcmp(user_name, req->client_info->user_name) == 0)
     {
       edit_vis = "visible";
@@ -180,9 +250,10 @@ struct response* get_user(const struct request* req)
       delete_vis = "visible";
       sub_vis = "visible";
     }
-    else if ((admin_info = query_administrator_by_user_id(req->client_info->user_id)) != NULL)
+
+    else if ((user_admin_info = query_administrator_by_user_id(req->client_info->user_id)) != NULL)
     {
-      ks_hashmap_delete(admin_info);
+      ks_hashmap_delete(user_admin_info);
       delete_vis = "visible";
     }
   }

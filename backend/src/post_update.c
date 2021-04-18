@@ -257,7 +257,7 @@ struct response* update_community_about(const struct request* req)
   {
     // check if client is a mod
     ks_hashmap* mod_info;
-    if ((mod_info = query_moderator_by_community_id_user_id(community_id, req->client_info->user_id)) == NULL)
+    if ((mod_info = query_moderator_by_user_id_community_id(req->client_info->user_id, community_id)) == NULL)
     {
       // check if client is an admin
       ks_hashmap* admin_info;
