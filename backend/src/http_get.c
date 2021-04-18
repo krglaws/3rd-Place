@@ -116,7 +116,7 @@ static struct response* get_file(const char* uri)
   struct response* resp = calloc(1, sizeof(struct response));
 
   // expiration
-  char* expiry = "Cache-Control: public, max-age=0\r\n";
+  char* expiry = "Cache-Control: public, max-age=86400\r\n";
 
   // build response object
   char contlenline[80];

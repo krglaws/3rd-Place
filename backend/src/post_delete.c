@@ -207,7 +207,7 @@ struct response* delete_community(const struct request* req)
   const char* owner_id = get_map_value_str(community_info, FIELD_COMMUNITY_OWNER_ID);
 
   // verify client has permission
-  // check if client user id == author id 
+  // check if client user id == owner id 
   if (strcmp(owner_id, req->client_info->user_id) != 0)
   {
     // check if client is an administrator

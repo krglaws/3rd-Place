@@ -259,14 +259,8 @@ struct response* update_community_about(const struct request* req)
     ks_hashmap* mod_info;
     if ((mod_info = query_moderator_by_user_id_community_id(req->client_info->user_id, community_id)) == NULL)
     {
-      // check if client is an admin
-      ks_hashmap* admin_info;
-      if ((admin_info = query_administrator_by_user_id(req->client_info->user_id)) == NULL)
-      {
-        ks_hashmap_delete(community_info);
-        return response_error(STAT400);
-      }
-      ks_hashmap_delete(admin_info);
+      ks_hashmap_delete(community_info);
+      return response_error(STAT400);
     }
     ks_hashmap_delete(mod_info);
   }

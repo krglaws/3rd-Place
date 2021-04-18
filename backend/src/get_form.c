@@ -289,6 +289,14 @@ struct response* get_edit_post_internal(const char* submitted_body, const char* 
     return response_error(STAT404);
   }
 
+  // check if community has been deleted
+  const char* community_id = get_map_value_str(page_data, FIELD_POST_COMMUNITY_ID);
+  if (strcmp(community_id, "1") == 0)
+  {
+    ks_hashmap_delete(page_data);
+    return response_error(STAT403);
+  }
+
   // make sure client is the author
   const char* author_id = get_map_value_str(page_data, FIELD_POST_AUTHOR_ID);
   if (strcmp(client_info->user_id, author_id) != 0)
@@ -439,11 +447,19 @@ struct response* get_edit_comment_internal(const char* submitted_body, const cha
     return response_error(STAT500);
   }
 
+  // check if community has been deleted
+  const char* community_id = get_map_value_str(comment_info, FIELD_COMMENT_COMMUNITY_ID);
+  if (strcmp(community_id, "1") == 0)
+  {
+    ks_hashmap_delete(comment_info);
+    ks_hashmap_delete(page_data);
+    return response_error(STAT403);
+  }
+
   // check if post has been deleted
   const char* post_author_id = get_map_value_str(page_data, FIELD_POST_AUTHOR_ID);
   if (strcmp(post_author_id, "1") == 0)
   {
-    // can't edit comments belonging to deleted posts
     ks_hashmap_delete(comment_info);
     ks_hashmap_delete(page_data);
     return response_error(STAT403);
@@ -612,14 +628,8 @@ struct response* get_edit_community_internal(const char* submitted_about, const 
     ks_hashmap* mod_info;
     if ((mod_info = query_moderator_by_user_id_community_id(client_info->user_id, community_id)) == NULL)
     {
-      // check if client is an admin
-      ks_hashmap* admin_info;
-      if ((admin_info = query_administrator_by_user_id(client_info->user_id)) == NULL)
-      {
-        ks_hashmap_delete(page_data);
-        return response_error(STAT403);
-      }
-      else ks_hashmap_delete(admin_info);
+      ks_hashmap_delete(page_data);
+      return response_error(STAT403);
     }
     else ks_hashmap_delete(mod_info);
   }
