@@ -138,8 +138,8 @@ static struct response* get_file(const char* uri)
 
 enum vote_type check_for_vote(enum item_type item_type, const char* item_id, const char* user_id)
 {
-  ks_hashmap* up_vote;
-  ks_hashmap* down_vote;
+  ks_hashmap* up_vote = NULL;
+  ks_hashmap* down_vote = NULL;
 
   // are we looking for post votes or comment votes?
   if (item_type == POST_ITEM)

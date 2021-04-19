@@ -16,11 +16,11 @@
 
 struct response* get_login(const struct request* req)
 {
-  return get_login_internal(NULL, USER_FORM_ERR_NONE, req->client_info);
+  return get_login_internal(USER_FORM_ERR_NONE, req->client_info);
 }
 
 
-struct response* get_login_internal(const char* submitted_user_name, enum user_form_error err, const struct auth_token* client_info)
+struct response* get_login_internal(enum user_form_error err, const struct auth_token* client_info)
 {
   ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 8);
 
@@ -31,19 +31,11 @@ struct response* get_login_internal(const char* submitted_user_name, enum user_f
 
     if (err == USER_FORM_ERR_BAD_LOGIN)
     {
-      if (submitted_user_name != NULL)
-      {
-        add_map_value_str(page_data, SUBMITTED_LOGIN_UNAME_KEY, submitted_user_name);
-      }
       add_map_value_str(page_data, LOGIN_ERR_KEY, "Bad login");
     }
 
     else if (err != USER_FORM_ERR_NONE)
     {
-      if (submitted_user_name != NULL)
-      {
-        add_map_value_str(page_data, SUBMITTED_SIGNUP_UNAME_KEY, submitted_user_name);
-      }
       switch (err)
       {
         case USER_FORM_ERR_UNAME_TAKEN:
@@ -111,11 +103,11 @@ struct response* get_login_internal(const char* submitted_user_name, enum user_f
 
 struct response* get_edit_user(const struct request* req)
 {
-  return get_edit_user_internal(NULL, USER_FORM_ERR_NONE, req->client_info);
+  return get_edit_user_internal(USER_FORM_ERR_NONE, req->client_info);
 }
 
 
-struct response* get_edit_user_internal(const char* submitted_about, enum user_form_error err, const struct auth_token* client_info)
+struct response* get_edit_user_internal(enum user_form_error err, const struct auth_token* client_info)
 {
   if (client_info == NULL)
   {
@@ -138,10 +130,6 @@ struct response* get_edit_user_internal(const char* submitted_about, enum user_f
   }
   else
   {
-    if (submitted_about != NULL)
-    {
-      add_map_value_str(page_data, SUBMITTED_USER_ABOUT_KEY, submitted_about);
-    }
     switch (err)
     {
       case USER_FORM_ERR_BAD_LOGIN:
@@ -194,11 +182,11 @@ struct response* get_new_post(const struct request* req)
 {
   const char* community_id = get_map_value_str(req->query, "id");
 
-  return get_new_post_internal(NULL, NULL, community_id, POST_FORM_ERR_NONE, req->client_info);
+  return get_new_post_internal(community_id, POST_FORM_ERR_NONE, req->client_info);
 }
 
 
-struct response* get_new_post_internal(const char* submitted_title, const char* submitted_body, const char* community_id, enum post_form_error err, const struct auth_token* client_info)
+struct response* get_new_post_internal(const char* community_id, enum post_form_error err, const struct auth_token* client_info)
 {
   if (client_info == NULL)
   {
@@ -212,17 +200,6 @@ struct response* get_new_post_internal(const char* submitted_title, const char* 
     return response_error(STAT404);
   }
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_NEW_POST);
-
-  // copy previously submitted data into page if present
-  if (submitted_title != NULL)
-  {
-    add_map_value_str(page_data, SUBMITTED_POST_TITLE_KEY, submitted_title);
-  }
-
-  if (submitted_body != NULL)
-  {
-    add_map_value_str(page_data, SUBMITTED_POST_BODY_KEY, submitted_body);
-  }
 
   switch (err)
   {
@@ -271,11 +248,11 @@ struct response* get_edit_post(const struct request* req)
 {
   const char* post_id = get_map_value_str(req->query, "id");
 
-  return get_edit_post_internal(NULL, post_id, POST_FORM_ERR_NONE, req->client_info);
+  return get_edit_post_internal(post_id, POST_FORM_ERR_NONE, req->client_info);
 }
 
 
-struct response* get_edit_post_internal(const char* submitted_body, const char* post_id, enum post_form_error err, const struct auth_token* client_info)
+struct response* get_edit_post_internal(const char* post_id, enum post_form_error err, const struct auth_token* client_info)
 {
   if (client_info == NULL)
   {
@@ -306,16 +283,8 @@ struct response* get_edit_post_internal(const char* submitted_body, const char* 
   }
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_EDIT_POST);
 
-  // copy previously submitted post body, or else existing post body
-  if (submitted_body != NULL)
-  {
-    add_map_value_str(page_data, SUBMITTED_POST_BODY_KEY, submitted_body);
-  }
-  else
-  {
-    const char* existing_body = get_map_value_str(page_data, FIELD_POST_BODY);
-    add_map_value_str(page_data, SUBMITTED_POST_BODY_KEY, existing_body);
-  }
+  const char* existing_body = get_map_value_str(page_data, FIELD_POST_BODY);
+  add_map_value_str(page_data, SUBMITTED_POST_BODY_KEY, existing_body);
 
   // you can only edit the post body, not the title. Why? just cuz
   // thats how reddit does it.
@@ -357,11 +326,11 @@ struct response* get_new_comment(const struct request* req)
 {
   const char* post_id = get_map_value_str(req->query, "id");
 
-  return get_new_comment_internal(NULL, post_id, COMMENT_FORM_ERR_NONE, req->client_info);
+  return get_new_comment_internal(post_id, COMMENT_FORM_ERR_NONE, req->client_info);
 }
 
 
-struct response* get_new_comment_internal(const char* submitted_body, const char* post_id, enum comment_form_error err, const struct auth_token* client_info)
+struct response* get_new_comment_internal(const char* post_id, enum comment_form_error err, const struct auth_token* client_info)
 {
   if (client_info == NULL)
   {
@@ -375,11 +344,6 @@ struct response* get_new_comment_internal(const char* submitted_body, const char
     return response_error(STAT404);
   }
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_NEW_COMMENT);
-
-  if (submitted_body != NULL)
-  {
-    add_map_value_str(page_data, SUBMITTED_COMMENT_BODY_KEY, submitted_body);
-  }
 
   switch (err)
   {
@@ -419,11 +383,11 @@ struct response* get_edit_comment(const struct request* req)
 {
   const char* comment_id = get_map_value_str(req->query, "id");
 
-  return get_edit_comment_internal(NULL, comment_id, COMMENT_FORM_ERR_NONE, req->client_info);
+  return get_edit_comment_internal(comment_id, COMMENT_FORM_ERR_NONE, req->client_info);
 }
 
 
-struct response* get_edit_comment_internal(const char* submitted_body, const char* comment_id, enum comment_form_error err, const struct auth_token* client_info)
+struct response* get_edit_comment_internal(const char* comment_id, enum comment_form_error err, const struct auth_token* client_info)
 {
   if (client_info == NULL)
   {
@@ -480,16 +444,8 @@ struct response* get_edit_comment_internal(const char* submitted_body, const cha
   // add comment ID to page data
   add_map_value_str(page_data, FIELD_COMMENT_ID, comment_id);
 
-  // copy previously submitted comment body, or else existing comment body
-  if (submitted_body != NULL)
-  {
-    add_map_value_str(page_data, SUBMITTED_COMMENT_BODY_KEY, submitted_body);
-  }
-  else
-  {
-    const char* existing_body = get_map_value_str(comment_info, FIELD_COMMENT_BODY);
-    add_map_value_str(page_data, SUBMITTED_COMMENT_BODY_KEY, existing_body);
-  }
+  const char* existing_body = get_map_value_str(comment_info, FIELD_COMMENT_BODY);
+  add_map_value_str(page_data, SUBMITTED_COMMENT_BODY_KEY, existing_body);
   ks_hashmap_delete(comment_info);
 
   switch (err)
@@ -528,11 +484,11 @@ struct response* get_edit_comment_internal(const char* submitted_body, const cha
 
 struct response* get_new_community(const struct request* req)
 {
-  return get_new_community_internal(NULL, NULL, COMMUNITY_FORM_ERR_NONE, req->client_info);
+  return get_new_community_internal(COMMUNITY_FORM_ERR_NONE, req->client_info);
 }
 
 
-struct response* get_new_community_internal(const char* submitted_name, const char* submitted_about, enum community_form_error err, const struct auth_token* client_info)
+struct response* get_new_community_internal(enum community_form_error err, const struct auth_token* client_info)
 {
   if (client_info == NULL)
   {
@@ -541,16 +497,6 @@ struct response* get_new_community_internal(const char* submitted_name, const ch
 
   ks_hashmap* page_data = ks_hashmap_new(KS_CHARP, 1);
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_NEW_COMMUNITY);
-
-  if (submitted_name != NULL)
-  {
-    add_map_value_str(page_data, SUBMITTED_COMMUNITY_NAME_KEY, submitted_name);
-  }
-
-  if (submitted_about != NULL)
-  {
-    add_map_value_str(page_data, SUBMITTED_COMMUNITY_ABOUT_KEY, submitted_about);
-  }
 
   switch (err)
   {
@@ -602,11 +548,11 @@ struct response* get_edit_community(const struct request* req)
 {
   const char* community_id = get_map_value_str(req->query, "id");
 
-  return get_edit_community_internal(NULL, community_id, COMMUNITY_FORM_ERR_NONE, req->client_info);
+  return get_edit_community_internal(community_id, COMMUNITY_FORM_ERR_NONE, req->client_info);
 }
 
 
-struct response* get_edit_community_internal(const char* submitted_about, const char* community_id, enum community_form_error err, const struct auth_token* client_info)
+struct response* get_edit_community_internal(const char* community_id, enum community_form_error err, const struct auth_token* client_info)
 {
   if (client_info == NULL)
   {
@@ -635,16 +581,8 @@ struct response* get_edit_community_internal(const char* submitted_about, const 
   }
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_EDIT_COMMUNITY);
 
-  // copy submitted community about if present, else existing community about
-  if (submitted_about != NULL)
-  {
-    add_map_value_str(page_data, SUBMITTED_COMMUNITY_ABOUT_KEY, submitted_about);
-  }
-  else
-  {
-    const char* existing_about = get_map_value_str(page_data, FIELD_COMMUNITY_ABOUT);
-    add_map_value_str(page_data, SUBMITTED_COMMUNITY_ABOUT_KEY, existing_about);
-  }
+  const char* existing_about = get_map_value_str(page_data, FIELD_COMMUNITY_ABOUT);
+  add_map_value_str(page_data, SUBMITTED_COMMUNITY_ABOUT_KEY, existing_about);
 
   switch (err)
   {

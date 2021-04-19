@@ -27,10 +27,10 @@ enum user_form_error {
 };
 
 struct response* get_login(const struct request* req);
-struct response* get_login_internal(const char* submitted_user_name, enum user_form_error err, const struct auth_token* client_info);
+struct response* get_login_internal(enum user_form_error err, const struct auth_token* client_info);
 
 struct response* get_edit_user(const struct request* req);
-struct response* get_edit_user_internal(const char* submitted_about, enum user_form_error err, const struct auth_token* client_info);
+struct response* get_edit_user_internal(enum user_form_error err, const struct auth_token* client_info);
 
 
 enum post_form_error {
@@ -44,10 +44,10 @@ enum post_form_error {
 };
 
 struct response* get_new_post(const struct request* req);
-struct response* get_new_post_internal(const char* submitted_title, const char* submitted_body, const char* community_id, enum post_form_error err, const struct auth_token* client_info);
+struct response* get_new_post_internal(const char* community_id, enum post_form_error err, const struct auth_token* client_info);
 
 struct response* get_edit_post(const struct request* req);
-struct response* get_edit_post_internal(const char* submitted_body, const char* post_id, enum post_form_error err, const struct auth_token* client_info);
+struct response* get_edit_post_internal(const char* post_id, enum post_form_error err, const struct auth_token* client_info);
 
 
 enum comment_form_error {
@@ -58,10 +58,10 @@ enum comment_form_error {
 };
 
 struct response* get_new_comment(const struct request* req);
-struct response* get_new_comment_internal(const char* submitted_body, const char* post_id, enum comment_form_error err, const struct auth_token* client_info);
+struct response* get_new_comment_internal(const char* post_id, enum comment_form_error err, const struct auth_token* client_info);
 
 struct response* get_edit_comment(const struct request* req);
-struct response* get_edit_comment_internal(const char* submitted_body, const char* comment_id, enum comment_form_error err, const struct auth_token* client_info);
+struct response* get_edit_comment_internal(const char* comment_id, enum comment_form_error err, const struct auth_token* client_info);
 
 
 enum community_form_error {
@@ -79,9 +79,9 @@ enum community_form_error {
 };
 
 struct response* get_new_community(const struct request* req);
-struct response* get_new_community_internal(const char* submitted_name, const char* submitted_about, enum community_form_error err, const struct auth_token* client_info);
+struct response* get_new_community_internal(enum community_form_error err, const struct auth_token* client_info);
 
 struct response* get_edit_community(const struct request* req);
-struct response* get_edit_community_internal(const char* submitted_about, const char* community_id, enum community_form_error err, const struct auth_token* client_info);
+struct response* get_edit_community_internal(const char* community_id, enum community_form_error err, const struct auth_token* client_info);
 
 #endif
