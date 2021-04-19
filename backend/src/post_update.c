@@ -29,11 +29,11 @@ struct response* update_user_about(const struct request* req)
     case VALRES_OK:
       break;
     case VALRES_TOO_SHORT:
-      return get_edit_user_internal(about_decoded, USER_FORM_ERR_ABOUT_TOO_SHORT, req->client_info);
+      return get_edit_user_internal(NULL, USER_FORM_ERR_ABOUT_TOO_SHORT, req->client_info);
     case VALRES_TOO_LONG:
-      return get_edit_user_internal(about_decoded, USER_FORM_ERR_ABOUT_TOO_LONG, req->client_info);
+      return get_edit_user_internal(NULL, USER_FORM_ERR_ABOUT_TOO_LONG, req->client_info);
     case VALRES_INV_ENC:
-      return get_edit_user_internal(about_decoded, USER_FORM_ERR_ABOUT_INV_ENC, req->client_info);
+      return get_edit_user_internal(NULL, USER_FORM_ERR_ABOUT_INV_ENC, req->client_info);
     default:
       log_crit("update_user_about(): invalid validation error for user about: %d", valres);
   }
@@ -153,11 +153,11 @@ struct response* update_post(const struct request* req)
     case VALRES_OK:
       break;
     case VALRES_TOO_SHORT:
-      return get_edit_post_internal(body_decoded, post_id, POST_FORM_ERR_BODY_TOO_SHORT, req->client_info);
+      return get_edit_post_internal(NULL, post_id, POST_FORM_ERR_BODY_TOO_SHORT, req->client_info);
     case VALRES_TOO_LONG:
-      return get_edit_post_internal(body_decoded, post_id, POST_FORM_ERR_BODY_TOO_LONG, req->client_info);
+      return get_edit_post_internal(NULL, post_id, POST_FORM_ERR_BODY_TOO_LONG, req->client_info);
     case VALRES_INV_ENC:
-      return get_edit_post_internal(body_decoded, post_id, POST_FORM_ERR_BODY_INV_ENC, req->client_info);
+      return get_edit_post_internal(NULL, post_id, POST_FORM_ERR_BODY_INV_ENC, req->client_info);
     default:
       log_crit("update_post(): invalid validation error for post body: %d", valres);
   }
@@ -197,6 +197,7 @@ struct response* update_comment(const struct request* req)
   const char* author_id = get_map_value_str(comment_info, FIELD_COMMENT_AUTHOR_ID);
   if (strcmp(author_id, req->client_info->user_id) != 0)
   {
+    ks_hashmap_delete(comment_info);
     return response_error(STAT403);
   }
 
@@ -209,11 +210,14 @@ struct response* update_comment(const struct request* req)
     case VALRES_OK:
       break;
     case VALRES_TOO_SHORT:
-      return get_edit_comment_internal(body_decoded, comment_id, COMMENT_FORM_ERR_TOO_SHORT, req->client_info);
+      ks_hashmap_delete(comment_info);
+      return get_edit_comment_internal(NULL, comment_id, COMMENT_FORM_ERR_TOO_SHORT, req->client_info);
     case VALRES_TOO_LONG:
-      return get_edit_comment_internal(body_decoded, comment_id, COMMENT_FORM_ERR_TOO_LONG, req->client_info);
+      ks_hashmap_delete(comment_info);
+      return get_edit_comment_internal(NULL, comment_id, COMMENT_FORM_ERR_TOO_LONG, req->client_info);
     case VALRES_INV_ENC:
-      return get_edit_comment_internal(body_decoded, comment_id, COMMENT_FORM_ERR_INV_ENC, req->client_info);
+      ks_hashmap_delete(comment_info);
+      return get_edit_comment_internal(NULL, comment_id, COMMENT_FORM_ERR_INV_ENC, req->client_info);
     default:
       log_crit("update_comment(): invalid validation error for comment body: %d", valres);
   }
@@ -275,11 +279,11 @@ struct response* update_community_about(const struct request* req)
     case VALRES_OK:
       break;
     case VALRES_TOO_SHORT:
-      return get_edit_community_internal(about_decoded, community_id, COMMUNITY_FORM_ERR_ABOUT_TOO_SHORT, req->client_info);
+      return get_edit_community_internal(NULL, community_id, COMMUNITY_FORM_ERR_ABOUT_TOO_SHORT, req->client_info);
     case VALRES_TOO_LONG:
-      return get_edit_community_internal(about_decoded, community_id, COMMUNITY_FORM_ERR_ABOUT_TOO_LONG, req->client_info);
+      return get_edit_community_internal(NULL, community_id, COMMUNITY_FORM_ERR_ABOUT_TOO_LONG, req->client_info);
     case VALRES_INV_ENC:
-      return get_edit_community_internal(about_decoded, community_id, COMMUNITY_FORM_ERR_ABOUT_INV_ENC, req->client_info);
+      return get_edit_community_internal(NULL, community_id, COMMUNITY_FORM_ERR_ABOUT_INV_ENC, req->client_info);
     default:
       log_crit("update_community_about(): invalid validation error for community about: %d", valres);
   }

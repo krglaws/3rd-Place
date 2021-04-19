@@ -42,7 +42,7 @@ struct response* login(const struct request* req)
       (token = login_user(user_name, password_decoded)) == NULL)
   {
     // no need to indicate exactly why login failed
-    return get_login_internal(user_name, USER_FORM_ERR_BAD_LOGIN, NULL);
+    return get_login_internal(NULL, USER_FORM_ERR_BAD_LOGIN, NULL);
   }
 
   // build redirect
@@ -99,13 +99,13 @@ struct response* signup(const struct request* req)
 
   if (password1 == NULL && password2 == NULL)
   {
-    return get_login_internal(user_name, USER_FORM_ERR_PASSWD_TOO_SHORT, NULL);
+    return get_login_internal(NULL, USER_FORM_ERR_PASSWD_TOO_SHORT, NULL);
   }
 
   if (password1 == NULL || password2 == NULL ||
       strcmp(password1, password2) != 0)
   {
-    return get_login_internal(user_name, USER_FORM_ERR_PASSWD_MISMATCH, NULL);
+    return get_login_internal(NULL, USER_FORM_ERR_PASSWD_MISMATCH, NULL);
   }
 
   char password_decoded[USER_PASSWD_BUF_LEN];
@@ -116,13 +116,13 @@ struct response* signup(const struct request* req)
     case VALRES_OK:
       break;
     case VALRES_TOO_SHORT:
-      return get_login_internal(user_name, USER_FORM_ERR_PASSWD_TOO_SHORT, NULL);
+      return get_login_internal(NULL, USER_FORM_ERR_PASSWD_TOO_SHORT, NULL);
     case VALRES_TOO_LONG:
-      return get_login_internal(user_name, USER_FORM_ERR_PASSWD_TOO_LONG, NULL);
+      return get_login_internal(NULL, USER_FORM_ERR_PASSWD_TOO_LONG, NULL);
     case VALRES_UNMET:
-      return get_login_internal(user_name, USER_FORM_ERR_PASSWD_UNMET, NULL);
+      return get_login_internal(NULL, USER_FORM_ERR_PASSWD_UNMET, NULL);
     case VALRES_INV_ENC:
-      return get_login_internal(user_name, USER_FORM_ERR_PASSWD_INV_ENC, NULL);
+      return get_login_internal(NULL, USER_FORM_ERR_PASSWD_INV_ENC, NULL);
     default:
       log_crit("post_signup(): unexpected validation result value for password: '%s', errno: %d", password1, valres);
   }
@@ -271,11 +271,11 @@ struct response* new_comment(const struct request* req)
     case VALRES_OK:
       break;
     case VALRES_INV_ENC:
-      return get_new_comment_internal(body_decoded, post_id, COMMENT_FORM_ERR_INV_ENC, req->client_info);
+      return get_new_comment_internal(NULL, post_id, COMMENT_FORM_ERR_INV_ENC, req->client_info);
     case VALRES_TOO_LONG:
-      return get_new_comment_internal(body_decoded, post_id, COMMENT_FORM_ERR_TOO_LONG, req->client_info);
+      return get_new_comment_internal(NULL, post_id, COMMENT_FORM_ERR_TOO_LONG, req->client_info);
     case VALRES_TOO_SHORT:
-      return get_new_comment_internal(body_decoded, post_id, COMMENT_FORM_ERR_TOO_SHORT, req->client_info);
+      return get_new_comment_internal(NULL, post_id, COMMENT_FORM_ERR_TOO_SHORT, req->client_info);
     default:
       log_crit("post_comment(): unexpected validation result value for comment: '%s', errno: %d", comment_body, valres);
   }
@@ -327,9 +327,9 @@ struct response* new_post(const struct request* req)
     case VALRES_INV_ENC:
       return get_new_post_internal(NULL, NULL, community_id, POST_FORM_ERR_TITLE_INV_ENC, req->client_info);
     case VALRES_TOO_LONG:
-      return get_new_post_internal(title_decoded, NULL, community_id, POST_FORM_ERR_TITLE_TOO_LONG, req->client_info);
+      return get_new_post_internal(NULL, NULL, community_id, POST_FORM_ERR_TITLE_TOO_LONG, req->client_info);
     case VALRES_TOO_SHORT:
-      return get_new_post_internal(title_decoded, NULL, community_id, POST_FORM_ERR_TITLE_TOO_SHORT, req->client_info);
+      return get_new_post_internal(NULL, NULL, community_id, POST_FORM_ERR_TITLE_TOO_SHORT, req->client_info);
     default:
       log_crit("post_post(): unexpected validation result value for post title: '%s', errno: %d", post_title, valres);
   }
@@ -342,11 +342,11 @@ struct response* new_post(const struct request* req)
     case VALRES_OK:
       break;
     case VALRES_INV_ENC:
-      return get_new_post_internal(title_decoded, NULL, community_id, POST_FORM_ERR_BODY_INV_ENC, req->client_info);
+      return get_new_post_internal(NULL, NULL, community_id, POST_FORM_ERR_BODY_INV_ENC, req->client_info);
     case VALRES_TOO_LONG:
-      return get_new_post_internal(title_decoded, body_decoded, community_id, POST_FORM_ERR_BODY_TOO_LONG, req->client_info);
+      return get_new_post_internal(NULL, NULL, community_id, POST_FORM_ERR_BODY_TOO_LONG, req->client_info);
     case VALRES_TOO_SHORT:
-      return get_new_post_internal(title_decoded, body_decoded, community_id, POST_FORM_ERR_BODY_TOO_SHORT, req->client_info);
+      return get_new_post_internal(NULL, NULL, community_id, POST_FORM_ERR_BODY_TOO_SHORT, req->client_info);
     default:
       log_crit("post_post(): unexpected validation result value for post body: '%s', errno: %d", post_body, valres);
   }
@@ -409,11 +409,11 @@ struct response* new_community(const struct request* req)
     case VALRES_OK:
       break;
     case VALRES_TOO_LONG:
-      return get_new_community_internal(community_name, NULL, COMMUNITY_FORM_ERR_ABOUT_TOO_LONG, req->client_info);
+      return get_new_community_internal(NULL, NULL, COMMUNITY_FORM_ERR_ABOUT_TOO_LONG, req->client_info);
     case VALRES_TOO_SHORT:
-      return get_new_community_internal(community_name, NULL, COMMUNITY_FORM_ERR_ABOUT_TOO_SHORT, req->client_info);
+      return get_new_community_internal(NULL, NULL, COMMUNITY_FORM_ERR_ABOUT_TOO_SHORT, req->client_info);
     case VALRES_INV_ENC:
-      return get_new_community_internal(community_name, NULL, COMMUNITY_FORM_ERR_ABOUT_INV_ENC, req->client_info);
+      return get_new_community_internal(NULL, NULL, COMMUNITY_FORM_ERR_ABOUT_INV_ENC, req->client_info);
     default:
       log_crit("post_community(): unexpected validation result value for commuity about: '%s', errno: %d", community_about, valres);
   }

@@ -68,7 +68,8 @@ static char hex_to_char(const char* hex)
 
 
 /* Returns the length of the decoded string,
-   -1 if an invalid encoding was found. */
+   otherwise DECODE_TOO_LONG if the decoded result of src is too long,
+   or DECODE_INV_ENC if an invalid encoding was found */
 static int decode(char* dest, const char* src, int max_len)
 {
   if (src == NULL)
@@ -83,6 +84,7 @@ static int decode(char* dest, const char* src, int max_len)
   {
     if (j == max_len)
     {
+      dest[j] = '\0';
       return DECODE_TOO_LONG;
     }
 
@@ -92,8 +94,18 @@ static int decode(char* dest, const char* src, int max_len)
       {
         return DECODE_INV_ENC;
       }
-      dest[j++] = c; 
-      i += 3;
+
+      // ignore carriage return character (browser sends two chars '\r\n' when user hits 'enter' key,
+      // but treats it as a single char when displayed in input box. Just ignore, and \n will do the job).
+      if (c != '\r')
+      {
+        dest[j++] = c; 
+        i += 3;
+      }
+      else
+      {
+        i += 3;
+      }
     }
     else if (src[i] == '+')
     {
@@ -110,7 +122,6 @@ static int decode(char* dest, const char* src, int max_len)
 
   return j;
 }
-
 
 static void escape(char* dest, char* src)
 {
@@ -251,16 +262,19 @@ static enum validation_result validate_content(char* dest, const char* src, int 
 
   if (len == DECODE_INV_ENC)
   {
+    *dest = '\0';
     return VALRES_INV_ENC;
   }
 
   if (len == DECODE_TOO_LONG)
   {
+    *dest = '\0';
     return VALRES_TOO_LONG;
   }
 
   if (len < min_len)
   {
+    *dest = '\0';
     return VALRES_TOO_SHORT;
   }
 
