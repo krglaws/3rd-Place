@@ -363,7 +363,18 @@ a:hover {
     width: 100%;
     text-align: left;
   }
-} 
+}
+
+footer {
+  width: 100%;
+  font-size: 14px;
+  margin: 2% 0% 1% 0%;
+  text-align: center;
+}
+
+footer a {
+  margin: 0% 6% 0% 6%;
+}
 /* end main style */
 /******************/
 
