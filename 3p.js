@@ -329,7 +329,6 @@ function processTimestamps() {
     var currTime = Math.floor(date.getTime() / 1000);
 
     var delta = currTime - postTime;
-    console.log(delta);
     var timeStr = "";
 
     if (delta < 60) {
