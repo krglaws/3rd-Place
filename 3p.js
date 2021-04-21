@@ -336,10 +336,10 @@ function processTimestamps() {
       utcElem.innerText = delta + " seconds ago";
     }
     else if (delta < 3600) {
-      utcElem.innerText = (delta / 60) + " minutes ago";
+      utcElem.innerText = Math.floor(delta / 60) + " minutes ago";
     }
     else if (delta < 86400) {
-      utcElem.innerText = (delta / 3600) + " hours ago";
+      utcElem.innerText = Math.floor(delta / 3600) + " hours ago";
     }
     else {
       date.setUTCSeconds(utcElem.innerText);
