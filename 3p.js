@@ -318,13 +318,32 @@ function vote(arrow, postOrComment, id) {
 
 function processTimestamps() {
 
-  var timestamplist = document.getElementsByClassName("utc-timestamp");
+  var timeStampList = document.getElementsByClassName("utc-timestamp");
 
-  for (var i = 0; i < timestamplist.length; i++) {
+  for (var i = 0; i < timeStampList.length; i++) {
 
-    var utcElem = timestamplist[i];
-    var date = new Date(0);
-    date.setUTCSeconds(utcElem.innerText);
-    utcElem.innerText = date.toDateString();
+    var utcElem = timeStampList[i];
+    var date = new Date();
+
+    var postTime = utcElem.innerText;
+    var currTime = Math.floor(date.getTime() / 1000);
+
+    var delta = currTime - postTime;
+    console.log(delta);
+    var timeStr = "";
+
+    if (delta < 60) {
+      utcElem.innerText = delta + " seconds ago";
+    }
+    else if (delta < 3600) {
+      utcElem.innerText = (delta / 60) + " minutes ago";
+    }
+    else if (delta < 86400) {
+      utcElem.innerText = (delta / 3600) + " hours ago";
+    }
+    else {
+      date.setUTCSeconds(utcElem.innerText);
+      utcElem.innerText = date.toDateString();
+    }
   }
 }
