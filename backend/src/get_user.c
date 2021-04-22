@@ -21,7 +21,7 @@ static ks_list* get_user_posts(const char* user_id, const struct auth_token* cli
   {
     return NULL;
   }
-  posts = sort_items(posts, POST_ITEM);
+  posts = sort_list(posts, POST_ITEM);
 
   // list of vote wrappers
   ks_list* post_wrappers = ks_list_new();
@@ -75,7 +75,7 @@ static ks_list* get_user_comments(const char* user_id, const struct auth_token* 
   {
     return NULL;
   }
-  comments = sort_items(comments, COMMENT_ITEM);
+  comments = sort_list(comments, COMMENT_ITEM);
 
   // list of vote wrappers
   ks_list* comment_wrappers = ks_list_new();

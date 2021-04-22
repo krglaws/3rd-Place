@@ -211,7 +211,7 @@ time_t get_item_date(const ks_hashmap* item, enum item_type it)
 }
 
 
-ks_list* sort_items(ks_list* items, enum item_type it)
+ks_list* sort_list(ks_list* items, enum item_type it)
 {
   if (items == NULL)
   {
@@ -267,7 +267,7 @@ ks_list* sort_items(ks_list* items, enum item_type it)
 }
 
 
-ks_list* merge_items(ks_list* lsA, ks_list* lsB, enum item_type it)
+ks_list* merge_lists(ks_list* lsA, ks_list* lsB, enum item_type it)
 {
   if (lsA == NULL || lsB == NULL)
   {
@@ -275,34 +275,43 @@ ks_list* merge_items(ks_list* lsA, ks_list* lsB, enum item_type it)
   }
 
   ks_list* merged = ks_list_new();
-  ks_iterator* iterA = ks_iterator_new(lsA, KS_LIST);
-  ks_iterator* iterB = ks_iterator_new(lsB, KS_LIST);
-  ks_datacont* itemA, *itemB;
 
-  do
+  // assume both lists are sorted by UTC greatest -> least
+  ks_listnode* lnA = lsA->head;
+  ks_listnode* lnB = lsB->head;
+  while (lnA != NULL || lnB != NULL)
   {
-    itemA = ks_datacont_copy(ks_iterator_next(iterA));
-    time_t tA = itemA ? get_item_date(itemA->hm, it) : 0;
-
-    itemB = ks_datacont_copy(ks_iterator_next(iterB));
-    time_t tB = itemB ? get_item_date(itemB->hm, it) : 0;
-
-    ks_datacont* first = tA < tB ? itemB : itemA;
-    ks_datacont* second = tA < tB ? itemA : itemB;
-
-    if (first != NULL)
+    if (lnA == NULL)
     {
-      ks_list_add(merged, first);
+      ks_list_add(merged, lnB->dc);
+      lnB->dc = NULL;
+      lnB = lnB->next;
     }
-
-    if (second != NULL)
+    else if (lnB == NULL)
     {
-      ks_list_add(merged, second);
+      ks_list_add(merged, lnA->dc);
+      lnA->dc = NULL;
+      lnA = lnA->next;
     }
-  } while (itemA != NULL || itemB != NULL);
+    else {
+      time_t tA = get_item_date(lnA->dc->hm, it);
+      time_t tB = get_item_date(lnB->dc->hm, it);
 
-  ks_iterator_delete(iterA);
-  ks_iterator_delete(iterB);
+      if (tA > tB)
+      {
+        ks_list_add(merged, lnA->dc);
+        lnA->dc = NULL;
+        lnA = lnA->next;
+      }
+      else
+      {
+        ks_list_add(merged, lnB->dc);
+        lnB->dc = NULL;
+        lnB = lnB->next;
+      }
+    }
+  }
+
   ks_list_delete(lsA);
   ks_list_delete(lsB);
 

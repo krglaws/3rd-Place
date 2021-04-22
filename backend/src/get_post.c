@@ -22,7 +22,7 @@ static ks_list* get_post_comments(const char* post_id, bool can_delete, const st
   {
     return NULL;
   }
-  comments = sort_items(comments, COMMENT_ITEM);
+  comments = sort_list(comments, COMMENT_ITEM);
 
   // list of vote wrappers
   ks_list* comment_wrappers = ks_list_new();

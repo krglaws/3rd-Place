@@ -100,8 +100,8 @@ static struct response* get_feed(const enum feed_type ft, const struct auth_toke
       {
         const char* community_id = get_map_value_str(curr->hm, FIELD_SUB_COMMUNITY_ID);
         ks_list* temp = query_posts_by_community_id(community_id);
-        temp = sort_items(temp, POST_ITEM);
-        posts = merge_items(posts, temp, POST_ITEM);
+        temp = sort_list(temp, POST_ITEM);
+        posts = merge_lists(posts, temp, POST_ITEM);
       }
       ks_iterator_delete(iter);
       ks_list_delete(subs);
@@ -113,7 +113,7 @@ static struct response* get_feed(const enum feed_type ft, const struct auth_toke
 
     posts = query_all_posts();
 
-    posts = sort_items(posts, POST_ITEM);
+    posts = sort_list(posts, POST_ITEM);
   }
 
   if (posts != NULL && ks_list_length(posts) > 0)
@@ -173,7 +173,7 @@ struct response* get_communities(const struct request* req)
   ks_list* communities;
   if ((communities = query_all_communities()) != NULL)
   {
-    communities = sort_items(communities, COMMUNITY_ITEM);
+    communities = sort_list(communities, COMMUNITY_ITEM);
     add_map_value_ls(page_data, FEED_ITEM_LIST_KEY, communities);
 
     // add html template path to each community

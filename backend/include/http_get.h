@@ -70,9 +70,11 @@ bool check_for_sub(const char* community_id, const struct auth_token* client_inf
 
 time_t get_item_date(const ks_hashmap* item, enum item_type it);
 
-ks_list* sort_items(ks_list* items, enum item_type it);
+/* sorts by timestamp newest -> oldest */
+ks_list* sort_list(ks_list* list, enum item_type it);
 
-ks_list* merge_items(ks_list* lsA, ks_list* lsB, enum item_type it);
+/* merges two sorted lists into a new list (still sorted) */
+ks_list* merge_lists(ks_list* lsA, ks_list* lsB, enum item_type it);
 
 /* wraps main page data hashmap with hashmap containing nav info */
 ks_hashmap* wrap_page_data(const struct auth_token* client_info, const ks_hashmap* page_data);

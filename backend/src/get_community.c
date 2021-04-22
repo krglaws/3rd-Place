@@ -20,7 +20,7 @@ static ks_list* get_community_posts(const char* community_id, const struct auth_
   {
     return NULL;
   }
-  posts = sort_items(posts, POST_ITEM);
+  posts = sort_list(posts, POST_ITEM);
 
   // vote wrapper list
   ks_list* post_wrappers = ks_list_new();
