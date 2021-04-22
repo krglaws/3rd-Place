@@ -19,7 +19,7 @@
         <form class="form-body" action="/new_post" method="post">
           <input type="hidden" name="id" value="<<COMMUNITY_ID>>">
           <label for="title">Title:</label><br>
-          <input id="title" autofocus type="text" maxlength="32" placeholder="32 character limit" name="title" value="<<OPT_SUBMITTED_POST_TITLE>>"><br><br>
+          <input id="title" autofocus type="text" maxlength="128" placeholder="128 character limit" name="title" value="<<OPT_SUBMITTED_POST_TITLE>>"><br><br>
           <label for="body">Body:</label><br>
           <textarea id="body"  type="text" name="body" maxlength="512" placeholder="512 character limit" rows="6"><<OPT_SUBMITTED_POST_BODY>></textarea><br>
           <input type="submit" value="Submit"><br>
