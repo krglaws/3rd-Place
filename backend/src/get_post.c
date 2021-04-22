@@ -157,6 +157,10 @@ struct response* get_post(const struct request* req)
   {
     add_map_value_ls(page_data, POST_COMMENT_LIST_KEY, comments);
   }
+  else
+  {
+    add_map_value_str(page_data, POST_COMMENT_LIST_KEY, "<p><em>No comments yet...</em><p>");
+  }
 
   // put page data together
   page_data = wrap_page_data(req->client_info, page_data);

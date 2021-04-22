@@ -136,6 +136,10 @@ struct response* get_community(const struct request* req)
   {
     add_map_value_ls(page_data, COMMUNITY_POST_LIST_KEY, community_posts);
   }
+  else
+  {
+    add_map_value_str(page_data, COMMUNITY_POST_LIST_KEY, "<p><em>No posts yet...</em></p>");
+  }
 
   bool is_owner = false;
   char* edit_vis = "hidden"; 
