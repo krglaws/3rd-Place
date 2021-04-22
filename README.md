@@ -9,8 +9,6 @@ If you are interested in digging into the code, I would start by glancing at the
 
 I should also mention that I made heavy use of a data structures library that I wrote called [KyleStructs](http://github.com/krglaws/kylestructs), and if you see functions with a leading "ks_", that indicates that it belongs to libkylestructs. There is also a small amount of wrapper code in src/string_map.c that makes life a little easier when using kylestructs. This project is by no means perfect, absolutely has a few issues, and would certainly not be good enough for a real production website, but really the point of this thing was to have fun, and hopefully learn a few things along the way.
 
-# Contributing
-TBH I'm a little tired of working on this, and will probably just leave the site to languish where it is. However, if some random nerd decides to make a few changes and submits a pull request, I would absolutely be okay with looking it over and merging if it looks good. Collaboration is always fun.
 
 # Workspace Setup
 Here are some quick instructions on how to set up the project on your linux machine for local development and/or experimentation:
