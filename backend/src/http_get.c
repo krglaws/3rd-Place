@@ -191,7 +191,7 @@ bool check_for_sub(const char* community_id, const struct auth_token* client_inf
 
 time_t get_item_date(const ks_hashmap* item, enum item_type it)
 {
-  const char* date_str;
+  const char* date_str = NULL;
 
   if (it == POST_ITEM)
   {

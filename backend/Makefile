@@ -1,5 +1,5 @@
 CC := gcc
-CFLAGS := -Iinclude -g -Wall -Wextra
+CFLAGS := -Iinclude -Wall -Wextra -O2
 
 SRC := ./src
 INC := ./include
