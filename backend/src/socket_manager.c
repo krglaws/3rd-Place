@@ -2,16 +2,18 @@
 #include <errno.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <time.h>
 #include <kylestructs.h>
 
 #include <log_manager.h>
 #include <socket_manager.h>
 
+static struct sock_entry* add_socket(int sock);
 static int reload_socket_set();
-static int get_active_socket();
+static struct sock_entry* get_active_socket();
 static void terminate_socket_manager();
 
-static int server_socket = 0;
+static struct sock_entry server_socket = {0};
 
 static ks_list* socket_list = NULL;
 
@@ -30,23 +32,23 @@ void init_socket_manager(const struct in6_addr* server_addr, const uint16_t serv
   addr.sin6_port = server_port;
   addr.sin6_addr = *(server_addr);
 
-  if ((server_socket = socket(AF_INET6, SOCK_STREAM, 0)) == -1)
+  if ((server_socket.sock = socket(AF_INET6, SOCK_STREAM, 0)) == -1)
   {
     log_crit("init_socket_manager(): failed on call to socket(): %s", strerror(errno));
   }
 
   int on = 1;
-  if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (void*) &on, sizeof(on)) == -1)
+  if (setsockopt(server_socket.sock, SOL_SOCKET, SO_REUSEADDR, (void*) &on, sizeof(on)) == -1)
   {
     log_crit("init_socket_manager(): setsockopt(): %s", strerror(errno));
   }
 
-  if (bind(server_socket, (struct sockaddr *) &addr, addrlen) == -1)
+  if (bind(server_socket.sock, (struct sockaddr *) &addr, addrlen) == -1)
   {
     log_crit("init_socket_manager(): failed on call to bind(): %s", strerror(errno));
   }
 
-  if (listen(server_socket, max_clients) == -1)
+  if (listen(server_socket.sock, max_clients) == -1)
   {
     log_crit("init_socket_manager(): failed on call to listen(): %s", strerror(errno));
   }
@@ -65,16 +67,19 @@ void init_socket_manager(const struct in6_addr* server_addr, const uint16_t serv
 
 static void terminate_socket_manager()
 {
-  if (server_socket != 0)
+  if (server_socket.sock != 0)
   {
-    close(server_socket);
+    close(server_socket.sock);
   }
 
+  struct sock_entry* se;
   ks_datacont* curr;
   ks_iterator* iter = ks_iterator_new(socket_list, KS_LIST);
   while ((curr = (ks_datacont*) ks_iterator_next(iter)) != NULL)
   {
-    close(curr->i);
+    se = curr->vp;
+    close(se->sock);
+    free(se);
   }
 
   ks_iterator_delete(iter);
@@ -82,66 +87,56 @@ static void terminate_socket_manager()
 }
 
 
-int get_socket_ip(const int sock, char* ipstr, const int iplen)
+static struct sock_entry* add_socket(int sock)
 {
   struct sockaddr_in6 addr;
   socklen_t addrlen = sizeof(addr);
 
+  struct sock_entry* se = malloc(sizeof(struct sock_entry));
+  se->sock = sock;
+  se->last_active = time(NULL);
+
   // find out socket address
   if (getpeername(sock, (struct sockaddr*) &addr, &addrlen) == -1)
   {
-    log_err("get_socket_ip(): getpeername(): %s", strerror(errno));
-    return -1;
-  }
-
-  if (inet_ntop(addr.sin6_family, &(addr.sin6_addr), ipstr, iplen) == NULL)
-  {
-    log_err("get_socket_ip(): inet_ntop(): %s", strerror(errno));
-    return -1;
-  }
-
-  return 0;
-}
-
-
-void add_socket(int sock)
-{
-  char ipstr[64];
-  if (get_socket_ip(sock, ipstr, sizeof(ipstr)) == -1)
-  {
-    log_err("add_socket(): failed on call to get_socket_ip()" \
-              "\nFailed to add new socket: %d", sock);
+    log_err("add_socket(): getpeername(): %s", strerror(errno));
     close(sock);
-    return;
+    free(se);
+    return NULL;
   }
 
-  log_info("Connected to %s (socket number %d)", ipstr, sock);
+  if (inet_ntop(addr.sin6_family, &(addr.sin6_addr), se->addr, sizeof(se->addr)) == NULL)
+  {
+    log_err("add_socket(): inet_ntop(): %s", strerror(errno));
+    close(sock);
+    free(se);
+    return NULL;
+  }
 
-  ks_list_add(socket_list, ks_datacont_new(&sock, KS_INT, 1));
+  ks_list_add(socket_list, ks_datacont_new(se, KS_VOIDP, 1));
+  log_info("Connected to %s (socket number %d)", se->addr, sock);
+
+  return se;
 }
 
 
-void remove_socket(int sock)
+void remove_socket(struct sock_entry* se)
 {
-  ks_datacont* dc = ks_datacont_new(&sock, KS_INT, 1);
+  int sock = se->sock;
+
+  ks_datacont* dc = ks_datacont_new(se, KS_VOIDP, 1);
   if (ks_list_remove_by(socket_list, dc) == -1)
   {
-    log_err("remove_socket(): socket number %d does not exist", sock);
+    // this should never happen
+    log_err("remove_socket(): socket entry with fd number %d does not exist", sock);
+    ks_datacont_delete(dc);
     return;
   }
   ks_datacont_delete(dc);
 
-  char ipstr[64];
-  if (get_socket_ip(sock, ipstr, sizeof(ipstr)) == -1)
-  {
-    log_err("remove_socket(): failed on call to get_socket_ip()");
-    log_info("Connection to [UNKNOWN] closed (socket number %d)", sock);
-    close(sock);
-    return;
-  }
-
   close(sock);
-  log_info("Connection to %s closed (socket number %d)", ipstr, sock);
+  log_info("Connection to %s closed (socket number %d)", se->addr, sock);
+  free(se);
 }
 
 
@@ -149,20 +144,31 @@ static int reload_socket_set()
 {
   // clear socket set, add server socket
   FD_ZERO(&socket_set);
-  FD_SET(server_socket, &socket_set);
+  FD_SET(server_socket.sock, &socket_set);
 
-  int max = server_socket;
+  int max = server_socket.sock;
 
+  struct sock_entry* se;
   const ks_datacont* curr;
   ks_iterator* iter = ks_iterator_new(socket_list, KS_LIST);
   while ((curr = ks_iterator_next(iter)) != NULL)
   {
-    FD_SET(curr->i, &socket_set);
+    se = curr->vp;
+
+    // if it has been 1 hour since last request, close
+    int delta = time(NULL) - se->last_active;
+    if (delta > 3600)
+    {
+      remove_socket(se);
+      continue;
+    }
+
+    FD_SET(se->sock, &socket_set);
 
     // find maximum socket number
-    if (max < curr->i)
+    if (max < se->sock)
     {
-      max = curr->i;
+      max = se->sock;
     }
   }
   ks_iterator_delete(iter);
@@ -171,12 +177,12 @@ static int reload_socket_set()
 }
 
 
-static int get_active_socket()
+static struct sock_entry* get_active_socket()
 {
   // check if server socket is active
-  if (FD_ISSET(server_socket, &socket_set))
+  if (FD_ISSET(server_socket.sock, &socket_set))
   {
-    return server_socket;
+    return &server_socket;
   }
 
   // look for active socket in ks_list
@@ -184,22 +190,25 @@ static int get_active_socket()
   ks_iterator* iter = ks_iterator_new(socket_list, KS_LIST);
   while ((curr = ks_iterator_next(iter)) != NULL)
   {
-    if (FD_ISSET(curr->i, &socket_set))
+    struct sock_entry* se = curr->vp;
+    if (FD_ISSET(se->sock, &socket_set))
     {
       ks_iterator_delete(iter);
-      return curr->i;
+      se->last_active = time(NULL);
+      return se;
     }
   }
   ks_iterator_delete(iter);
 
-  return -1;
+  return NULL;
 }
 
 
-int await_active_socket()
+struct sock_entry* await_active_socket()
 {
   int max_socket = reload_socket_set();
-  int active_socket, new_socket;
+  struct sock_entry *active_socket;
+  int new_socket;
 
   struct sockaddr addr;
   socklen_t addrlen = sizeof(addr);
@@ -211,16 +220,17 @@ int await_active_socket()
   }
 
   // find out which one is active
-  if ((active_socket = get_active_socket()) == -1)
+  if ((active_socket = get_active_socket()) == NULL)
   {
-    log_crit("await_active_socket(): no active socket");
+    log_err("await_active_socket(): no active socket");
+    return NULL;
   }
 
   // if server socket is active, there is a new connection
-  if (active_socket == server_socket)
+  if (active_socket == &server_socket)
   {
     // accept connection
-    if ((new_socket = accept(server_socket, (struct sockaddr*) &addr, &addrlen)) == -1)
+    if ((new_socket = accept(server_socket.sock, (struct sockaddr*) &addr, &addrlen)) == -1)
     {
       log_crit("await_active_socket(): accept(): %s", strerror(errno));
     }
@@ -234,9 +244,7 @@ int await_active_socket()
       log_crit("await_active_socket(): setsockopt(): %s", strerror(errno));
     }
 
-    add_socket(new_socket);
-
-    return new_socket;
+    return add_socket(new_socket);
   }
 
   // otherwise, just return existing socket

@@ -37,16 +37,16 @@ static void delete_request(struct request* req);
 /* Parses the request string into a 'request' struct, passes it to 
    the corresponding HTTP method handler, and returns a 'response' 
    struct. */
-static struct response* process_request(const int sock);
+static struct response* process_request(struct sock_entry* se);
 
 /* Sends the contents of a buffer to a specified socket */
-static int send_msg(const int sock, char* buffer, int msg_len);
+static int send_msg(struct sock_entry* se, char* buffer, int msg_len);
 
 /* Delete response object */
 static void delete_response(struct response* resp);
 
 /* Uses send_msg() to send the response in pieces */
-static void send_response(const int sock, struct response* resp);
+static void send_response(struct sock_entry* se, struct response* resp);
 
 /* Takes in a structure of execution options and listens for
    incoming connections. Never returns. */
@@ -56,7 +56,6 @@ static void serve();
 int main(int argc, char** argv)
 {
   // process CLI args
-  //struct options* opts = calloc(1, sizeof(struct options));
   struct options opts;
   memset(&opts, 0, sizeof(opts));
   get_options(argc, argv, &opts);
@@ -150,8 +149,8 @@ static void init_server(struct options* opts)
   sigaction(SIGTERM, &sa, NULL);
   sigaction(SIGINT, &sa, NULL);
 
-  // init remaining services
   init_http_post();
+
   init_http_get();
 
   init_file_manager();
@@ -183,7 +182,13 @@ static void serve()
 {
   while (1)
   {
-    int active_socket = await_active_socket();
+    struct sock_entry* active_socket = await_active_socket();
+
+    // skip on error
+    if (active_socket == NULL)
+    {
+      continue;
+    }
 
     send_response(active_socket,
       process_request(active_socket));
@@ -311,33 +316,30 @@ static void delete_request(struct request* req)
 }
 
 
-static struct response* process_request(const int sock)
+static struct response* process_request(struct sock_entry* se)
 {
-  char ipstr[64];
-  get_socket_ip(sock, ipstr, 64);
-
   // stack allocate request buffer here
   char req_buf[MAXREQUESTSIZE + 1];
   memset(req_buf, 0, MAXREQUESTSIZE + 1);
 
   // read request into buffer
   int req_len;
-  if ((req_len = recv(sock, req_buf, MAXREQUESTSIZE + 1, 0)) == -1)
+  if ((req_len = recv(se->sock, req_buf, MAXREQUESTSIZE + 1, 0)) == -1)
   {
     log_err("process_request(): Failed on call to recv(): %s", strerror(errno));
-    remove_socket(sock);
+    remove_socket(se);
     return NULL;
   }
 
   if (req_len == 0)
   {
-    remove_socket(sock);
+    remove_socket(se);
     return NULL;
   }
 
   if (req_len > MAXREQUESTSIZE)
   {
-    log_info("Bad request from %s (socket number %d)", ipstr, sock);
+    log_info("Bad request from %s (socket number %d)", se->addr, se->sock);
     return response_error(STAT413);
   }
 
@@ -350,7 +352,7 @@ static struct response* process_request(const int sock)
 
   struct response* resp;
 
-  log_info("Request from %s (socket number %d): %s %s", ipstr, sock, req->method, (req->uri + 1));
+  log_info("Request from %s (socket number %d): %s %s", se->addr, se->sock, req->method, (req->uri + 1));
 
   // send request object to appropriate handler
   if (strcmp(req->method, "GET") == 0 ||
@@ -373,7 +375,7 @@ static struct response* process_request(const int sock)
 }
 
 
-static int send_msg(const int sock, char* buffer, int msg_len)
+static int send_msg(struct sock_entry* se, char* buffer, int msg_len)
 {
   if (buffer == NULL)
   {
@@ -384,10 +386,10 @@ static int send_msg(const int sock, char* buffer, int msg_len)
 
   while (total < msg_len)
   {
-    if ((bytes = send(sock, buffer + total, msg_len - total, 0)) == -1)
+    if ((bytes = send(se->sock, buffer + total, msg_len - total, 0)) == -1)
     {
       log_err("send_msg(): send(): %s", strerror(errno));
-      remove_socket(sock);
+      remove_socket(se);
       return -1;
     }
     total += bytes; 
@@ -405,7 +407,7 @@ static void delete_response(struct response* resp)
 }
 
 
-static void send_response(const int sock, struct response* resp)
+static void send_response(struct sock_entry* se, struct response* resp)
 {
   if (resp == NULL)
   {
@@ -421,7 +423,7 @@ static void send_response(const int sock, struct response* resp)
   for (int i = 0; i < head_lines; i++)
   {
     ks_datacont* line = ks_list_get(resp->header, i);
-    if (send_msg(sock, line->cp, line->size) == -1)
+    if (send_msg(se, line->cp, line->size) == -1)
     {
       delete_response(resp);
       return;
@@ -429,12 +431,12 @@ static void send_response(const int sock, struct response* resp)
   }
 
   // end header
-  send_msg(sock, "\r\n", 2);
+  send_msg(se, "\r\n", 2);
 
   // send resp body
   if (resp->content)
   {
-    send_msg(sock, resp->content, resp->content_length);
+    send_msg(se, resp->content, resp->content_length);
   }
 
   delete_response(resp);
