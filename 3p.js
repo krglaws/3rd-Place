@@ -341,6 +341,7 @@ function processTimestamps() {
       utcElem.innerText = Math.floor(delta / 3600) + " hours ago";
     }
     else {
+      date = new Date(0);
       date.setUTCSeconds(utcElem.innerText);
       utcElem.innerText = date.toDateString();
     }
