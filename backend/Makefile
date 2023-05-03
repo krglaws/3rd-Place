@@ -1,5 +1,5 @@
 CC := gcc
-CFLAGS := -Iinclude -Wall -Wextra -O2
+CFLAGS := -Iinclude -Wall -Wextra -g #-O2
 
 SRC := ./src
 INC := ./include
@@ -43,10 +43,10 @@ $(VALIDATIONTARG): $(VALIDATIONDEP)
 	$(CC) -c $< -o $@ $(CFLAGS) 
 
 
-SOCKMGRDEP := $(SRC)/socket_manager.c
-SOCKMGRTARG := $(BIN)/socket_manager.o
+CLIENTMGRDEP := $(SRC)/client_manager.c
+CLIENTMGRTARG := $(BIN)/client_manager.o
 
-$(SOCKMGRTARG): $(SOCKMGRDEP)
+$(CLIENTMGRTARG): $(CLIENTMGRDEP)
 	$(CC) -c $< -o $@ $(CFLAGS) 
 
 
@@ -124,7 +124,7 @@ SQLMGRDEP := $(SRC)/sql_manager.c
 SQLMGRTARG := $(BIN)/sql_manager.o
 
 $(SQLMGRTARG): $(SQLMGRDEP)
-	$(CC) -c $< -o $@ $(CFLAGS) `mysql_config --cflags`
+	$(CC) -c $< -o $@ $(CFLAGS) `mariadb_config --cflags`
 
 
 AUTHMGRDEP := $(SRC)/auth_manager.c
@@ -149,12 +149,12 @@ $(LOGMGRTARG): $(LOGMGRDEP)
 
 
 ALLDEPS := $(FILEMGRTARG) $(STRINGMAPTARG) $(TEMPLATINGTARG) $(LOGMGRTARG) $(SQLMGRTARG) $(AUTHMGRTARG) \
-	$(SOCKMGRTARG) $(RESPONSETARG) $(HTPGETTARG) $(GETUSRTARG) $(GETPSTTARG) $(GETCMTYTARG) \
+	$(CLIENTMGRTARG) $(RESPONSETARG) $(HTPGETTARG) $(GETUSRTARG) $(GETPSTTARG) $(GETCMTYTARG) \
 	$(HTTPPOSTTARG) $(POSTNEWTARG) $(POSTUPDATETARG) $(POSTDELETETARG) $(SVRTARG) $(GETFEEDTARG) $(GETFORMTARG) $(VALIDATIONTARG)
 
 
 server: $(ALLDEPS)
-	$(CC) -o $@ $^ -lkylestructs -lcrypt `mysql_config --libs`
+	$(CC) -o $@ $^ -lkylestructs -lcrypt `mariadb_config --libs`
 
 
 .PHONY: clean

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include <mysql.h>
+#include <mariadb/mysql.h>
 #include <kylestructs.h>
 
 #include <log_manager.h>
