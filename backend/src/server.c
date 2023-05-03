@@ -334,12 +334,14 @@ static struct response* process_request(struct client_entry* ce)
   {
     free(ce->raw_request);
     ce->raw_request = NULL;
+    ce->content_length = 0;
     return response_error(STAT400);
   }
-  log_info("Request:\n%s", ce->raw_request);
-  //log_info("Request from %s (socket number %d): %s %s\n%s", ce->addr, ce->sock, req->method, (req->uri + 1), ce->raw_request);
   free(ce->raw_request);
   ce->raw_request = NULL;
+  ce->content_length = 0;
+
+  log_info("Request: %s %s %s", req->method, req->uri,  req->http_version);
 
   struct response* resp;
 
@@ -405,8 +407,7 @@ static void send_response(struct client_entry* ce, struct response* resp)
   }
 
   // log first line of resp header
-  //, ks_list_get(resp->header, 0)->cp);
-  log_info("Response:");
+  log_info("Response: %s", ks_list_get(resp->header, 0)->cp);
 
   // send each line of header
   int head_lines = ks_list_length(resp->header);
@@ -418,7 +419,6 @@ static void send_response(struct client_entry* ce, struct response* resp)
       delete_response(resp);
       return;
     }
-    log_info(line->cp);
   }
 
   // end header
@@ -427,7 +427,6 @@ static void send_response(struct client_entry* ce, struct response* resp)
     delete_response(resp);
     return;
   }
-  log_info("\r\n");
 
   // send resp body
   if (resp->content)

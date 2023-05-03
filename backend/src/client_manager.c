@@ -226,13 +226,9 @@ static int read_client_request(struct client_entry* ce)
     remove_client(ce);
     return -1;
   }
-  //log_info("\nPartial request on socket %d:\n%s\n", ce->sock, req_buf);
 
   // copy request buffer into ce->raw_request
-  
   int cpy_start = ce->raw_request ? strlen(ce->raw_request) : 0;
-  //log_info("ce->raw_request=%d\n", ce->raw_request);
-  //log_info("cpy_start=%d\n", cpy_start);
   if (cpy_start + read_bytes > MAXREQSIZE)
   {
     response_error(STAT413);
@@ -245,14 +241,11 @@ static int read_client_request(struct client_entry* ce)
   memcpy(ce->raw_request + cpy_start, req_buf, read_bytes);
   ce->raw_request[cpy_start + read_bytes] = '\0';
 
-  //log_info("\nPartial request on socket %d:\n%s\n", ce->sock, ce->raw_request);
-
   // find end of headers
   char* eoh = strstr(ce->raw_request, "\r\n\r\n");
   if (eoh == NULL)
   {
     // haven't read all the headers yet
-    //log_info("\nPartial request on socket %d:\n%s\n", ce->sock, req_buf);
     return -1;
   }
 
@@ -272,20 +265,17 @@ static int read_client_request(struct client_entry* ce)
     if (currlen < ce->content_length)
     {
       // haven't read all the content yet
-      //log_info("\nPartial request on socket %d:\n%s\n", ce->sock, req_buf);
       return -1;
     }
 
     if (currlen > ce->content_length)
     {
       // truncate raw_request buffer according to content-length header
-      int total_len = (ce->content_length + 1) - ((eoh + 4) - ce->raw_request);
+      int total_len = ((eoh + 4) - ce->raw_request) + (ce->content_length + 1);
       ce->raw_request = realloc(ce->raw_request, total_len);
       ce->raw_request[total_len] = '\0';
     }
   }
-
-  //log_info("\nComplete request on socket %d:\n%s\n", ce->sock, ce->raw_request);
 
   return 0;
 }
