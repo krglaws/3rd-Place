@@ -169,13 +169,25 @@ struct response* get_communities(const struct request* req)
   add_map_value_str(page_data, FEED_TITLE_KEY, "Communities");
   add_map_value_str(page_data, NEW_OPTION_VISIBILITY_KEY, "visible");
 
+  const char *page_no = "1", *page_size = "10";
+
+  const ks_datacont* val;
+  if (val = get_map_value(req->query, "page_no"))
+  {
+    page_no = val->cp;
+  }
+  add_map_value_str(page_data, FEED_PAGE_NO_KEY, page_no);
+
+  if (val = get_map_value(req->query, "page_size"))
+  {
+    page_size = val->cp;
+  }
+  add_map_value_str(page_data, FEED_PAGE_SIZE_KEY, page_size);
+
   // query communities and sort
   ks_list* communities;
-  if ((communities = query_all_communities()) != NULL)
+  if ((communities = query_all_communities(page_no, page_size)) != NULL)
   {
-    communities = sort_list(communities, COMMUNITY_ITEM);
-    add_map_value_ls(page_data, FEED_ITEM_LIST_KEY, communities);
-
     // add html template path to each community
     const ks_datacont* curr;
     ks_iterator* iter = ks_iterator_new(communities, KS_LIST);
@@ -184,6 +196,9 @@ struct response* get_communities(const struct request* req)
       add_map_value_str(curr->hm, TEMPLATE_PATH_KEY, HTML_FEED_COMMUNITY);
     }
     ks_iterator_delete(iter);
+
+    // add community list to page_data
+    add_map_value_ls(page_data, FEED_ITEM_LIST_KEY, communities);
   }
   else
   {

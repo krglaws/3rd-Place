@@ -174,7 +174,7 @@ ks_hashmap* query_community_by_id(const char* community_id);
 
 ks_hashmap* query_community_by_name(const char* community_name);
 
-ks_list* query_all_communities();
+ks_list* query_all_communities(const char* page_size, const char* page_number);
 
 ks_list* query_communities_by_owner_id(const char* owner_id);
 

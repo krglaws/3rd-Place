@@ -108,6 +108,8 @@
 /* Feed HTML keys */
 #define FEED_ITEM_LIST_KEY "FEED_ITEM_LIST"
 #define FEED_TITLE_KEY "FEED_TITLE"
+#define FEED_PAGE_NO_KEY "PAGE_NO"
+#define FEED_PAGE_SIZE_KEY "PAGE_SIZE"
 
 char* build_template(const ks_hashmap* hm);
 

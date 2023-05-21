@@ -347,3 +347,35 @@ function processTimestamps() {
     }
   }
 }
+
+function pagerGo() {
+  var page_no = document.getElementById("page-no").value;
+  var page_size = document.getElementById("page-size").value;
+  var path = window.location.href.split('/')[1].split('?')[0];
+  window.location.href = `${path}?page_no=${page_no}&page_size=${page_size}`;
+}
+
+function pagerPrevious() {
+  var page_no = document.getElementById("page-no").value;
+
+  if (page_no <= 1) {
+    page_no = 1;
+  }
+  else {
+    page_no--;
+  }
+
+  document.getElementById("page-no").value = page_no;
+
+  pagerGo();
+}
+
+function pagerNext(path) {
+  var page_no = document.getElementById("page-no").value;
+
+  page_no++;
+
+  document.getElementById("page-no").value = page_no;
+
+  pagerGo();
+}

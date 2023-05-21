@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <errno.h>
 #include <mariadb/mysql.h>
 #include <kylestructs.h>
 
@@ -360,9 +361,18 @@ ks_hashmap* query_community_by_name(const char* community_name)
 }
 
 static MYSQL_STMT* stmt_query_all_communities = NULL;
-ks_list* query_all_communities()
+ks_list* query_all_communities(const char* page_no, const char* page_size)
 {
-  return sql_select(&communities_table_info, stmt_query_all_communities);
+  int ipage_no = atoi(page_no);
+  if (ipage_no < 1) return NULL;
+
+  int ipage_size = atoi(page_size);
+  if (ipage_size < 1) return NULL;
+
+  char offset[16] = {0};
+  snprintf(offset, 15, "%d", (ipage_no - 1) * ipage_size);
+
+  return sql_select(&communities_table_info, stmt_query_all_communities, offset, page_size);
 }
 
 static MYSQL_STMT* stmt_query_communities_by_owner_id = NULL;
@@ -847,7 +857,7 @@ void init_sql_manager()
   // communities
   stmt_query_community_by_id = build_prepared_statement(sqlcon, "SELECT * FROM communities WHERE id = ? AND NOT id = 1;");
   stmt_query_community_by_name = build_prepared_statement(sqlcon, "SELECT * FROM communities WHERE name = BINARY ? AND NOT name = '[deleted]';");
-  stmt_query_all_communities = build_prepared_statement(sqlcon, "SELECT * FROM communities WHERE NOT id = 1;");
+  stmt_query_all_communities = build_prepared_statement(sqlcon, "SELECT * FROM communities WHERE NOT id = 1 ORDER BY date_created DESC LIMIT ?, ?;");
   stmt_query_communities_by_owner_id = build_prepared_statement(sqlcon, "SELECT * FROM communities WHERE owner_id = ?;");
   stmt_create_community = build_prepared_statement(sqlcon, "SELECT CreateCommunity(?, ?, ?);");
   stmt_update_community_about = build_prepared_statement(sqlcon, "CALL UpdateCommunityAbout(?, ?);");
