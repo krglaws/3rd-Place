@@ -124,6 +124,16 @@ a:hover {
   text-decoration: underline;
   cursor: pointer;
 }
+
+.pager-container {
+  width: 100%;
+}
+
+.pager {
+  width: 50%;
+  margin: 0 auto;
+}
+
 /* end global style */
 /********************/
 
@@ -419,7 +429,6 @@ footer a {
 .comment-content {
   width: 75%;
   background-color: white;
-  display: table;
   margin: 0 auto;
 }
 
