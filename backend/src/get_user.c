@@ -13,15 +13,14 @@
 #include <get_user.h>
 
 
-static ks_list* get_user_posts(const char* user_id, const struct auth_token* client_info)
+static ks_list* get_user_posts(const char* user_id, const struct auth_token* client_info, const char* page_no, const char* page_size)
 {
   // get user posts
   ks_list* posts;
-  if ((posts = query_posts_by_author_id(user_id)) == NULL)
+  if ((posts = query_posts_by_author_id(user_id, page_no, page_size)) == NULL)
   {
     return NULL;
   }
-  posts = sort_list(posts, POST_ITEM);
 
   // list of vote wrappers
   ks_list* post_wrappers = ks_list_new();
@@ -67,11 +66,11 @@ static ks_list* get_user_posts(const char* user_id, const struct auth_token* cli
 }
 
 
-static ks_list* get_user_comments(const char* user_id, const struct auth_token* client_info)
+static ks_list* get_user_comments(const char* user_id, const struct auth_token* client_info, const char* page_no, const char* page_size)
 {
   // get user comments
   ks_list* comments;
-  if ((comments = query_comments_by_author_id(user_id)) == NULL)
+  if ((comments = query_comments_by_author_id(user_id, page_no, page_size)) == NULL)
   {
     return NULL;
   }
@@ -188,12 +187,26 @@ struct response* get_user(const struct request* req)
   {
     return response_error(STAT404);
   }
-
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_USER);
+
+  const char *page_no = "1", *page_size = "10";
+
+  const ks_datacont* val;
+  if (val = get_map_value(req->query, "page_no"))
+  {
+    page_no = val->cp;
+  }
+  add_map_value_str(page_data, FEED_PAGE_NO_KEY, page_no);
+
+  if (val = get_map_value(req->query, "page_size"))
+  {
+    page_size = val->cp;
+  }
+  add_map_value_str(page_data, FEED_PAGE_SIZE_KEY, page_size);
 
   // get user posts
   ks_list* posts;
-  if ((posts = get_user_posts(user_id, req->client_info)) != NULL)
+  if ((posts = get_user_posts(user_id, req->client_info, page_no, page_size)) != NULL)
   {
     add_map_value_ls(page_data, USER_POST_LIST_KEY, posts);
   }
@@ -204,7 +217,7 @@ struct response* get_user(const struct request* req)
 
   // get user comments
   ks_list* comments;
-  if ((comments = get_user_comments(user_id, req->client_info)) != NULL)
+  if ((comments = get_user_comments(user_id, req->client_info, page_no, page_size)) != NULL)
   {
     add_map_value_ls(page_data, USER_COMMENT_LIST_KEY, comments);
   }

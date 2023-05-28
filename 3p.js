@@ -354,13 +354,11 @@ function pagerGo() {
   var path = window.location.href.split('/')[1].split('?')[0];
 
   var query = location.search.substring(1);
-  query_obj = JSON.parse('{"' + query.replace(/&/g, '","').replace(/=/g,'":"') + '"}', function(key, value) { return key===""?value:decodeURIComponent(value) })
+  query_obj = query === '' ? {} : JSON.parse('{"' + query.replace(/&/g, '","').replace(/=/g,'":"') + '"}', function(key, value) { return key===""?value:decodeURIComponent(value) });
   query_obj['page_no'] = page_no;
   query_obj['page_size'] = page_size;
 
   var newurl = `${path}?${Object.keys(query_obj).map(key => key + '=' + query_obj[key]).join('&')}`;
-  console.log(`newurl='${newurl}'`);
-
   window.location.href = newurl;
 }
 
