@@ -358,7 +358,10 @@ function pagerGo() {
   query_obj['page_no'] = page_no;
   query_obj['page_size'] = page_size;
 
-  window.location.href = `${path}?${Object.keys(query_obj).map(key => key + '=' + query_obj[key]).join('&')}`;
+  var newurl = `${path}?${Object.keys(query_obj).map(key => key + '=' + query_obj[key]).join('&')}`;
+  console.log(`newurl='${newurl}'`);
+
+  window.location.href = newurl;
 }
 
 function pagerPrevious() {

@@ -14,15 +14,14 @@
 #include <get_post.h>
 
 
-static ks_list* get_post_comments(const char* post_id, bool can_delete, const struct auth_token* client_info)
+static ks_list* get_post_comments(const char* post_id, bool can_delete, const struct auth_token* client_info, const char* page_no, const char* page_size)
 {
   // get user comments
   ks_list* comments;
-  if ((comments = query_comments_by_post_id(post_id)) == NULL)
+  if ((comments = query_comments_by_post_id(post_id, page_no, page_size)) == NULL)
   {
     return NULL;
   }
-  comments = sort_list(comments, COMMENT_ITEM);
 
   // list of vote wrappers
   ks_list* comment_wrappers = ks_list_new();
@@ -151,9 +150,23 @@ struct response* get_post(const struct request* req)
   add_map_value_str(page_data, EDIT_OPTION_VISIBILITY_KEY, edit_vis);
   add_map_value_str(page_data, DELETE_OPTION_VISIBILITY_KEY, delete_vis);
 
+  // pager
+  const char *page_no = "1", *page_size = "10";
+  const ks_datacont* val;
+  if (val = get_map_value(req->query, "page_no"))
+  {
+    page_no = val->cp;
+  }
+  add_map_value_str(page_data, FEED_PAGE_NO_KEY, page_no);
+  if (val = get_map_value(req->query, "page_size"))
+  {
+    page_size = val->cp;
+  }
+  add_map_value_str(page_data, FEED_PAGE_SIZE_KEY, page_size);
+
   // get post comments
   ks_list* comments;
-  if ((comments = get_post_comments(post_id, can_delete, req->client_info)) != NULL)
+  if ((comments = get_post_comments(post_id, can_delete, req->client_info, page_no, page_size)) != NULL)
   {
     add_map_value_ls(page_data, POST_COMMENT_LIST_KEY, comments);
   }

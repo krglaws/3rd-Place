@@ -284,9 +284,10 @@ ks_list* query_comments_by_author_id(const char* author_id)
 }
 
 static MYSQL_STMT* stmt_query_comments_by_post_id = NULL;
-ks_list* query_comments_by_post_id(const char* post_id)
+ks_list* query_comments_by_post_id(const char* post_id, const char* page_no, const char* page_size)
 {
-  return sql_select(&comments_table_info, stmt_query_comments_by_post_id, post_id);
+  GET_LIMIT_OFFSET;
+  return sql_select(&comments_table_info, stmt_query_comments_by_post_id, post_id, offset, page_size);
 }
 
 static MYSQL_STMT* stmt_create_comment = NULL;
@@ -862,7 +863,7 @@ void init_sql_manager()
   // comments
   stmt_query_comment_by_id = build_prepared_statement(sqlcon, "SELECT * FROM comments WHERE id = ?;");
   stmt_query_comments_by_author_id = build_prepared_statement(sqlcon, "SELECT * FROM comments WHERE author_id = ?;");
-  stmt_query_comments_by_post_id = build_prepared_statement(sqlcon, "SELECT * FROM comments WHERE post_id = ?;");
+  stmt_query_comments_by_post_id = build_prepared_statement(sqlcon, "SELECT * FROM comments WHERE post_id = ? ORDER BY date_posted LIMIT ?, ?;");
   stmt_create_comment = build_prepared_statement(sqlcon, "SELECT CreateComment(?, ?, ?);");
   stmt_update_comment_body = build_prepared_statement(sqlcon, "CALL UpdateComment(?, ?);");
   stmt_delete_comment = build_prepared_statement(sqlcon, "CALL DeleteComment(?);");

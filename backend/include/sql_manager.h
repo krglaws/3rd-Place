@@ -190,7 +190,7 @@ ks_hashmap* query_comment_by_id(const char* comment_id);
 
 ks_list* query_comments_by_author_id(const char* author_id);
 
-ks_list* query_comments_by_post_id(const char* post_id);
+ks_list* query_comments_by_post_id(const char* post_id, const char* page_no, const char* page_size);
 
 ks_hashmap* query_post_up_vote_by_post_id_user_id(const char* post_id, const char* user_id);
 
