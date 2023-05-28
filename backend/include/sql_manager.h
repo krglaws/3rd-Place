@@ -200,9 +200,11 @@ ks_hashmap* query_comment_up_vote_by_comment_id_user_id(const char* comment_id, 
 
 ks_hashmap* query_comment_down_vote_by_comment_id_user_id(const char* comment_id, const char* user_id);
 
-ks_hashmap* query_subscription_by_community_id_user_id(const char* community_id, const char* id);
+ks_hashmap* query_subscription_by_community_id_user_id(const char* community_id, const char* user_id);
 
 ks_list* query_subscriptions_by_user_id(const char* user_id);
+
+ks_list* query_feed_by_user_id(const char* user_id, const char* page_no, const char* page_size);
 
 
 /* Return 0 on success, -1 on failure */

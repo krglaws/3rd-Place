@@ -17,7 +17,7 @@ enum feed_type
   ALL_FEED
 };
 
-static struct response* get_feed(const enum feed_type ft, const struct auth_token* client_info);
+static struct response* get_feed(const enum feed_type ft, const struct auth_token* client_info, const ks_hashmap* query);
 
 static ks_list* wrap_posts(ks_list* posts, const struct auth_token* client_info)
 {
@@ -70,7 +70,7 @@ static ks_list* wrap_posts(ks_list* posts, const struct auth_token* client_info)
 }
 
 
-static struct response* get_feed(const enum feed_type ft, const struct auth_token* client_info)
+static struct response* get_feed(const enum feed_type ft, const struct auth_token* client_info, const ks_hashmap* query)
 {
   if (ft == HOME_FEED && client_info == NULL)
   {
@@ -81,38 +81,32 @@ static struct response* get_feed(const enum feed_type ft, const struct auth_toke
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_FEED);
   add_map_value_str(page_data, NEW_OPTION_VISIBILITY_KEY, "hidden");
 
+  const char *page_no = "1", *page_size = "10";
+
+  const ks_datacont* val;
+  if (val = get_map_value(query, "page_no"))
+  {
+    page_no = val->cp;
+  }
+  add_map_value_str(page_data, FEED_PAGE_NO_KEY, page_no);
+
+  if (val = get_map_value(query, "page_size"))
+  {
+    page_size = val->cp;
+  }
+  add_map_value_str(page_data, FEED_PAGE_SIZE_KEY, page_size);
+
   // get list of posts
   ks_list* posts = NULL;
   if (ft == HOME_FEED)
   {
     add_map_value_str(page_data, FEED_TITLE_KEY, "Home");
-
-    // get list of subscriptions
-    ks_list* subs;
-    if ((subs = query_subscriptions_by_user_id(client_info->user_id)) != NULL)
-    {
-      posts = ks_list_new();
-
-      // for each sub, get list of posts
-      const ks_datacont* curr;
-      ks_iterator* iter = ks_iterator_new(subs, KS_LIST);
-      while ((curr = ks_iterator_next(iter)) != NULL)
-      {
-        const char* community_id = get_map_value_str(curr->hm, FIELD_SUB_COMMUNITY_ID);
-        ks_list* temp = query_posts_by_community_id(community_id);
-        temp = sort_list(temp, POST_ITEM);
-        posts = merge_lists(posts, temp, POST_ITEM);
-      }
-      ks_iterator_delete(iter);
-      ks_list_delete(subs);
-    }
+    posts = query_feed_by_user_id(client_info->user_id, page_no, page_size);
   }
   else
   {
     add_map_value_str(page_data, FEED_TITLE_KEY, "All");
-
-    posts = query_all_posts();
-
+    posts = query_all_posts(page_no, page_size);
     posts = sort_list(posts, POST_ITEM);
   }
 
@@ -151,13 +145,13 @@ static struct response* get_feed(const enum feed_type ft, const struct auth_toke
 
 struct response* get_home(const struct request* req)
 {
-  return get_feed(HOME_FEED, req->client_info);
+  return get_feed(HOME_FEED, req->client_info, req->query);
 }
 
 
 struct response* get_all(const struct request* req)
 {
-  return get_feed(ALL_FEED, req->client_info);
+  return get_feed(ALL_FEED, req->client_info, req->query);
 }
 
 

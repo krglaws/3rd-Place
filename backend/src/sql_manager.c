@@ -12,6 +12,16 @@
 #include <sql_manager.h>
 
 
+// used in many queries for pagination
+#define GET_LIMIT_OFFSET \
+  int ipage_no = atoi(page_no);\
+  if (ipage_no < 1) return NULL;\
+  int ipage_size = atoi(page_size);\
+  if (ipage_size < 1) return NULL;\
+  char offset[16] = {0};\
+  snprintf(offset, 15, "%d", (ipage_no - 1) * ipage_size);
+
+
 // one of these structs for each table in sql
 // is used for retrieving data and storing for
 // processing.
@@ -174,9 +184,10 @@ ks_hashmap* query_post_by_id(const char* id)
 }
 
 static MYSQL_STMT* stmt_query_all_posts = NULL;
-ks_list* query_all_posts()
+ks_list* query_all_posts(const char* page_no, const char* page_size)
 {
-  return sql_select(&posts_table_info, stmt_query_all_posts);
+  GET_LIMIT_OFFSET;
+  return sql_select(&posts_table_info, stmt_query_all_posts, offset, page_size);
 }
 
 static MYSQL_STMT* stmt_query_posts_by_author_id = NULL;
@@ -246,6 +257,7 @@ static const struct table_info comments_table_info =
   comments_field_table,
   comments_field_lengths
 };
+
 
 static MYSQL_STMT* stmt_query_comment_by_id = NULL;
 ks_hashmap* query_comment_by_id(const char* comment_id)
@@ -360,18 +372,11 @@ ks_hashmap* query_community_by_name(const char* community_name)
   return row0;
 }
 
+
 static MYSQL_STMT* stmt_query_all_communities = NULL;
 ks_list* query_all_communities(const char* page_no, const char* page_size)
 {
-  int ipage_no = atoi(page_no);
-  if (ipage_no < 1) return NULL;
-
-  int ipage_size = atoi(page_size);
-  if (ipage_size < 1) return NULL;
-
-  char offset[16] = {0};
-  snprintf(offset, 15, "%d", (ipage_no - 1) * ipage_size);
-
+  GET_LIMIT_OFFSET;
   return sql_select(&communities_table_info, stmt_query_all_communities, offset, page_size);
 }
 
@@ -550,6 +555,13 @@ static MYSQL_STMT* stmt_query_subscriptions_by_user_id = NULL;
 ks_list* query_subscriptions_by_user_id(const char* user_id)
 {
   return sql_select(&subscriptions_table_info, stmt_query_subscriptions_by_user_id, user_id);
+}
+
+static MYSQL_STMT* stmt_query_feed_by_user_id = NULL;
+ks_list* query_feed_by_user_id(const char* user_id, const char* page_no, const char* page_size)
+{
+  GET_LIMIT_OFFSET;
+  return sql_select(&posts_table_info, stmt_query_feed_by_user_id, user_id, offset, page_size);
 }
 
 static MYSQL_STMT* stmt_toggle_subscription = NULL;
@@ -839,7 +851,7 @@ void init_sql_manager()
 
   // posts
   stmt_query_post_by_id = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE id = ?;");
-  stmt_query_all_posts = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE NOT author_id = 1 AND NOT community_id = 1;");
+  stmt_query_all_posts = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE NOT author_id = 1 AND NOT community_id = 1 ORDER BY date_posted DESC LIMIT ?, ?;");
   stmt_query_posts_by_author_id = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE author_id = ?;");
   stmt_query_posts_by_community_id = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE community_id = ? AND NOT author_id = 1;");
   stmt_create_post = build_prepared_statement(sqlcon, "SELECT CreatePost(?, ?, ?, ?);");
@@ -876,6 +888,9 @@ void init_sql_manager()
   // subscriptions
   stmt_query_subscription_by_community_id_user_id = build_prepared_statement(sqlcon, "SELECT * FROM subscriptions WHERE community_id = ? AND user_id = ?;");
   stmt_query_subscriptions_by_user_id = build_prepared_statement(sqlcon, "SELECT * FROM subscriptions WHERE user_id = ?;");
+  stmt_query_feed_by_user_id = build_prepared_statement(sqlcon, "SELECT posts.* FROM posts, subscriptions WHERE subscriptions.user_id = ? "\
+                                                                "AND subscriptions.community_id = posts.community_id ORDER BY posts.date_posted DESC LIMIT ?, ?;");
+
   stmt_toggle_subscription = build_prepared_statement(sqlcon, "CALL ToggleSubscription(?, ?);");
 
   // post votes
@@ -945,6 +960,7 @@ static void terminate_sql_manager()
   // subscriptions
   mysql_stmt_close(stmt_query_subscription_by_community_id_user_id);
   mysql_stmt_close(stmt_query_subscriptions_by_user_id);
+  mysql_stmt_close(stmt_query_feed_by_user_id);
   mysql_stmt_close(stmt_toggle_subscription);
 
   // post votes
