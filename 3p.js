@@ -352,7 +352,13 @@ function pagerGo() {
   var page_no = document.getElementById("page-no").value;
   var page_size = document.getElementById("page-size").value;
   var path = window.location.href.split('/')[1].split('?')[0];
-  window.location.href = `${path}?page_no=${page_no}&page_size=${page_size}`;
+
+  var query = location.search.substring(1);
+  query_obj = JSON.parse('{"' + query.replace(/&/g, '","').replace(/=/g,'":"') + '"}', function(key, value) { return key===""?value:decodeURIComponent(value) })
+  query_obj['page_no'] = page_no;
+  query_obj['page_size'] = page_size;
+
+  window.location.href = `${path}?${Object.keys(query_obj).map(key => key + '=' + query_obj[key]).join('&')}`;
 }
 
 function pagerPrevious() {

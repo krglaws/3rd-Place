@@ -12,15 +12,14 @@
 #include <get_community.h>
 
 
-static ks_list* get_community_posts(const char* community_id, const struct auth_token* client_info)
+static ks_list* get_community_posts(const char* community_id, const struct auth_token* client_info, const char* page_no, const char* page_size)
 {
   // get community posts
   ks_list* posts;
-  if ((posts = query_posts_by_community_id(community_id)) == NULL)
+  if ((posts = query_posts_by_community_id(community_id, page_no, page_size)) == NULL)
   {
     return NULL;
   }
-  posts = sort_list(posts, POST_ITEM);
 
   // vote wrapper list
   ks_list* post_wrappers = ks_list_new();
@@ -94,8 +93,8 @@ struct response* get_community(const struct request* req)
   const char* community_id = get_map_value_str(req->query, "id");
   const char* community_name = get_map_value_str(req->query, "name");
 
-  // get user info from DB
   ks_hashmap* page_data;
+
   if (community_id != NULL)
   {
     if ((page_data = query_community_by_id(community_id)) == NULL)
@@ -119,6 +118,20 @@ struct response* get_community(const struct request* req)
 
   add_map_value_str(page_data, TEMPLATE_PATH_KEY, HTML_COMMUNITY);
 
+  // pager
+  const char *page_no = "1", *page_size = "10";
+  const ks_datacont* val;
+  if (val = get_map_value(req->query, "page_no"))
+  {
+    page_no = val->cp;
+  }
+  add_map_value_str(page_data, FEED_PAGE_NO_KEY, page_no);
+  if (val = get_map_value(req->query, "page_size"))
+  {
+    page_size = val->cp;
+  }
+  add_map_value_str(page_data, FEED_PAGE_SIZE_KEY, page_size);
+
   // check if client is subscribed
   char* substatus = "subscribe";
   ks_hashmap* sub_info;
@@ -132,7 +145,7 @@ struct response* get_community(const struct request* req)
 
   // get community posts
   ks_list* community_posts;
-  if ((community_posts = get_community_posts(community_id, req->client_info)) != NULL)
+  if ((community_posts = get_community_posts(community_id, req->client_info, page_no, page_size)) != NULL)
   {
     add_map_value_ls(page_data, COMMUNITY_POST_LIST_KEY, community_posts);
   }

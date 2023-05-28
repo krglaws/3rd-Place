@@ -168,7 +168,7 @@ ks_list* query_all_posts();
 
 ks_list* query_posts_by_author_id(const char* user_id);
 
-ks_list* query_posts_by_community_id(const char* community_id);
+ks_list* query_posts_by_community_id(const char* community_id, const char* page_no, const char* page_size);
 
 ks_hashmap* query_community_by_id(const char* community_id);
 

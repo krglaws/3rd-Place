@@ -197,9 +197,10 @@ ks_list* query_posts_by_author_id(const char* author_id)
 }
 
 static MYSQL_STMT* stmt_query_posts_by_community_id = NULL;
-ks_list* query_posts_by_community_id(const char* community_id)
+ks_list* query_posts_by_community_id(const char* community_id, const char* page_no, const char* page_size)
 {
-  return sql_select(&posts_table_info, stmt_query_posts_by_community_id, community_id);
+  GET_LIMIT_OFFSET;
+  return sql_select(&posts_table_info, stmt_query_posts_by_community_id, community_id, offset, page_size);
 }
 
 static MYSQL_STMT* stmt_create_post = NULL;
@@ -853,7 +854,7 @@ void init_sql_manager()
   stmt_query_post_by_id = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE id = ?;");
   stmt_query_all_posts = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE NOT author_id = 1 AND NOT community_id = 1 ORDER BY date_posted DESC LIMIT ?, ?;");
   stmt_query_posts_by_author_id = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE author_id = ?;");
-  stmt_query_posts_by_community_id = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE community_id = ? AND NOT author_id = 1;");
+  stmt_query_posts_by_community_id = build_prepared_statement(sqlcon, "SELECT * FROM posts WHERE community_id = ? AND NOT author_id = 1 ORDER BY date_posted DESC LIMIT ?, ?;");
   stmt_create_post = build_prepared_statement(sqlcon, "SELECT CreatePost(?, ?, ?, ?);");
   stmt_update_post_body = build_prepared_statement(sqlcon, "CALL UpdatePost(?, ?);");
   stmt_delete_post = build_prepared_statement(sqlcon, "CALL DeletePost(?);");
