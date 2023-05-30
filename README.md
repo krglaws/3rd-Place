@@ -1,5 +1,5 @@
 # 3rd Place
-[live website](http://3rd-Place.krgdev.xyz)
+[live website](https://3rd-Place.krgdev.xyz)
 
 This is the repository for my community-oriented discussion website. Users can sign up, create communities, subscribe to communities, write posts in communities, write comments on posts, and vote on posts and comments. Yes, just like reddit. The frontend is currently text only, and there is no capacity for sharing images besides pasting links to them into posted content. In truth, this website is more of a learning experience and a toy for me rather than something that was meant to be actually useful to anyone, although I do welcome people to use it as they please.
 
