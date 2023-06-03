@@ -556,9 +556,10 @@ ks_hashmap* query_subscription_by_community_id_user_id(const char* community_id,
 }
 
 static MYSQL_STMT* stmt_query_subscriptions_by_user_id = NULL;
-ks_list* query_subscriptions_by_user_id(const char* user_id)
+ks_list* query_subscriptions_by_user_id(const char* user_id, const char* page_no, const char* page_size)
 {
-  return sql_select(&subscriptions_table_info, stmt_query_subscriptions_by_user_id, user_id);
+  GET_LIMIT_OFFSET;
+  return sql_select(&subscriptions_table_info, stmt_query_subscriptions_by_user_id, user_id, offset, page_size);
 }
 
 static MYSQL_STMT* stmt_query_feed_by_user_id = NULL;
@@ -891,7 +892,7 @@ void init_sql_manager()
 
   // subscriptions
   stmt_query_subscription_by_community_id_user_id = build_prepared_statement(sqlcon, "SELECT * FROM subscriptions WHERE community_id = ? AND user_id = ?;");
-  stmt_query_subscriptions_by_user_id = build_prepared_statement(sqlcon, "SELECT * FROM subscriptions WHERE user_id = ?;");
+  stmt_query_subscriptions_by_user_id = build_prepared_statement(sqlcon, "SELECT * FROM subscriptions WHERE user_id = ? LIMIT ?, ?;");
   stmt_query_feed_by_user_id = build_prepared_statement(sqlcon, "SELECT posts.* FROM posts, subscriptions WHERE subscriptions.user_id = ? "\
                                                                 "AND subscriptions.community_id = posts.community_id ORDER BY posts.date_posted DESC LIMIT ?, ?;");
 

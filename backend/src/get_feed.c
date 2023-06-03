@@ -107,7 +107,6 @@ static struct response* get_feed(const enum feed_type ft, const struct auth_toke
   {
     add_map_value_str(page_data, FEED_TITLE_KEY, "All");
     posts = query_all_posts(page_no, page_size);
-    posts = sort_list(posts, POST_ITEM);
   }
 
   if (posts != NULL && ks_list_length(posts) > 0)
@@ -178,7 +177,7 @@ struct response* get_communities(const struct request* req)
   }
   add_map_value_str(page_data, FEED_PAGE_SIZE_KEY, page_size);
 
-  // query communities and sort
+  // query communities
   ks_list* communities;
   if ((communities = query_all_communities(page_no, page_size)) != NULL)
   {
@@ -227,9 +226,24 @@ struct response* get_subscriptions(const struct request* req)
   add_map_value_str(page_data, FEED_TITLE_KEY, "Subscriptions");
   add_map_value_str(page_data, NEW_OPTION_VISIBILITY_KEY, "visible");
 
+  const char *page_no = "1", *page_size = "10";
+
+  const ks_datacont* val;
+  if (val = get_map_value(req->query, "page_no"))
+  {
+    page_no = val->cp;
+  }
+  add_map_value_str(page_data, FEED_PAGE_NO_KEY, page_no);
+
+  if (val = get_map_value(req->query, "page_size"))
+  {
+    page_size = val->cp;
+  }
+  add_map_value_str(page_data, FEED_PAGE_SIZE_KEY, page_size);
+
   // query user subscriptions
   ks_list* subs;
-  if ((subs = query_subscriptions_by_user_id(req->client_info->user_id)) != NULL)
+  if ((subs = query_subscriptions_by_user_id(req->client_info->user_id, page_no, page_size)) != NULL)
   {
     // get each community and store into list
     ks_list* communities = ks_list_new();

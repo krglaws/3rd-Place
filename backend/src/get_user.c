@@ -74,7 +74,6 @@ static ks_list* get_user_comments(const char* user_id, const struct auth_token* 
   {
     return NULL;
   }
-  comments = sort_list(comments, COMMENT_ITEM);
 
   // list of vote wrappers
   ks_list* comment_wrappers = ks_list_new();
