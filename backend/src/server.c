@@ -261,6 +261,9 @@ static struct request* parse_request(char* req_buf)
     req->query = string_to_map(q_begin, "&", "=");
   }
 
+  // save start line
+  COPY_STR(req->start_line, req_buf, end_req_line);
+
   // prep uri string and copy
   int uri_len = strlen(uri);
   req->uri = malloc(sizeof(char) * (uri_len + 2));
@@ -341,8 +344,6 @@ static struct response* process_request(struct client_entry* ce)
   ce->raw_request = NULL;
   ce->content_length = 0;
 
-  log_info("Request: %s %s %s", req->method, req->uri,  req->http_version);
-
   struct response* resp;
 
   // send request object to appropriate handler
@@ -359,6 +360,8 @@ static struct response* process_request(struct client_entry* ce)
   {
     resp = response_error(STAT405);
   }
+
+  log_info("Request: %s -> %s", req->start_line, ks_list_get(resp->header, 0)->cp);
 
   delete_request(req);
 

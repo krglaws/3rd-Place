@@ -93,7 +93,7 @@ struct response* get_post(const struct request* req)
 {
   const char* post_id = get_map_value_str(req->query, "id");
 
-  if (strlen(post_id) == 0)
+  if (post_id == NULL || strlen(post_id) == 0)
   {
     return response_error(STAT404);
   }

@@ -39,6 +39,9 @@ struct options
 /* struct containing stripped down request info */
 struct request
 {
+  /* the start line of the request (for logging purposes only) */
+  char* start_line;
+
   /* if client is logged in, this will
      contain the clients user name and
      user ID */
