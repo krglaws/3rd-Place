@@ -318,6 +318,7 @@ static struct request* parse_request(char* req_buf)
 
 static void delete_request(struct request* req)
 {
+  free(req->start_line);
   free(req->http_version);
   free(req->method);
   free(req->uri);
